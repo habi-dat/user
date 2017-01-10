@@ -1,0 +1,9 @@
+{
+  "server": {
+    "url": "ldap://localhost:389",
+    "bindDn": "cn=root, dc=willy-fred, dc=org",
+    "bindCredentials": "fr33w1lly*fr3d!",
+    "searchBase": "ou=users, dc=willy-fred, dc=org",
+    "searchFilter": "(cn={{username}})"
+  }
+}
