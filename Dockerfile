@@ -6,6 +6,6 @@ RUN npm install
 RUN npm install pm2 -g
 
 
-VOLUME config
+VOLUME /habidat-user/config
 
 CMD pm2-docker start app.js 
