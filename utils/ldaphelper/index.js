@@ -1,5 +1,4 @@
 var ldap = require('ldapjs');
-var md5 = require('md5');
 var ssha = require('openldap_ssha');
 var config    = require('../../config/config.json');
 var client = ldap.createClient({
