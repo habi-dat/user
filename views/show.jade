@@ -1,0 +1,58 @@
+extends layout
+
+block content
+    .row
+      .col-md-6
+        .panel.panel-default
+          .panel-heading
+            h2.panel-title Benutzer #[a.btn.btn-default.btn-sm(href='/user/add') #[span.glyphicon.glyphicon-plus]]
+          .panel-body
+            table.table.datatable(id='usertable')
+              thead
+                tr
+                  th.col-md-5 ID
+                  th.col-md-5 Name
+                  th.col-md-2.text-right Aktionen
+                  th.hidden DN
+              tbody
+                each user in users
+                  if (user.uid)
+                    tr
+                      td= user.uid
+                      td= user.cn
+                      td.text-right
+                          a.btn.btn-default.btn-sm(href='/user/edit/'+user.dn) #[span.glyphicon.glyphicon-pencil]
+                          a.btn.btn-default.btn-sm.confirm(data-link='/user/delete/'+user.dn, data-confirmtext='Willst du Benutzer*in ' + user.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+                      td.hidden.dn= user.dn
+      .col-md-6
+        .panel.panel-default
+          .panel-heading
+            h2.panel-title Gruppen #[a.btn.btn-default.btn-sm(href='/group/add') #[span.glyphicon.glyphicon-plus]]
+          .panel-body
+            table.table.datatable(id='grouptable')
+              thead
+                tr
+                  th.col-md-10 Name
+                  th.col-md-2.text-right Aktionen
+                  th.hidden Members
+                  th.hidden Admins
+              tbody
+                each group in groups
+                  if (group.cn)
+                    tr
+                      td= group.cn
+                      td.text-right
+                          a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn) #[span.glyphicon.glyphicon-pencil]
+                          a.btn.btn-default.btn-sm.confirm(data-link='/user/delete/'+group.dn, data-confirmtext='Willst du die Gruppe ' + group.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+                      td.hidden.dn 
+                        if (group.member && group.member instanceof Array)
+                          each member in group.member
+                            .memberdn= member
+                        else if (group.member)
+                            .memberdn= group.member
+                      td.hidden.dn 
+                        if (group.owner && group.owner instanceof Array)
+                          each admin in group.owner
+                            .admindn= admin
+                        else if (group.owner)
+                            .admindn= group.owner

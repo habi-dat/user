@@ -1,0 +1,24 @@
+mixin group_form(action, group)
+  form.form-horizontal.checkbox-form.validation-form(action=action method="post" role="form")
+        if group && group.dn
+          input.hidden(name="dn", value=group.dn)
+        legend Gruppe #{(group && action=="/group/edit"? "Bearbeiten": "Anlegen")}
+        .col-md-6
+          .form-group.required
+            label.control-label.col-md-4(for="cn") Name
+            .col-md-8
+              .input-group
+                span.input-group-addon
+                  i.glyphicon.glyphicon-th-list
+                input.form-control(type="text" id="cn" name="cn" value=(group?group.cn:undefined) required data-msg="Darf nicht leer sein")
+        .col-md-6
+          .form-group
+            label.control-label.col-md-2(for="sn") Beschreibung
+            .col-md-10
+              .input-group
+                span.input-group-addon
+                  i.glyphicon.glyphicon-tag
+                textarea.form-control(type="text" id="description" name="description" rows="5")=group?group.description:undefined
+        .form-group
+          .col-md-12.text-right
+            button(type='submit' class='btn btn-primary') Speichern

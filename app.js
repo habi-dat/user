@@ -7,6 +7,9 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var passport = require('passport');
 var LdapStrategy = require('passport-ldapauth');
+var flash    = require('connect-flash');
+var http = require('http');
+var ldaphelper = require('./utils/ldaphelper');
 
 var routes = require('./routes/index');
 
@@ -33,19 +36,40 @@ app.use(require('express-session')({
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(flash());
 
+var oneDay = 86400000;
+app.use('/public', express.static(__dirname + '/public/',  { maxAge: oneDay }));
 
 app.use('/', routes);
 
 // passport config
 passport.use(new LdapStrategy(config));
 
+passport.serializeUser(function(user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function(user, done) {
+    if (user.isAdmin == undefined) {
+        ldaphelper.fetchIsAdmin(user.dn, function(isAdmin) {
+            console.log('fetched admin status: ' + isAdmin);
+            user.isAdmin = isAdmin;
+            done(null, user);
+        });
+    } else {
+        done(null, user);
+    }   
+});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
     var err = new Error('Not Found');
-    err.status = 404;
-    next(err);
+    res.status(err.status || 404);
+    res.render('error', {
+        message: err.message,
+        error: err
+    });
 });
 
 // error handlers
@@ -75,6 +99,6 @@ app.use(function(err, req, res, next) {
 
 module.exports = app;
 
-console.log("starting http server on: " + site.porthttp.toString());
+console.log("starting http server on: 80");
 var httpServer = http.createServer(app);
-httpServer.listen(site.porthttp);
+httpServer.listen(8090);

@@ -27,6 +27,9 @@
     "passport-local-mongoose": "^1.0.0",
     "serve-favicon": "^2.2.0",
     "should": "~2.1.0",
-    "passport-ldapauth": ">=1.0.0"
+    "passport-ldapauth": ">=1.0.0",
+    "connect-flash" : "~0.1.1",
+    "openldap_ssha": ">=0.0.8",
+    "discourse-sdk": ">=1.0.3"
   }
 }

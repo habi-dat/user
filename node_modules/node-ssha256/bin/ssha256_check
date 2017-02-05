@@ -1,0 +1,5 @@
+#!/usr/bin/env node
+// bin/ssha256
+var ssha256 = require('../lib/ssha256');
+
+console.log(ssha256.check(process.argv[2],process.argv[3]));

@@ -1,0 +1,8 @@
+extends ../layout
+include group
+
+block content
+    if message
+      .alert.alert-danger=message
+    +group_form('/group/edit', group)   
+      

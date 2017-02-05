@@ -1,0 +1,8 @@
+extends ../layout
+include user
+
+block content
+    if message
+      .alert.alert-danger=message
+    +user_form('/user/edit', user, groups)   
+      

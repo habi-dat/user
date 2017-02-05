@@ -1,0 +1,59 @@
+mixin user_form(action, user, groups)
+  form.form-horizontal.checkbox-form.validation-form(action=action method="post" role="form")
+        if user && user.dn
+          input.hidden(name="dn", value=user.dn)
+        legend Benutzer*in #{(user && action=="/user/edit"? "Bearbeiten": "Anlegen")}
+        .col-md-6
+          .form-group.required
+            label.control-label.col-md-4(for="givenName") Vorname
+            .col-md-8
+              .input-group
+                span.input-group-addon
+                  i.glyphicon.glyphicon-user
+                input.form-control(type="text" id="givenName" name="givenName" value=(user?user.givenName:undefined) required data-msg="Darf nicht leer sein")
+          .form-group.required
+            label.control-label.col-md-4(for="sn") Nachname
+            .col-md-8
+              .input-group
+                span.input-group-addon
+                  i.glyphicon.glyphicon-user
+                input.form-control(type="text" id="sn" name="sn" value=(user?user.sn:undefined) required)
+          .form-group.required
+            label.control-label.col-md-4 E-Mail
+            .col-md-8
+              .input-group
+                span.input-group-addon
+                  i.glyphicon.glyphicon-envelope
+                input.form-control(type="email" name="mail" value=(user?user.mail:undefined) required)                                   
+          .form-group
+            label.control-label.col-md-4 Passwort
+            .col-md-8
+              .input-group
+                span.input-group-addon
+                  i.glyphicon.glyphicon-lock
+                input.form-control(type="password" id="password" name="userPassword" value=(user?user.userPassword:undefined))     
+          .form-group   
+            label.control-label.col-md-4 
+            .col-md-8
+              .input-group
+                span.input-group-addon
+                  i.glyphicon.glyphicon-lock
+                input.form-control(type="password" id="password_confirmation" name="userPassword2"  value=(user?user.userPassword:undefined))
+        .col-md-6
+          .form-group
+            label.control-label.col-md-2 Gruppen
+            .col-md-10
+              .well
+                ul.list-group.checked-list-box(id="check-list-box")
+                  each group in groups
+                    if (group.cn)
+                      if user && user.dn && group.owner && group.owner.indexOf(user.dn) > -1
+                        li.list-group-item.active.admin(id=group.dn)=group.cn
+                      else if user && user.dn && group.member && group.member.indexOf(user.dn) > -1
+                        li.list-group-item.active(id=group.dn)=group.cn
+                      else
+                        li.list-group-item(id=group.dn)=group.cn
+                        //label #[input(type="checkbox" name="groups[]" value="group.dn" checked=(group.isMember ? "checked" : undefined))] #{group.cn}
+        .form-group
+          .col-md-12.text-right
+            button(type='submit' class='btn btn-primary') Speichern
