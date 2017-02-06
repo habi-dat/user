@@ -1,6 +1,8 @@
 extends layout
 
 block content
+    if notification && notification != ""
+      .alert.alert-success=notification
     .row
       .col-md-6
         .panel.panel-default

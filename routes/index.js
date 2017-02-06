@@ -25,32 +25,11 @@ var isLoggedInAdmin = function(req, res, next) {
     }
 };
 
-
-router.get('/', function (req, res) {
-    res.render('index', { user : req.user });
-});
-
-router.get('/register', function(req, res) {
-    res.render('register', { });
-});
-
-router.post('/register', function(req, res) {
-    Account.register(new Account({ username : req.body.username }), req.body.password, function(err, account) {
-        if (err) {
-            return res.render('register', { account : account });
-        }
-
-        passport.authenticate('local')(req, res, function () {
-            res.redirect('/');
-        });
-    });
-});
-
 router.get('/login', function(req, res) {
     res.render('login', { user : req.user , message: req.flash('error')[0]});
 });
 
-router.get('/start', function(req, res) {
+router.get('/', isLoggedIn, function(req, res) {
     if (req.user.isAdmin) {
         res.redirect('/show');
     } else {
@@ -113,7 +92,7 @@ router.post('/user/edit_me', isLoggedIn, function(req, res) {
 });
 
 router.post('/login', passport.authenticate('ldapauth', {session: true, failureRedirect: '/login',
- failureFlash:true, successReturnToOrRedirect: '/start'}));
+ failureFlash:true, successReturnToOrRedirect: '/'}));
 
 router.get('/logout', function(req, res) {
     req.logout();
@@ -128,7 +107,7 @@ router.get('/show', isLoggedInAdmin, function(req,res){
     ldaphelper.fetchUsers(function(users) {
         ldaphelper.fetchGroups(function(groups) {
             //console.log('users: ' + JSON.stringify(users));
-            res.render('show', {users: users, groups: groups});
+            res.render('show', {users: users, groups: groups, notification: req.flash('notification')});
         });
     });
 });
@@ -159,6 +138,7 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
               }});
             })
         } else {
+            req.flash('notification', 'Benutzer*in ' + req.body.givenName + ' ' + req.body.sn + ' angelegt');
             res.redirect('/show');
         }
     })
@@ -201,14 +181,10 @@ router.post('/user/edit', isLoggedInAdmin, function(req, res) {
               }});
             })
         } else {
+            req.flash('notification', 'Benutzer*in ' + req.body.givenName + ' ' + req.body.sn + ' geändert');
             res.redirect('/show');
         }
     })
-    console.log('givenName:' + req.body.givenName);
-    console.log('sn:' + req.body.sn);
-    console.log('userPassword:' + req.body.userPassword);
-    console.log('mail:' + req.body.mail);
-    console.log('groups:' + req.body.groups);
 });
 
 router.get('/user/delete/:id', isLoggedInAdmin, function(req, res) {
@@ -217,6 +193,7 @@ router.get('/user/delete/:id', isLoggedInAdmin, function(req, res) {
         if (err) {
             req.flash('error', 'Fehler beim Löschen von ' + req.params.id + ': ' + err);
         }
+        req.flash('notification', 'Benutzer*in ' + req.params.id + ' gelöscht');        
         res.redirect('/show');
     });
 });
@@ -243,11 +220,10 @@ router.post('/group/add', isLoggedInAdmin, function(req, res) {
                 description: req.body.description
               }});
         } else {
+            req.flash('notification', 'Gruppe ' + req.body.cn + ' angelegt');            
             res.redirect('/show');
         }
     })
-    console.log('cn:' + req.body.cn);
-    console.log('description:' + req.body.description);
 });
 
 router.post('/group/edit', isLoggedInAdmin, function(req, res) {
@@ -263,6 +239,7 @@ router.post('/group/edit', isLoggedInAdmin, function(req, res) {
                 dn: req.body.dn
               }});
         } else {
+            req.flash('notification', 'Gruppe ' + req.body.cn + ' geändert');               
             res.redirect('/show');
         }
     })
@@ -270,12 +247,13 @@ router.post('/group/edit', isLoggedInAdmin, function(req, res) {
     console.log('description:' + req.body.description);
 });
 
-router.get('/user/delete/:id', isLoggedInAdmin, function(req, res) {
+router.get('/group/delete/:id', isLoggedInAdmin, function(req, res) {
     console.log('deleting group ' + req.params.id);
     ldaphelper.deleteGroup(req.params.id, function(err) {
         if (err) {
             req.flash('error', 'Fehler beim Löschen von ' + req.params.id + ': ' + err);
         }
+        req.flash('notification', 'Gruppe ' + req.params.cn + ' gelöscht');           
         res.redirect('/show');
     });
 });
