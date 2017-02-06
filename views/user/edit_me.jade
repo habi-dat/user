@@ -1,0 +1,10 @@
+extends ../layout
+include user
+
+block content
+    if message
+      .alert.alert-danger=message
+    if notification && notification != ""
+      .alert.alert-success=notification      
+    +user_form('/user/edit_me', currentUser)   
+      
