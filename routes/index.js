@@ -9,8 +9,8 @@ var isLoggedIn = function(req, res, next) {
         next();
     } else {
         //  if they aren't redirect them to the home page
-        req.session.returnTo = req.path; 
-        res.redirect('/login');
+        req.session.returnTo = req.url; 
+        return res.redirect('/login');
     }
 };
 
@@ -20,8 +20,8 @@ var isLoggedInAdmin = function(req, res, next) {
         next();
     } else {
         //  if they aren't redirect them to the home page
-        req.session.returnTo = req.path; 
-        res.redirect('/login');
+        req.session.returnTo = req.url; 
+        return res.redirect('/login');
     }
 };
 
@@ -50,17 +50,70 @@ router.get('/login', function(req, res) {
     res.render('login', { user : req.user , message: req.flash('error')[0]});
 });
 
-router.post('/login', passport.authenticate('ldapauth', {session: true, failureRedirect: '/login',
- failureFlash:true}), function(req, res) {
-    if (req.session.returnTo) {
-        console.log('redirect to: ' + req.session.returnTo);
-        returnTo = req.session.returnTo;
-        delete req.session.returnTo;
-        res.redirect(returnTo);
-    } else {
+router.get('/start', function(req, res) {
+    if (req.user.isAdmin) {
         res.redirect('/show');
+    } else {
+        res.redirect('/edit_me');
     }
 });
+
+router.get('/edit_me', isLoggedIn, function(req, res) {
+    res.render('user/edit_me', {notification: req.flash('notification')});
+});
+
+router.post('/user/edit_me', isLoggedIn, function(req, res) {
+    ldaphelper.updateUser(req.body.dn, {
+        givenName: req.body.givenName,
+        sn: req.body.sn,
+        userPassword: req.body.userPassword,
+        userPassword2: req.body.userPassword2,
+        mail: req.body.mail
+    }, false, function(err) {
+        if (err) {
+              req.flash('error', 'Error: ' + err);
+              res.render('user/edit_me', {message: req.flash('error'), user: {
+                givenName: req.body.givenName,
+                sn: req.body.sn,
+                mail: req.body.mail,
+                userPassword: req.body.userPassword,
+                userPassword2: req.body.userPassword2,
+                dn: req.body.dn
+              }});
+        } else {
+              ldaphelper.fetchGroups(function(groups) {
+              req.flash('notification', 'Benutzer*innendaten geändert');
+              req.login({
+                    givenName: req.body.givenName,
+                    sn: req.body.sn,
+                    mail: req.body.mail,
+                    userPassword: req.body.userPassword,
+                    dn: req.body.dn,
+                    isAdmin: req.user.isAdmin
+                  }, function(err) {
+                        if (err) {
+                          req.flash('error', 'Error: ' + err);
+                          res.render('user/edit_me', {message: req.flash('error'), user: {
+                            givenName: req.body.givenName,
+                            sn: req.body.sn,
+                            mail: req.body.mail,
+                            userPassword: req.body.userPassword,
+                            userPassword2: req.body.userPassword2,
+                            dn: req.body.dn,
+                          }});
+                        } else {
+                          res.redirect('/edit_me');
+                        }
+
+                    });
+
+            })
+        }
+    })
+});
+
+router.post('/login', passport.authenticate('ldapauth', {session: true, failureRedirect: '/login',
+ failureFlash:true, successReturnToOrRedirect: '/start'}));
 
 router.get('/logout', function(req, res) {
     req.logout();
@@ -78,9 +131,6 @@ router.get('/show', isLoggedInAdmin, function(req,res){
             res.render('show', {users: users, groups: groups});
         });
     });
-
-    //res.send('ok');
-
 });
 
 router.get('/user/add', isLoggedInAdmin, function(req, res) {
@@ -137,7 +187,7 @@ router.post('/user/edit', isLoggedInAdmin, function(req, res) {
         mail: req.body.mail,
         groups: req.body.groups,
         adminGroups: req.body.admingroups
-    }, req.user, function(err) {
+    }, true, function(err) {
         if (err) {
             req.flash('error', 'Error: ' + err);
             ldaphelper.fetchGroups(function(groups) {

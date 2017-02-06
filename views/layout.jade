@@ -17,8 +17,13 @@ html
     script(type='text/javascript' src='/public/javascripts/bootbox.min.js')    
   body
     .container.col-md-8.col-md-offset-2.col-sm-offset-0.col-xs-offset-0.col-xs-12.col-sm-12
-      +nav("Benutzer*innenverwaltung", "dropdown_menu")
-        +nav_item( "/show" ) Übersicht   
+      +nav("habiDAT Benutzer*innen", "dropdown_menu")
+        if (session && !currentUser)
+          +nav_item( "/edit_me") Registrieren         
+        if (currentUser)
+          +nav_item( "/edit_me") Daten Ändern
+        if (currentUser && currentUser.isAdmin)
+          +nav_item( "/show" ) Übersicht   
         +nav_item( "/logout" ) Abmelden
       block content
 

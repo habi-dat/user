@@ -41,6 +41,12 @@ app.use(flash());
 var oneDay = 86400000;
 app.use('/public', express.static(__dirname + '/public/',  { maxAge: oneDay }));
 
+app.use(function(req,res,next){
+    res.locals.session = req.session;
+    res.locals.currentUser = req.user;
+    next();
+});
+
 app.use('/', routes);
 
 // passport config
@@ -95,6 +101,7 @@ app.use(function(err, req, res, next) {
         error: {}
     });
 });
+
 
 
 module.exports = app;

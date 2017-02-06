@@ -9,7 +9,6 @@ exports.fetchIsAdmin = function(userDn, done) {
     client.bind(config.server.bindDn, config.server.bindCredentials, function(err) {
         if (err) {
             console.log('Error connecting LDAP: ' + err);
-            return false;
         }
     });
 
@@ -27,7 +26,6 @@ exports.fetchIsAdmin = function(userDn, done) {
             } else {
                 admin = false;
             }
-            done(admin);
 
         });
           res.on('searchReference', function(referral) {
@@ -290,7 +288,7 @@ exports.addUser = function(user, currentUser, done) {
 
 };
 
-exports.updateUser = function(oldDn, user, currentUser, done) {
+exports.updateUser = function(oldDn, user, updateGroups, done) {
 
     if(!user.givenName) {
         done("Vorname fehlt");
@@ -307,6 +305,7 @@ exports.updateUser = function(oldDn, user, currentUser, done) {
             console.log('Error connecting LDAP: ' + err);
         }
     }); 
+
 
     var assignedGroups;
 
@@ -337,95 +336,96 @@ exports.updateUser = function(oldDn, user, currentUser, done) {
 
         console.log("groups JSON: "+JSON.stringify(assignedGroups));
 
-        exports.fetchGroups(function(groups) {
-            groups.forEach(function (group) {
-                var updatedMember = [],
-                    updated,
-                    updatedAdmin = [];
+        if (updateGroups) {
+            exports.fetchGroups(function(groups) {
+                groups.forEach(function (group) {
+                    var updatedMember = [],
+                        updated,
+                        updatedAdmin = [];
 
-                if (group.member && group.member instanceof Array) 
-                    updatedMember = group.member.slice();
-                else if (group.member != null && group.member != "")
-                    updatedMember.push(group.member);
-     
-                if (group.owner && group.owner instanceof Array) 
-                    updatedAdmin = group.owner.slice();
-                else if (group.owner != null && group.owner != "")
-                    updatedAdmin.push(group.owner);
+                    if (group.member && group.member instanceof Array) 
+                        updatedMember = group.member.slice();
+                    else if (group.member != null && group.member != "")
+                        updatedMember.push(group.member);
+         
+                    if (group.owner && group.owner instanceof Array) 
+                        updatedAdmin = group.owner.slice();
+                    else if (group.owner != null && group.owner != "")
+                        updatedAdmin.push(group.owner);
 
-                if (assignedGroups.indexOf(group.dn) > -1) {
-                    if (updatedMember.indexOf(oldDn) > -1 ) {
-                        if (changedDn) {
+                    if (assignedGroups.indexOf(group.dn) > -1) {
+                        if (updatedMember.indexOf(oldDn) > -1 ) {
+                            if (changedDn) {
+                                updated = true;
+                                updatedMember[updatedMember.indexOf(oldDn)] = dn;
+                            }
+                        } else {
+                            updatedMember.push(dn);
                             updated = true;
-                            updatedMember[updatedMember.indexOf(oldDn)] = dn;
                         }
                     } else {
-                        updatedMember.push(dn);
-                        updated = true;
-                    }
-                } else {
-                    if (updatedMember.indexOf(oldDn) > -1 ) {
-                        updatedMember.splice(updatedMember.indexOf(oldDn), 1);
-                        updated = true;
-
-                    }
-                }
-
-                if (updated) {
-                    var change = new ldap.Change( {
-                        operation: group.member == undefined?'add':'replace',
-                        modification: {
-                            member: updatedMember
-                        }
-                    });
-
-                    client.modify(group.dn, change, function(err ) {
-                        if (err) {
-                            console.log('error in group modify: ' + err);
-                            done(err);
-                        }
-                    });
-                }
-
-                // check admin groups
-
-                updated = false;
-                if (assignedAdminGroups.indexOf(group.dn) > -1) {
-                    if (updatedAdmin.indexOf(oldDn) > -1 ) {
-                        if (changedDn) {
+                        if (updatedMember.indexOf(oldDn) > -1 ) {
+                            updatedMember.splice(updatedMember.indexOf(oldDn), 1);
                             updated = true;
-                            updatedAdmin[updatedAdmin.indexOf(oldDn)] = dn;
+
+                        }
+                    }
+
+                    if (updated) {
+                        var change = new ldap.Change( {
+                            operation: group.member == undefined?'add':'replace',
+                            modification: {
+                                member: updatedMember
+                            }
+                        });
+
+                        client.modify(group.dn, change, function(err ) {
+                            if (err) {
+                                console.log('error in group modify: ' + err);
+                                done(err);
+                            }
+                        });
+                    }
+
+                    // check admin groups
+
+                    updated = false;
+                    if (assignedAdminGroups.indexOf(group.dn) > -1) {
+                        if (updatedAdmin.indexOf(oldDn) > -1 ) {
+                            if (changedDn) {
+                                updated = true;
+                                updatedAdmin[updatedAdmin.indexOf(oldDn)] = dn;
+                            }
+                        } else {
+                            updatedAdmin.push(dn);
+                            updated = true;
                         }
                     } else {
-                        updatedAdmin.push(dn);
-                        updated = true;
-                    }
-                } else {
-                    if (updatedAdmin.indexOf(oldDn) > -1 ) {
-                        updatedAdmin.splice(updatedAdmin.indexOf(oldDn), 1);
-                        updated = true;
+                        if (updatedAdmin.indexOf(oldDn) > -1 ) {
+                            updatedAdmin.splice(updatedAdmin.indexOf(oldDn), 1);
+                            updated = true;
 
-                    }
-                }
-
-                if (updated) {
-                    var change = new ldap.Change( {
-                        operation: group.owner == undefined?'add':'replace',
-                        modification: {
-                            owner: updatedAdmin
                         }
-                    });
+                    }
 
-                    client.modify(group.dn, change, function(err ) {
-                        if (err) {
-                            console.log('error in group modify: ' + err);
-                            done(err);
-                        }
-                    });
-                }                
+                    if (updated) {
+                        var change = new ldap.Change( {
+                            operation: group.owner == undefined?'add':'replace',
+                            modification: {
+                                owner: updatedAdmin
+                            }
+                        });
+
+                        client.modify(group.dn, change, function(err ) {
+                            if (err) {
+                                console.log('error in group modify: ' + err);
+                                done(err);
+                            }
+                        });
+                    }                
+                });
             });
-        });
-
+        }
         if (changedDn) {
             client.modifyDN(oldDn, dn, function(err) {
                 if (err) {
