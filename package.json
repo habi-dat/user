@@ -30,6 +30,6 @@
     "passport-ldapauth": ">=1.0.0",
     "connect-flash" : "~0.1.1",
     "openldap_ssha": ">=0.0.8",
-    "discourse-sdk": ">=1.0.3"
+    "discourse-api": ">=1.8.0"
   }
 }

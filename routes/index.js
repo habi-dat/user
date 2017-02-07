@@ -1,7 +1,9 @@
 var express = require('express');
 var passport = require('passport');
-var ldaphelper = require('../utils/ldaphelper')
+var ldaphelper = require('../utils/ldaphelper');
+var discourse = require('../utils/discoursehelper');
 var router = express.Router();
+var config    = require('../config/config.json');
 
 var isLoggedIn = function(req, res, next) {
     // if user is authenticated in the session, carry on 
@@ -138,6 +140,20 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
               }});
             })
         } else {
+            if (config.discourse.enabled) {
+                discourse.createUser({
+                    givenName: req.body.givenName,
+                    sn: req.body.sn,
+                    userPassword: req.body.userPassword,
+                    userPassword2: req.body.userPassword2,
+                    mail: req.body.mail,
+                    groups: req.body.groups,
+                    adminGroups: req.body.admingroups
+                }, function(err) {
+                    if (err)
+                      console.log('Error creating disocurse user: ' + err);
+                });
+            }
             req.flash('notification', 'Benutzer*in ' + req.body.givenName + ' ' + req.body.sn + ' angelegt');
             res.redirect('/show');
         }

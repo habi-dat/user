@@ -1,6 +1,7 @@
 var ldap = require('ldapjs');
 var ssha = require('openldap_ssha');
-var config    = require('../../config/config.json');
+var config    = require('../../config/config.json').ldap;
+var discourse = require('../discoursehelper');
 var client = ldap.createClient({
   url: config.server.url
 });

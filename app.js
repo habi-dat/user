@@ -50,7 +50,7 @@ app.use(function(req,res,next){
 app.use('/', routes);
 
 // passport config
-passport.use(new LdapStrategy(config));
+passport.use(new LdapStrategy(config.ldap));
 
 passport.serializeUser(function(user, done) {
   done(null, user);
