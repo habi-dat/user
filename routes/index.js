@@ -237,6 +237,7 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
                     mail: req.body.mail,
                     groups: req.body.groups,
                     adminGroups: req.body.admingroups,
+                    userPassword: req.body.userPassword,
                     uid: uniqueUID
                 }, function(err) {
                     if (err)
@@ -284,6 +285,22 @@ router.post('/user/edit', isLoggedInAdmin, function(req, res) {
               }});
             })
         } else {
+            if (config.discourse.enabled) {
+                discourse.updateUser({
+                    givenName: req.body.givenName,
+                    sn: req.body.sn,
+                    businessCategory: req.body.businessCategory,
+                    mail: req.body.mail,
+                    groups: req.body.groups,
+                    adminGroups: req.body.admingroups,
+                    userPassword: req.body.userPassword,
+                    uid: req.body.uid
+                }, function(err) {
+                    if (err)
+                      console.log('Error updating disocurse user: ' + err);
+                });
+            }            
+
             req.flash('notification', 'Benutzer*in ' + req.body.givenName + ' ' + req.body.sn + ' geändert');
             res.redirect('/show');
         }
@@ -291,12 +308,21 @@ router.post('/user/edit', isLoggedInAdmin, function(req, res) {
 });
 
 router.get('/user/delete/:id', isLoggedInAdmin, function(req, res) {
-    ldaphelper.deleteUser(req.params.id, function(err) {
-        if (err) {
-            req.flash('error', 'Fehler beim Löschen von ' + req.params.id + ': ' + err);
-        }
-        req.flash('notification', 'Benutzer*in ' + req.params.id + ' gelöscht');        
-        res.redirect('/show');
+    ldaphelper.fetchObject(req.params.id, function(user) {
+        ldaphelper.deleteUser(req.params.id, function(err) {
+            if (err) {
+                req.flash('error', 'Fehler beim Löschen von ' + req.params.id + ': ' + err);
+            } else {
+                if (config.discourse.enabled) {
+                    discourse.deleteUser(user.uid, function(err) {
+                        if (err)
+                          console.log('Error deleting discourse user: ' + err);
+                    });            
+                }
+            }
+            req.flash('notification', 'Benutzer*in ' + req.params.id + ' gelöscht');        
+            res.redirect('/show');
+        });
     });
 });
 
@@ -322,6 +348,17 @@ router.post('/group/add', isLoggedInAdmin, function(req, res) {
                 description: req.body.description
               }});
         } else {
+
+            if (config.discourse.enabled) {
+                discourse.createGroup({
+                    cn: req.body.cn,
+                    description: req.body.description
+                }, function(err) {
+                    if (err)
+                      console.log('Error creating discourse group: ' + err);
+                });
+            }
+
             req.flash('notification', 'Gruppe ' + req.body.cn + ' angelegt');            
             res.redirect('/show');
         }
@@ -341,6 +378,18 @@ router.post('/group/edit', isLoggedInAdmin, function(req, res) {
                 dn: req.body.dn
               }});
         } else {
+
+            if (config.discourse.enabled) {
+                var oldGroupName = req.body.dn.split(',')[0].replace('cn=', '');
+                discourse.updateGroup(oldGroupName, {
+                    cn: req.body.cn,
+                    description: req.body.description
+                }, function(err) {
+                    if (err)
+                      console.log('Error updating discourse group: ' + err);
+                });
+            }
+
             req.flash('notification', 'Gruppe ' + req.body.cn + ' geändert');               
             res.redirect('/show');
         }
@@ -351,6 +400,14 @@ router.get('/group/delete/:id', isLoggedInAdmin, function(req, res) {
     ldaphelper.deleteGroup(req.params.id, function(err) {
         if (err) {
             req.flash('error', 'Fehler beim Löschen von ' + req.params.id + ': ' + err);
+        } else {
+            if (config.discourse.enabled) {
+                var groupName = req.params.id.split(',')[0].replace('cn=', '');
+                discourse.deleteGroup(groupName, function(err) {
+                    if (err)
+                      console.log('Error deleting discourse group: ' + err);
+                }); 
+            }
         }
         req.flash('notification', 'Gruppe ' + req.params.cn + ' gelöscht');           
         res.redirect('/show');

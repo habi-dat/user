@@ -47,7 +47,7 @@ block content
                       td= group.cn
                       td.text-right
                           a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn) #[span.glyphicon.glyphicon-pencil]
-                          a.btn.btn-default.btn-sm.confirm(data-link='/user/delete/'+group.dn, data-confirmtext='Willst du die Gruppe ' + group.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+                          a.btn.btn-default.btn-sm.confirm(data-link='/group/delete/'+group.dn, data-confirmtext='Willst du die Gruppe ' + group.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
                       td.hidden.dn 
                         if (group.member && group.member instanceof Array)
                           each member in group.member
