@@ -31,7 +31,7 @@
     "connect-flash" : "~0.1.1",
     "openldap_ssha": ">=0.0.8",
     "discourse-api": ">=1.8.0",
-    "sendmail": ">=1.1.1",
+    "nodemailer": ">=3.0.2",
     "jsonfile": ">=2.4.0"
 
   }

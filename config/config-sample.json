@@ -6,7 +6,12 @@
       "email_from": "noreply.habidat.org",
       "base_url": "https://user.habidat.org"
     }
-  },    
+  },  
+  // for more information https://www.npmjs.com/package/smtp-connection
+  "smtp": {
+      "host": "mail.xaok.org",
+      "port": "25"
+  },  
   "ldap": { 
   	"server": {
 	    "url": "ldap://localhost:389",

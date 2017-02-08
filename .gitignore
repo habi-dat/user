@@ -1,5 +1,6 @@
 node_modules
 config/config.json
+data/activationStore.json
 
 # Compiled source #
 ###################
