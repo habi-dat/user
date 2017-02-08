@@ -2,6 +2,7 @@ var ldap = require('ldapjs');
 var ssha = require('openldap_ssha');
 var config    = require('../../config/config.json').ldap;
 var discourse = require('../discoursehelper');
+var mail = require('../mailhelper');
 var client = ldap.createClient({
   url: config.server.url
 });
@@ -289,10 +290,21 @@ exports.addUser = function(user, currentUser, done) {
         return done("Projekt fehlt");
     } else if (!user.mail || user.mail == "") {
         return done("E-mail Adresse fehlt");
+    } else if (!user.userPassword && !user.activation) {
+        return done("Passwort fehlt");
     } else if (user.userPassword && user.userPassword != user.userPassword2) {
         return done("Passwörter sind unterschiedlich");
     } else if (user.userPassword && !passwordValid(user.userPassword)) {
         return done("Passwort muss den Vorgaben entsprechen");
+    }
+
+    if (user.activation) {
+        var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_?!&%$#+-';
+        var uncrackable = '';
+        for (var i = 20; i > 0; --i) {
+          uncrackable += chars[Math.round(Math.random() * (chars.length - 1))];
+        }
+        user.userPassword = uncrackable;
     }
 
     client.bind(config.server.bindDn, config.server.bindCredentials, function(err) {
@@ -391,7 +403,13 @@ exports.addUser = function(user, currentUser, done) {
                 if (err) {
                     done(err);
                 }else {
-                    done(null, uniqueUID);
+                    if (user.activation) {
+                        mail.sendActivationEmail({uid: uniqueUID, mail: user.mail}, function(err){
+                            done(err, uniqueUID);
+                        });
+                    } else {
+                        done(null, uniqueUID);
+                    }
                 }
             });
         })

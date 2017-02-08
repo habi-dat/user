@@ -5,6 +5,15 @@ var client = new discourse(config.discourse.APIURL, config.discourse.APIKEY, con
 
 exports.createUser = function(user, done) {
 
+    if (user.activation) {
+        var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_?!&%$#+-';
+        var uncrackable = '';
+        for (var i = 20; i > 0; --i) {
+          uncrackable += chars[Math.round(Math.random() * (chars.length - 1))];
+        }
+        user.userPassword = uncrackable;
+    }
+
     client.put('admin/site_settings/enable_local_logins', { enable_local_logins:true }, function(error, bodyELL, httpCode) {
         console.log('enable_local_logins' + bodyELL);
 

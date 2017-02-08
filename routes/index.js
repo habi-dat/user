@@ -168,9 +168,9 @@ router.post('/user/lostpasswd', function(req, res) {
             req.flash('notification', 'Link zum Ändern des Passworts wurde per E-Mail verschickt');
             res.redirect('/login');
         } else {
-            mail.sendActivationEmail(user, function(err) {
+            mail.sendPasswordResetEmail(user, function(err) {
                 if (err) {
-                    console.log('Error sending activation mail: ' + err);
+                    console.log('Error sending password reset mail: ' + err);
                 } 
                 req.flash('notification', 'Link zum Ändern des Passworts wurde per E-Mail verschickt');
                 res.redirect('/login');                
@@ -238,7 +238,8 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
                     groups: req.body.groups,
                     adminGroups: req.body.admingroups,
                     userPassword: req.body.userPassword,
-                    uid: uniqueUID
+                    uid: uniqueUID,
+                    activation: req.body.activation
                 }, function(err) {
                     if (err)
                       console.log('Error creating disocurse user: ' + err);
