@@ -397,9 +397,16 @@ exports.addUser = function(user, currentUser, done) {
         })
     };
 
+    var uid = (user.givenName.substr(0,1)+user.sn)
+                .toLowerCase()
+                .replace('ä', 'ae')
+                .replace('ö', 'oe')
+                .replace('ü', 'ue')
+                .replace('ß', 'ss')
+                .replace(' ', '_')
+                .replace(/[\W]+/g,"")
+                .substr(0,15);
 
-    console.log('uid');
-    var uid = (user.givenName.substr(0,1)+user.sn).toLowerCase().substr(0,15);
     exports.getByUID(uid, function(user) {
         if (user != null) {
             exports.findUniqueUID(uid, 2, function(uniqueUID) {

@@ -54,7 +54,7 @@ exports.createUser = function(user, done) {
             				}
 
             				if(assignedAdminGroups.indexOf(dn) > -1) {
-            					client.put('groups/' + group.id + '/owners.json', { usernames: user.uid}, function(error, body, httpCode) {
+            					client.put('admin/groups/' + group.id + '/owners.json', { usernames: user.uid}, function(error, body, httpCode) {
             						console.log('group add owner body: ' + body);
             					});
             				}
@@ -128,11 +128,11 @@ exports.updateUser = function(user, done) {
                         }
 
                         if(assignedAdminGroups.indexOf(dn) > -1) {
-                            client.put('groups/' + group.id + '/owners.json', { usernames: user.uid}, function(error, body, httpCode) {
+                            client.put('admin/groups/' + group.id + '/owners.json', { usernames: user.uid}, function(error, body, httpCode) {
                                 console.log('group add owner body: ' + body);
                             });
                         } else {
-                            client.delete('groups/' + group.id + '/owners.json', { user_id: oldUser.id}, function(error, body, httpCode) {
+                            client.delete('admin/groups/' + group.id + '/owners.json', { user_id: oldUser.id}, function(error, body, httpCode) {
                             });                            
                         }
                     });
