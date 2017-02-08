@@ -2,9 +2,9 @@ extends layout
 
 block content
     if notification && notification != ""
-      .alert.alert-success=notification
+      .alert.alert-fadeout.alert-success=notification
     .row
-      .col-md-6
+      .col-md-7
         .panel.panel-default
           .panel-heading
             h2.panel-title Benutzer #[a.btn.btn-default.btn-sm(href='/user/add') #[span.glyphicon.glyphicon-plus]]
@@ -12,8 +12,9 @@ block content
             table.table.datatable(id='usertable')
               thead
                 tr
-                  th.col-md-5 ID
-                  th.col-md-5 Name
+                  th.col-md-3 ID
+                  th.col-md-4 Name
+                  th.col-md-3 Projekt
                   th.col-md-2.text-right Aktionen
                   th.hidden DN
               tbody
@@ -22,11 +23,12 @@ block content
                     tr
                       td= user.uid
                       td= user.cn
+                      td= user.businessCategory
                       td.text-right
                           a.btn.btn-default.btn-sm(href='/user/edit/'+user.dn) #[span.glyphicon.glyphicon-pencil]
                           a.btn.btn-default.btn-sm.confirm(data-link='/user/delete/'+user.dn, data-confirmtext='Willst du Benutzer*in ' + user.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
                       td.hidden.dn= user.dn
-      .col-md-6
+      .col-md-5
         .panel.panel-default
           .panel-heading
             h2.panel-title Gruppen #[a.btn.btn-default.btn-sm(href='/group/add') #[span.glyphicon.glyphicon-plus]]

@@ -1,9 +1,16 @@
-mixin user_form(action, user, groups)
+mixin user_form(action, user, admin)
   form.form-horizontal.checkbox-form.validation-form(action=action method="post" role="form")
         if user && user.dn
           input.hidden(name="dn", value=user.dn)
-        legend #{(user && action == "/user/edit_me"? "Daten Ändern" : "Benutzer*in" + (user && action=="/user/edit"? "Bearbeiten": "Anlegen"))}
+        if user && user.uid
+          input.hidden(name="uid", value=user.uid)            
+        legend #{(user && action == "/user/edit_me"? "Daten Ändern" : "Benutzer*in " + (user && action=="/user/edit"? "Bearbeiten": "Anlegen"))}
         .col-md-6
+          if user && user.uid != null
+            .form-group
+              label.control-label.col-md-4 Username
+              .col-md-8
+                p.form-control-static= user.uid
           .form-group.required
             label.control-label.col-md-4(for="givenName") Vorname
             .col-md-8
@@ -18,28 +25,47 @@ mixin user_form(action, user, groups)
                 span.input-group-addon
                   i.glyphicon.glyphicon-user
                 input.form-control(type="text" id="sn" name="sn" value=(user?user.sn:undefined) required)
+          if action != "/user/edit_me"
+            .form-group.required
+              label.control-label.col-md-4(for="sn") Projekt
+              .col-md-8
+                .input-group
+                  span.input-group-addon
+                    i.glyphicon.glyphicon-home
+                  input.form-control(type="text" id="businessCategory" name="businessCategory" value=(user?user.businessCategory:undefined) required)                  
+          else
+            .form-group
+              label.control-label.col-md-4 Projekt
+              .col-md-8
+                p.form-control-static= user.businessCategory
           .form-group.required
             label.control-label.col-md-4 E-Mail
             .col-md-8
               .input-group
                 span.input-group-addon
                   i.glyphicon.glyphicon-envelope
-                input.form-control(type="email" name="mail" value=(user?user.mail:undefined) required)                                   
-          .form-group
-            label.control-label.col-md-4 Passwort
-            .col-md-8
-              .input-group
-                span.input-group-addon
-                  i.glyphicon.glyphicon-lock
-                input.form-control(type="password" id="password" name="userPassword" value=(user?user.userPassword:undefined))     
-          .form-group   
-            label.control-label.col-md-4 
-            .col-md-8
-              .input-group
-                span.input-group-addon
-                  i.glyphicon.glyphicon-lock
-                input.form-control(type="password" id="password_confirmation" name="userPassword2"  value=(user?user.userPassword:undefined))
-        if (groups)
+                input.form-control(type="email" name="mail" value=(user?user.mail:undefined) required)    
+          if action == "/user/add"
+            .form-group
+              .col-md-4 &nbsp;
+              .col-md-8.checkbox
+                label #[input(id="activation_checkbox" type="checkbox" name="activation")] Benutzer*in Aktivierungsmail schicken 
+          div(id="password_fields")                                      
+            .form-group
+              label.control-label.col-md-4 Passwort
+              .col-md-8
+                .input-group
+                  span.input-group-addon
+                    i.glyphicon.glyphicon-lock
+                  input.form-control(type="password" data-toggle="tooltip" title="Min. 8 Zeichen, je min. 1 Groß- und 1 Kleinbuchstabe, 1 Zahl und 1 Sonderzeichen" id="password" name="userPassword" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$")     
+            .form-group   
+              label.control-label.col-md-4 
+              .col-md-8
+                .input-group
+                  span.input-group-addon
+                    i.glyphicon.glyphicon-lock
+                  input.form-control(type="password" id="password_confirmation" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$" name="userPassword2")
+        if (admin)
           .col-md-6
             .form-group
               label.control-label.col-md-2 Gruppen
@@ -56,7 +82,7 @@ mixin user_form(action, user, groups)
                           li.list-group-item(id=group.dn)=group.cn
                           //label #[input(type="checkbox" name="groups[]" value="group.dn" checked=(group.isMember ? "checked" : undefined))] #{group.cn}
 
-        if (groups)
+        if (admin)
           .form-group
             .col-md-12.text-right
               button(type='submit' class='btn btn-primary') Speichern
@@ -65,3 +91,50 @@ mixin user_form(action, user, groups)
             .form-group
               .col-md-6.text-right
                 button(type='submit' class='btn btn-primary') Speichern
+
+
+mixin password_form(action, user, token)
+  form.form-horizontal.checkbox-form.validation-form(action=action method="post" role="form")
+        input.hidden(name="uid", value=user.uid)    
+        input.hidden(name="token", value=token)                  
+        legend Passwort Ändern
+        .col-md-6
+          .form-group
+              label.control-label.col-md-4 Username
+              .col-md-8
+                p.form-control-static= user.uid
+          div(id="password_fields")                                      
+            .form-group
+              label.control-label.col-md-4 Passwort
+              .col-md-8
+                .input-group
+                  span.input-group-addon
+                    i.glyphicon.glyphicon-lock
+                  input.form-control(type="password" id="password"  data-toggle="tooltip" title="Min. 8 Zeichen, je min. 1 Groß- und 1 Kleinbuchstabe, 1 Zahl und 1 Sonderzeichen" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$" name="userPassword")
+            .form-group   
+              label.control-label.col-md-4 
+              .col-md-8
+                .input-group
+                  span.input-group-addon
+                    i.glyphicon.glyphicon-lock
+                  input.form-control(type="password" id="password_confirmation" name="userPassword2" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$")
+        .col-md-12
+          .form-group
+            .col-md-6.text-right
+              button(type='submit' class='btn btn-primary') Speichern
+
+mixin lostpasswd_form(action)
+  form.form-horizontal.checkbox-form.validation-form(action=action method="post" role="form")
+        legend Link zum Ändern des Passworts schicken
+        .col-md-6
+          .form-group.required
+            label.control-label.col-md-4 E-Mail
+            .col-md-8
+              .input-group
+                span.input-group-addon
+                  i.glyphicon.glyphicon-envelope
+                input.form-control(type="email" name="mail" required)    
+         .col-md-12
+          .form-group
+            .col-md-6.text-right
+              button(type='submit' class='btn btn-primary') Speichern

@@ -1,4 +1,12 @@
 {
+  "settings":
+  {
+    "activation":
+    {
+      "email_from": "noreply.habidat.org",
+      "base_url": "https://user.habidat.org"
+    }
+  },    
   "ldap": { 
   	"server": {
 	    "url": "ldap://localhost:389",

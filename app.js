@@ -38,7 +38,7 @@ app.use(passport.session());
 app.use(flash());
 
 var oneDay = 86400000;
-app.use(express.static(__dirname + '/public',  { maxAge: oneDay }));
+app.use('/public', express.static(path.join(__dirname, '/public'),  { maxAge: oneDay }));
 
 app.use(function(req,res,next){
     res.locals.session = req.session;
@@ -105,6 +105,6 @@ app.use(function(err, req, res, next) {
 
 module.exports = app;
 
-console.log("starting http server on: 80");
+console.log("starting http server on: 8090");
 var httpServer = http.createServer(app);
 httpServer.listen(8090);

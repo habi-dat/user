@@ -19,11 +19,14 @@ html
     .container.col-md-8.col-md-offset-2.col-sm-offset-0.col-xs-offset-0.col-xs-12.col-sm-12
       +nav("habiDAT Benutzer*innen", "dropdown_menu")
         if (session && !currentUser)
-          +nav_item( "/edit_me") Registrieren         
+          +nav_item( "/login") Login
+        if (session && !currentUser)
+          +nav_item( "/lostpasswd") Passwort vergessen?         
         if (currentUser)
           +nav_item( "/edit_me") Daten Ändern
         if (currentUser && currentUser.isAdmin)
           +nav_item( "/show" ) Übersicht   
-        +nav_item( "/logout" ) Abmelden
+        if (currentUser)
+          +nav_item( "/logout" ) Abmelden
       block content
 

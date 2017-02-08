@@ -130,6 +130,10 @@
         init();
     });
 
+    $('#activation_checkbox').click(function() {
+        $('#password_fields').toggle(1);
+    });
+
     $('.checkbox-form').submit(function() {
         var $hidden = $("<input type='hidden' class='hidden-groups' name='groups'/>");
         var $hiddenAdmin = $("<input type='hidden' class='hidden-groups' name='admingroups'/>");
@@ -149,6 +153,14 @@
         $(this).append($hidden);
         $(this).append($hiddenAdmin);
         return true;
+    });
+
+    $(".alert-fadeout").fadeTo(2000, 500).slideUp(500, function(){
+        $(".alert-fadeout").slideUp(500);
+    });
+
+    $(document).ready(function(){
+        $('[data-toggle="tooltip"]').tooltip(); 
     });
     
     $('a.confirm').click(function() {

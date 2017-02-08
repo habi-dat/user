@@ -4,6 +4,8 @@ var ldaphelper = require('../utils/ldaphelper');
 var discourse = require('../utils/discoursehelper');
 var router = express.Router();
 var config    = require('../config/config.json');
+var activation = require('../utils/activation');
+var mail = require('../utils/mailhelper');
 
 var isLoggedIn = function(req, res, next) {
     // if user is authenticated in the session, carry on 
@@ -27,8 +29,21 @@ var isLoggedInAdmin = function(req, res, next) {
     }
 };
 
+var title = function(page) {
+    return 'habiDAT - ' + page;
+}
+
 router.get('/login', function(req, res) {
-    res.render('login', { user : req.user , message: req.flash('error')[0]});
+
+    var errorText;
+    var error = req.flash('error');
+    if (error instanceof Array) {
+        errorText = error[0];
+    } else {
+        errorText = error;
+    }
+
+    res.render('login', { user : req.user , message: error, notification: req.flash('notification'), title: title('Login')});
 });
 
 router.get('/', isLoggedIn, function(req, res) {
@@ -40,7 +55,7 @@ router.get('/', isLoggedIn, function(req, res) {
 });
 
 router.get('/edit_me', isLoggedIn, function(req, res) {
-    res.render('user/edit_me', {notification: req.flash('notification')});
+    res.render('user/edit_me', {notification: req.flash('notification'), title: title('Daten Ändern')});
 });
 
 router.post('/user/edit_me', isLoggedIn, function(req, res) {
@@ -53,7 +68,7 @@ router.post('/user/edit_me', isLoggedIn, function(req, res) {
     }, false, function(err) {
         if (err) {
               req.flash('error', 'Error: ' + err);
-              res.render('user/edit_me', {message: req.flash('error'), user: {
+              res.render('user/edit_me', {message: req.flash('error'), title: title('Daten Ändern'), user: {
                 givenName: req.body.givenName,
                 sn: req.body.sn,
                 mail: req.body.mail,
@@ -74,7 +89,7 @@ router.post('/user/edit_me', isLoggedIn, function(req, res) {
                   }, function(err) {
                         if (err) {
                           req.flash('error', 'Error: ' + err);
-                          res.render('user/edit_me', {message: req.flash('error'), user: {
+                          res.render('user/edit_me', {message: req.flash('error'), title: title('Daten Ändern'), user: {
                             givenName: req.body.givenName,
                             sn: req.body.sn,
                             mail: req.body.mail,
@@ -89,6 +104,77 @@ router.post('/user/edit_me', isLoggedIn, function(req, res) {
                     });
 
             })
+        }
+    })
+});
+
+router.get('/passwd/:uid/:token', function(req, res) {
+    activation.isTokenValid(req.params.uid, req.params.token, function(valid) {
+        if (valid) {
+            res.render('user/passwd', {user: {uid: req.params.uid}, token: req.params.token, title: title('Passwort Ändern')});
+        } else {
+            req.flash('error', 'Link zum Ändern des Passworts in ungültig!');
+            res.redirect('/login');
+        }
+    });
+});
+
+router.post('/user/passwd', function(req, res) {
+    activation.isTokenValid(req.body.uid, req.body.token, function(valid) {
+        if (valid) {
+            ldaphelper.updatePassword(
+                req.body.uid, 
+                req.body.userPassword,
+                req.body.userPassword2, function(err) {
+                    if (err) {
+                        req.flash('error', 'Fehler: ' + err);
+                        res.render('user/passwd', {message: req.flash('error'), token: req.body.token, title: title('Passwort Ändern'), user: {
+                            uid: req.body.uid,
+                            userPassword: req.body.userPassword,
+                            userPassword2: req.body.userPassword2
+                        }});
+
+                    } else {
+                        activation.deleteToken(req.body.uid, function(err) {
+                            if (err) {
+                                req.flash('error', 'Fehler: ' + err);
+                                res.render('/user/passwd', {message: req.flash('error'), token: req.body.token, title: title('Passwort Ändern'), user: {
+                                    uid: req.body.uid,
+                                    userPassword: req.body.userPassword,
+                                    userPassword2: req.body.userPassword2
+                                }});
+                            } else {
+                                req.flash('notification', 'Passwort geändert');
+                                res.redirect('/login');
+                            }
+                        });
+                    }
+            });
+        } else {
+            req.flash('error', 'Token zum Ändern des Passworts in ungültig!');
+            res.redirect('login');
+        }
+    });
+});
+
+router.get('/lostpasswd', function(req, res) {
+    res.render('user/lostpasswd', {title: title('Passwort Vergessen')});
+});
+
+router.post('/user/lostpasswd', function(req, res) {
+    ldaphelper.getByEmail(req.body.mail, function(user, err) {
+        if (err || !user) {
+            console.log('Error sending activation mail: ' + err);
+            req.flash('notification', 'Link zum Ändern des Passworts wurde per E-Mail verschickt');
+            res.redirect('/login');
+        } else {
+            mail.sendActivationEmail(user, function(err) {
+                if (err) {
+                    console.log('Error sending activation mail: ' + err);
+                } 
+                req.flash('notification', 'Link zum Ändern des Passworts wurde per E-Mail verschickt');
+                res.redirect('/login');                
+            });
         }
     })
 });
@@ -109,14 +195,14 @@ router.get('/show', isLoggedInAdmin, function(req,res){
     ldaphelper.fetchUsers(function(users) {
         ldaphelper.fetchGroups(function(groups) {
             //console.log('users: ' + JSON.stringify(users));
-            res.render('show', {users: users, groups: groups, notification: req.flash('notification')});
+            res.render('show', {users: users, groups: groups, notification: req.flash('notification'), title: title('Übersicht')});
         });
     });
 });
 
 router.get('/user/add', isLoggedInAdmin, function(req, res) {
     ldaphelper.fetchGroups(function(groups) {
-        res.render('user/add', { groups: groups });
+        res.render('user/add', { groups: groups, title: title('Benutzer*in Anlegen') });
     });
 });
 
@@ -128,15 +214,18 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
         userPassword2: req.body.userPassword2,
         mail: req.body.mail,
         groups: req.body.groups,
-        adminGroups: req.body.admingroups
+        adminGroups: req.body.admingroups,
+        businessCategory: req.body.businessCategory,
+        activation: req.body.activation
     }, req.user,  function(err) {
         if (err) {
             req.flash('error', 'Error: ' + err);
             ldaphelper.fetchGroups( function(groups) {
-              res.render('user/add', {message: req.flash('error'), groups:groups, user: {
+              res.render('user/add', {message: req.flash('error'), groups:groups, title: title('Benutzer*in Anlegen'), user: {
                 givenName: req.body.givenName,
                 sn: req.body.sn,
-                mail: req.body.mail
+                mail: req.body.mail,
+                businessCategory: req.body.businessCategory
               }});
             })
         } else {
@@ -144,8 +233,7 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
                 discourse.createUser({
                     givenName: req.body.givenName,
                     sn: req.body.sn,
-                    userPassword: req.body.userPassword,
-                    userPassword2: req.body.userPassword2,
+                    businessCategory: req.body.businessCategory,
                     mail: req.body.mail,
                     groups: req.body.groups,
                     adminGroups: req.body.admingroups
@@ -158,18 +246,13 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
             res.redirect('/show');
         }
     })
-    console.log('givenName:' + req.body.givenName);
-    console.log('sn:' + req.body.sn);
-    console.log('userPassword:' + req.body.userPassword);
-    console.log('mail:' + req.body.mail);
-    console.log('groups:' + req.body.groups);
 });
 
 router.get('/user/edit/:id', isLoggedInAdmin, function(req, res) {
     console.log('admin: ' + req.user.isAdmin);
     ldaphelper.fetchGroups( function(groups) {
         ldaphelper.fetchObject(req.params.id, function(user) {
-            res.render('user/edit', { groups: groups, user:user});
+            res.render('user/edit', { groups: groups, user:user, title: title('Benutzer*in Bearbeiten')});
         });
     });
 });
@@ -182,18 +265,21 @@ router.post('/user/edit', isLoggedInAdmin, function(req, res) {
         userPassword2: req.body.userPassword2,
         mail: req.body.mail,
         groups: req.body.groups,
-        adminGroups: req.body.admingroups
+        adminGroups: req.body.admingroups,
+        businessCategory: req.body.businessCategory
     }, true, function(err) {
         if (err) {
             req.flash('error', 'Error: ' + err);
             ldaphelper.fetchGroups(function(groups) {
-              res.render('user/edit', {message: req.flash('error'), groups:groups, user: {
+              res.render('user/edit', {message: req.flash('error'), groups:groups, title: title('Benutzer*in Bearbeiten'), user: {
                 givenName: req.body.givenName,
                 sn: req.body.sn,
                 mail: req.body.mail,
                 userPassword: req.body.userPassword,
                 userPassword2: req.body.userPassword2,
-                dn: req.body.dn
+                dn: req.body.dn,
+                uid: req.body.uid,
+                businessCategory: req.body.businessCategory
               }});
             })
         } else {
@@ -204,7 +290,6 @@ router.post('/user/edit', isLoggedInAdmin, function(req, res) {
 });
 
 router.get('/user/delete/:id', isLoggedInAdmin, function(req, res) {
-    console.log('deleting user ' + req.params.id);
     ldaphelper.deleteUser(req.params.id, function(err) {
         if (err) {
             req.flash('error', 'Fehler beim Löschen von ' + req.params.id + ': ' + err);
@@ -216,12 +301,12 @@ router.get('/user/delete/:id', isLoggedInAdmin, function(req, res) {
 
 router.get('/group/edit/:id', isLoggedInAdmin, function(req, res) {
     ldaphelper.fetchObject(req.params.id, function(group) {
-        res.render('group/edit', { group:group});
+        res.render('group/edit', { group:group, title: title('Gruppe Bearbeiten')});
     });
 });
 
 router.get('/group/add', isLoggedInAdmin, function(req, res) {
-    res.render('group/add', { });
+    res.render('group/add', { title: title('Gruppe Anlegen')});
 });
 
 router.post('/group/add', isLoggedInAdmin, function(req, res) {
@@ -231,7 +316,7 @@ router.post('/group/add', isLoggedInAdmin, function(req, res) {
     }, function(err) {
         if (err) {
             req.flash('error', 'Error: ' + err);
-              res.render('group/add', {message: req.flash('error'),group: {
+              res.render('group/add', {message: req.flash('error'), title: title('Gruppe Anlegen'),group: {
                 cn: req.body.cn,
                 description: req.body.description
               }});
@@ -249,7 +334,7 @@ router.post('/group/edit', isLoggedInAdmin, function(req, res) {
     }, function(err) {
         if (err) {
             req.flash('error', 'Error: ' + err);
-              res.render('group/edit', {message: req.flash('error'),group: {
+              res.render('group/edit', {message: req.flash('error'), title: title('Gruppe Bearbeiten'),group: {
                 cn: req.body.cn,
                 description: req.body.description,
                 dn: req.body.dn
@@ -259,12 +344,9 @@ router.post('/group/edit', isLoggedInAdmin, function(req, res) {
             res.redirect('/show');
         }
     })
-    console.log('cn:' + req.body.cn);
-    console.log('description:' + req.body.description);
 });
 
 router.get('/group/delete/:id', isLoggedInAdmin, function(req, res) {
-    console.log('deleting group ' + req.params.id);
     ldaphelper.deleteGroup(req.params.id, function(err) {
         if (err) {
             req.flash('error', 'Fehler beim Löschen von ' + req.params.id + ': ' + err);
