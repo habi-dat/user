@@ -391,7 +391,7 @@ exports.addUser = function(user, currentUser, done) {
                 if (err) {
                     done(err);
                 }else {
-                    done();
+                    done(null, uniqueUID);
                 }
             });
         })

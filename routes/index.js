@@ -217,7 +217,7 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
         adminGroups: req.body.admingroups,
         businessCategory: req.body.businessCategory,
         activation: req.body.activation
-    }, req.user,  function(err) {
+    }, req.user,  function(err, uniqueUID) {
         if (err) {
             req.flash('error', 'Error: ' + err);
             ldaphelper.fetchGroups( function(groups) {
@@ -236,7 +236,8 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
                     businessCategory: req.body.businessCategory,
                     mail: req.body.mail,
                     groups: req.body.groups,
-                    adminGroups: req.body.admingroups
+                    adminGroups: req.body.admingroups,
+                    uid: uniqueUID
                 }, function(err) {
                     if (err)
                       console.log('Error creating disocurse user: ' + err);

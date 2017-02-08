@@ -5,9 +5,8 @@ var client = new discourse(config.discourse.APIURL, config.discourse.APIKEY, con
 
 exports.createUser = function(user, done) {
 
-	var uid = (user.givenName.substr(0,1)+user.sn).toLowerCase();
 
-	client.createUser(user.givenName + ' ' + user.sn, user.mail, uid, '', true, function(error, body, httpCode) {    
+	client.createUser(user.givenName + ' ' + user.sn, user.mail, user.uid, '', true, function(error, body, httpCode) {    
 		if (error) {
 			console.log("Error creating discoures user: " + error)
 			done(error);          
@@ -28,13 +27,13 @@ exports.createUser = function(user, done) {
         				var dn = 'cn=' + group.name + ',ou=groups,dc=willy-fred,dc=org';
 
         				if (assignedGroups.indexOf(dn) > -1) {
-        					client.put('groups/' + group.id + '/members.json', { usernames: uid}, function(error, body, httpCode) {
+        					client.put('groups/' + group.id + '/members.json', { usernames: user.uid}, function(error, body, httpCode) {
         						console.log('group add member body: ' + body);
         					});
         				}
 
         				if(assignedAdminGroups.indexOf(dn) > -1) {
-        					client.put('groups/' + group.id + '/owners.json', { usernames: uid}, function(error, body, httpCode) {
+        					client.put('groups/' + group.id + '/owners.json', { usernames: user.uid}, function(error, body, httpCode) {
         						console.log('group add owner body: ' + body);
         					});
         				}
