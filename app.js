@@ -37,6 +37,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 
+app.enable('trust proxy');
+
 var oneDay = 86400000;
 app.use('/public', express.static(path.join(__dirname, '/public'),  { maxAge: oneDay }));
 
