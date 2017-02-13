@@ -54,7 +54,7 @@ exports.createUser = function(user, done) {
 
             			groups.forEach(function(group) {
 
-            				var dn = 'cn=' + group.name + ',ou=groups,dc=willy-fred,dc=org';
+            				var dn = 'cn=' + group.name.toLowerCase() + ',ou=groups,dc=willy-fred,dc=org';
 
             				if (assignedGroups.indexOf(dn) > -1) {
             					client.put('groups/' + group.id + '/members.json', { usernames: user.uid}, function(error, body, httpCode) {
@@ -125,7 +125,7 @@ exports.updateUser = function(user, done) {
 
                     groups.forEach(function(group) {
 
-                        var dn = 'cn=' + group.name + ',ou=groups,dc=willy-fred,dc=org';
+                        var dn = 'cn=' + group.name.toLowerCase() + ',ou=groups,dc=willy-fred,dc=org';
 
                         if (assignedGroups.indexOf(dn) > -1) {
                             client.put('groups/' + group.id + '/members.json', { usernames: user.uid}, function(error, body, httpCode) {
@@ -156,7 +156,7 @@ exports.deleteGroup = function(cn, done) {
         if (httpCode == "200") {
             var groups = JSON.parse(body);
             groups.forEach(function(group) {
-                if (group.name == cn) {
+                if (group.name.toLowerCase() == cn.toLowerCase()) {
                     client.delete('admin/groups/' + group.id, {}, function(error, body, httpCode) {
                         console.log('deleted group: ' + JSON.stringify(body) + ' httpCode: ' + httpCode);   
                         done(error);                       
@@ -206,7 +206,7 @@ exports.updateGroup = function(oldCn, newGroup, done) {
         if (httpCode == "200") {
             var groups = JSON.parse(body);
             groups.forEach(function(group) {
-                if (group.name == oldCn) {
+                if (group.name.toLowerCase() == oldCn.toLowerCase()) {
 
                     group.name=newGroup.cn;
                     group.bio_raw=newGroup.description;
