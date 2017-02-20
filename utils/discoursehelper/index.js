@@ -3,6 +3,12 @@ var discourse = require('discourse-api');
 
 var client = new discourse(config.discourse.APIURL, config.discourse.APIKEY, config.discourse.USERNAME);
 
+Array.prototype.insensitiveIndexOf = function (searchElement, fromIndex) {
+    return this.map(function (value) {
+        return value.toLowerCase();
+    }).indexOf(searchElement.toLowerCase(), fromIndex);
+};
+
 exports.createUser = function(user, done) {
 
     if (user.activation) {
@@ -56,13 +62,13 @@ exports.createUser = function(user, done) {
 
             				var dn = 'cn=' + group.name.toLowerCase() + ',ou=groups,dc=willy-fred,dc=org';
 
-            				if (assignedGroups.indexOf(dn) > -1) {
+            				if (assignedGroups.insensitiveIndexOf(dn) > -1) {
             					client.put('groups/' + group.id + '/members.json', { usernames: user.uid}, function(error, body, httpCode) {
             						console.log('group add member body: ' + body);
             					});
             				}
 
-            				if(assignedAdminGroups.indexOf(dn) > -1) {
+            				if(assignedAdminGroups.insensitiveIndexOf(dn) > -1) {
             					client.put('admin/groups/' + group.id + '/owners.json', { usernames: user.uid}, function(error, body, httpCode) {
             						console.log('group add owner body: ' + body);
             					});
@@ -127,7 +133,7 @@ exports.updateUser = function(user, done) {
 
                         var dn = 'cn=' + group.name.toLowerCase() + ',ou=groups,dc=willy-fred,dc=org';
 
-                        if (assignedGroups.indexOf(dn) > -1) {
+                        if (assignedGroups.insensitiveIndexOf(dn) > -1) {
                             client.put('groups/' + group.id + '/members.json', { usernames: user.uid}, function(error, body, httpCode) {
                                 console.log('group add member body: ' + body);
                             });
@@ -136,7 +142,7 @@ exports.updateUser = function(user, done) {
                             });
                         }
 
-                        if(assignedAdminGroups.indexOf(dn) > -1) {
+                        if(assignedAdminGroups.insensitiveIndexOf(dn) > -1) {
                             client.put('admin/groups/' + group.id + '/owners.json', { usernames: user.uid}, function(error, body, httpCode) {
                                 console.log('group add owner body: ' + body);
                             });
