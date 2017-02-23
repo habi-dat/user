@@ -262,13 +262,8 @@ exports.getByUID = function(uid, done) {
 
 exports.findUniqueUID = function(uid, number, done) {
     var uniqueUID = uid;
-    if (number < 10) {
-        uniqueUID = uid.substr(0,14) + number;
-    } else if (number < 100) {
-        uniqueUID = uid.substr(0,13) + number;
-    } else if (number < 1000) {
-        uniqueUID = uid.substr(0,12) + number;
-    }
+    uniqueUID = uid + '_' + number;
+
     console.log('try uid: ' + uniqueUID);
     exports.getByUID(uniqueUID, function(user, err) {
         if (user == null) {
@@ -415,7 +410,7 @@ exports.addUser = function(user, currentUser, done) {
         })
     };
 
-    var uid = (user.givenName.substr(0,1)+user.sn)
+    var uid = (user.givenName+ '_' + user.sn)
                 .toLowerCase()
                 .replace('ä', 'ae')
                 .replace('ö', 'oe')
@@ -423,7 +418,7 @@ exports.addUser = function(user, currentUser, done) {
                 .replace('ß', 'ss')
                 .replace(' ', '_')
                 .replace(/[\W]+/g,"")
-                .substr(0,15);
+                .substr(0,35);
 
     exports.getByUID(uid, function(user) {
         if (user != null) {
