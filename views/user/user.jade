@@ -38,6 +38,7 @@ mixin user_form(action, user, admin)
               label.control-label.col-md-4 Projekt
               .col-md-8
                 p.form-control-static= user.businessCategory
+                input.hidden(name="businessCategory", value=(user?user.businessCategory:undefined)) 
           .form-group.required
             label.control-label.col-md-4 E-Mail
             .col-md-8

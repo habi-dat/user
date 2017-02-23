@@ -24,7 +24,7 @@ exports.sendActivationEmail = function(user, done) {
                 html: '<h1>Willkommen beim habiDAT!</h1>'+
                       '<p>Dein Account wurde angelegt, bitte klicke auf den folgenden Link um dein Passwort zu wählen: </p>'+
                       '<a href="'+ link +'">' + link + '</a>'+
-                      '<p>Für Information zur Benutzung der Plattform bitte <a href="">https://wiki.habidat.org/doku.php?id=benutzer_innenguide</a> klicken</p>'
+                      '<p>Für Information zur Benutzung der Plattform bitte <a href="https://wiki.habidat.org/doku.php?id=benutzer_innenguide">HIER</a> klicken</p>'
             }
 
             transport.sendMail(mailOptions, (error, info) => {

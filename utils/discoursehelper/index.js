@@ -138,7 +138,7 @@ exports.updateUser = function(user, done) {
                                 console.log('group add member body: ' + body);
                             });
                         } else {
-                            client.delete('groups/' + group.id + '/members.json', { user_id: oldUser.id}, function(error, body, httpCode) {
+                            client.delete('groups/' + group.id + '/members.json', { username: user.uid}, function(error, body, httpCode) {
                             });
                         }
 
@@ -147,7 +147,7 @@ exports.updateUser = function(user, done) {
                                 console.log('group add owner body: ' + body);
                             });
                         } else {
-                            client.delete('admin/groups/' + group.id + '/owners.json', { user_id: oldUser.id}, function(error, body, httpCode) {
+                            client.delete('admin/groups/' + group.id + '/owners.json', { username: user.uid}, function(error, body, httpCode) {
                             });                            
                         }
                     });
