@@ -124,7 +124,9 @@ router.post('/user/edit_me', isLoggedIn, function(req, res) {
 router.get('/passwd/:uid/:token', function(req, res) {
     activation.isTokenValid(req.params.uid, req.params.token, function(valid) {
         if (valid) {
-            res.render('user/passwd', {user: {uid: req.params.uid}, token: req.params.token, title: title('Passwort Ändern')});
+            ldaphelper.getByUID(req.params.uid, function(user) {
+                res.render('user/passwd', {user: user, token: req.params.token, title: title('Passwort Ändern')});
+            });
         } else {
             req.flash('error', 'Link zum Ändern des Passworts in ungültig!');
             res.redirect('/login');
@@ -141,21 +143,27 @@ router.post('/user/passwd', function(req, res) {
                 req.body.userPassword2, function(err) {
                     if (err) {
                         req.flash('error', 'Fehler: ' + err);
-                        res.render('user/passwd', {message: req.flash('error'), token: req.body.token, title: title('Passwort Ändern'), user: {
-                            uid: req.body.uid,
-                            userPassword: req.body.userPassword,
-                            userPassword2: req.body.userPassword2
-                        }});
-
+                        ldaphelper.getByUID(req.body.uid, function(user) {
+                            res.render('user/passwd', {message: req.flash('error'), token: req.body.token, title: title('Passwort Ändern'), user: {
+                                uid: req.body.uid,
+                                cn: user.cn,
+                                userPassword: req.body.userPassword,
+                                userPassword2: req.body.userPassword2
+                            }});
+                        });                        
+    
                     } else {
                         activation.deleteToken(req.body.uid, function(err) {
                             if (err) {
                                 req.flash('error', 'Fehler: ' + err);
-                                res.render('/user/passwd', {message: req.flash('error'), token: req.body.token, title: title('Passwort Ändern'), user: {
-                                    uid: req.body.uid,
-                                    userPassword: req.body.userPassword,
-                                    userPassword2: req.body.userPassword2
-                                }});
+                                ldaphelper.getByUID(req.body.uid, function(user) {
+                                    res.render('user/passwd', {message: req.flash('error'), token: req.body.token, title: title('Passwort Ändern'), user: {
+                                        uid: req.body.uid,
+                                        cn: user.cn,
+                                        userPassword: req.body.userPassword,
+                                        userPassword2: req.body.userPassword2
+                                    }});
+                                });  
                             } else {
                                 req.flash('notification', 'Passwort geändert');
                                 res.redirect('/login');

@@ -108,9 +108,13 @@ mixin password_form(action, user, token)
         legend Passwort Ändern
         .col-md-6
           .form-group
-              label.control-label.col-md-4 Username
+              label.control-label.col-md-4 Interner Username
               .col-md-8
-                p.form-control-static= user.uid
+                p.form-control-static= user.uid          
+          .form-group
+              label.control-label.col-md-4 Loginname
+              .col-md-8
+                p.form-control-static= user.cn
           div(id="password_fields")                                      
             .form-group
               label.control-label.col-md-4 Passwort
