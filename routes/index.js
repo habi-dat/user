@@ -98,7 +98,20 @@ router.post('/user/edit_me', isLoggedIn, function(req, res) {
                             dn: req.body.dn,
                           }});
                         } else {
-                          res.redirect('/edit_me');
+
+                           if (config.discourse.enabled) {
+                                discourse.updateUser({
+                                    givenName: req.body.givenName,
+                                    sn: req.body.sn,
+                                    businessCategory: req.body.businessCategory,
+                                    mail: req.body.mail,
+                                    uid: req.body.uid
+                                }, function(err) {
+                                    if (err)
+                                      console.log('Error updating disocurse user: ' + err);
+                                });
+                            }                                        
+                            res.redirect('/edit_me');
                         }
 
                     });
