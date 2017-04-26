@@ -32,7 +32,8 @@
     "openldap_ssha": ">=0.0.8",
     "discourse-api": ">=1.8.0",
     "nodemailer": ">=3.0.2",
-    "jsonfile": ">=2.4.0"
-
+    "jsonfile": ">=2.4.0",
+    "async": ">=2.3.0",
+    "nodemon": ">=1.11.0"
   }
 }
