@@ -1,0 +1,57 @@
+extends layout
+
+block content
+    if notification && notification != ""
+      .alert.alert-fadeout.alert-success=notification
+    .row
+      .col-md-6
+        .panel.panel-default
+          .panel-heading
+            h2.panel-title Gruppen #[a.btn.btn-default.btn-sm(href='/group/add') #[span.glyphicon.glyphicon-plus]]
+          .panel-body
+            table.table.datatable(id='grouptable_cat')
+              thead
+                tr
+                  th.col-md-10 Name
+                  th.col-md-2.text-right Aktionen
+              tbody
+                each group in groups
+                  if (group.cn)
+                    tr
+                      td.groupcn= group.cn
+                      td.text-right
+                          a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn) #[span.glyphicon.glyphicon-pencil]
+                          a.btn.btn-default.btn-sm.confirm(data-link='/group/delete/'+group.dn, data-confirmtext='Willst du die Gruppe ' + group.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+      .col-md-6
+        .panel.panel-default
+          .panel-heading
+            h2.panel-title Discourse Kategorien #[a.btn.btn-default.btn-sm(href='/cat/add') #[span.glyphicon.glyphicon-plus]]
+          .panel-body
+            table.table.datatable_nosort(id='cattable')
+              thead
+                tr
+                  th.col-md-10 Name
+                  th.col-md-2.text-right Aktionen
+                  th.hidden Groups
+              tbody
+                if categories
+                  each category in categories
+                    tr
+                      td= category.name
+                      td.text-right
+                          a.btn.btn-default.btn-sm(href='/cat/edit/'+category.id) #[span.glyphicon.glyphicon-pencil]
+                          a.btn.btn-default.btn-sm.confirm(data-link='/category/delete/'+category.id, data-confirmtext='Willst du die Kategorie ' + category.name + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+                      td.hidden.groups 
+                        if (category.groups && category.groups instanceof Array)
+                          each group in category.groups
+                            .groupname= group.group_name   
+                    each subCategory in category.subCategories  
+                      tr
+                        td(style="padding-left:50px;")= subCategory.name
+                        td.text-right
+                            a.btn.btn-default.btn-sm(href='/cat/edit/'+subCategory.id) #[span.glyphicon.glyphicon-pencil]
+                            a.btn.btn-default.btn-sm.confirm(data-link='/category/delete/'+subCategory.id, data-confirmtext='Willst du die Kategorie ' + subCategory.name + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+                        td.hidden.groups 
+                          if (subCategory.groups && subCategory.groups instanceof Array)
+                            each group in subCategory.groups
+                              .groupname= group.group_name 

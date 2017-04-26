@@ -1,0 +1,7 @@
+[
+{
+	"client_id": "discourse",
+	"client_secret": "d9239fklyxcv092140uosjv02ur309usv0ju09",
+	"redirect_uris": ["https://discourse.willy-fred.org"	]
+}
+]

@@ -25,7 +25,9 @@ html
         if (currentUser)
           +nav_item( "/edit_me") Daten Ändern
         if (currentUser && currentUser.isAdmin)
-          +nav_item( "/show" ) Übersicht   
+          +nav_item( "/show" ) Benutzer*innen <-> Gruppen   
+        if (currentUser && currentUser.isAdmin)
+          +nav_item( "/show_cat" ) Gruppen <-> Kategorien  
         if (currentUser)
           +nav_item( "/logout" ) Abmelden
       block content

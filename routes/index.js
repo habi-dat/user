@@ -215,8 +215,19 @@ router.get('/ping', function(req, res){
 router.get('/show', isLoggedInAdmin, function(req,res){
     ldaphelper.fetchUsers(function(users) {
         ldaphelper.fetchGroups(function(groups) {
-            //console.log('users: ' + JSON.stringify(users));
-            res.render('show', {users: users, groups: groups, notification: req.flash('notification'), title: title('Übersicht')});
+            res.render('show', {users: users, groups: groups, notification: req.flash('notification'), title: title('Benutzer <-> Gruppen')});
+
+        });
+    });
+});
+
+router.get('/show_cat', isLoggedInAdmin, function(req,res){
+    ldaphelper.fetchGroups(function(groups) {
+        //console.log('users: ' + JSON.stringify(users));
+        discourse.getCategories(function (err, categories) {
+            if (err) req.flash('notification', err);
+            res.render('show_cat', {groups: groups, categories: categories, notification: req.flash('notification'), title: title('Gruppen <-> Kategorien')});
+
         });
     });
 });
