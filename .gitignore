@@ -1,5 +1,7 @@
+upload
 node_modules
 config/config.json
+config/clients.json
 data/activationStore.json
 
 # Compiled source #
