@@ -79,7 +79,7 @@ mixin user_form(action, user, admin)
               label.control-label.col-md-2 Gruppen
               .col-md-10
                 .well
-                  ul.list-group.checked-list-box(id="check-list-box")
+                  ul.list-group.list-user-groups.checked-list-box(id="check-list-box")
                     each group in groups
                       if (group.cn)
                         if user && user.dn && group.owner && group.owner.indexOf(user.dn) > -1

@@ -10,6 +10,7 @@ var LdapStrategy = require('passport-ldapauth');
 var flash    = require('connect-flash');
 var http = require('http');
 var ldaphelper = require('./utils/ldaphelper');
+var multer = require('multer');
 
 var routes = require('./routes/index');
 
@@ -36,6 +37,8 @@ app.use(require('express-session')({
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
+
+app.use(multer({dest:'./upload/'}).single('logo'));
 
 app.enable('trust proxy');
 

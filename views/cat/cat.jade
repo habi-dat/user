@@ -1,0 +1,70 @@
+mixin cat_form(action, category, groups, parents)
+  form.form-horizontal.checkbox-form.validation-form(action=action method="post" role="form" enctype="multipart/form-data")
+        if category && category.id
+          input.hidden(name="id", value=category.id)
+        legend Kategorie #{(category && action=="/cat/edit"? "Bearbeiten": "Anlegen")}
+        .col-md-6
+          .form-group.required
+            label.control-label.col-md-3(for="cn") Name
+            .col-md-9
+              .input-group
+                span.input-group-addon
+                  i.glyphicon.glyphicon-th-list
+                input.form-control(type="text" id="name" name="name" value=(category?category.name:undefined) required data-msg="Darf nicht leer sein")
+          if category && category.image
+            .form-group
+              label.control-label.col-md-3 Aktuelles Logo
+              .col-md-9
+                p.form-control-static
+                  img(src=category.image width="100%")  
+            .form-group
+              .col-md-3 &nbsp;
+              .col-md-9.checkbox
+                label #[input(id="deleteimage_checkbox" type="checkbox" name="delete_image")] Logo entfernen
+          .form-group(id='cat_image_upload')
+            if category && category.image
+              label.control-label.col-md-3(for="logo") Neues Logo
+            else
+              label.control-label.col-md-3(for="logo") Logo
+            .col-md-9
+              .input-group
+                span.input-group-addon
+                  i.glyphicon.glyphicon-picture
+                input.form-control(type="file" id="logo" name="logo")
+          .form-group
+            label.control-label.col-md-3(for="parent") Oberkategorie
+            .col-md-9
+              .input-group
+                span.input-group-addon
+                  i.glyphicon.glyphicon-arrow-up
+                select.form-control(id="parent" name="parent")
+                  option(value=-1) Keine
+                  each parent in parents
+                    if category && parent.id == category.parent
+                      option(value=parent.id selected)=parent.name
+                    else
+                      option(value=parent.id)=parent.name
+          .form-group.required
+            label.control-label.col-md-3(for="color") Farbe
+            .col-md-9
+              .input-group.colorpicker-component.colorpicker-input
+                span.input-group-addon
+                  i
+                input.form-control(type="text" id="color" name="color" value=(category?category.color:'#FF0000') required data-msg="Darf nicht leer sein")     
+
+
+        .col-md-6
+          .form-group
+            label.control-label.col-md-2 Gruppen
+            .col-md-10
+              .well
+                ul.list-group.list-cat-groups.checked-list-box(id="check-list-box")
+                  each group in groups
+                    if (group.cn)
+                      if category && category.groups && category.groups.indexOf(group.cn) > -1
+                        li.list-group-item.active(id=group.cn)=group.cn
+                      else
+                        li.list-group-item(id=group.cn)=group.cn            
+        .form-group
+          .col-md-12.text-right
+            button(type='submit' class='btn btn-primary') Speichern

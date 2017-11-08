@@ -96,7 +96,7 @@
   });
 
   $(document).ready(function () {
-    $('.list-group.checked-list-box .list-group-item').each(function () {
+    $('.list-user-groups.checked-list-box .list-group-item').each(function () {
         
         // Settings
         var $widget = $(this),
@@ -179,8 +179,106 @@
         init();
     });
 
+    $('.list-cat-groups.checked-list-box .list-group-item').each(function () {
+        
+        // Settings
+        var $widget = $(this),
+            $checkbox = $('<input type="checkbox" class="hidden" name="'+$widget.prop('id')+'"/>'),
+            color = ($widget.data('color') ? $widget.data('color') : "primary"),
+            style = "btn-"; // ($widget.data('style') == "button" ? "btn-" : "list-group-item-"),
+            settings = {
+                on: {
+                    icon: 'glyphicon glyphicon-check'
+                },
+                off: {
+                    icon: 'glyphicon glyphicon-unchecked'
+                }
+            };
+            
+        if ($widget.hasClass('active')) {
+            $widget.data('state', 'on');
+        } else {
+            $widget.data('state', 'off');
+        }
+        $widget.css('cursor', 'pointer');
+        $widget.append($checkbox);
+
+        // Event Handlers
+        $widget.on('click', function () {
+            var $state = $widget.data('state');
+            //$checkbox.prop('checked', !$checkbox.is(':checked'));
+            //$checkbox.triggerHandler('change');
+            if ($state == "on") {
+                $widget.data('state', 'off');
+            } else {
+                $widget.data('state', 'on');
+            }            
+            updateDisplay();
+        });
+        $checkbox.on('change', function () {
+            updateDisplay();
+        });
+          
+
+        // Actions
+        function updateDisplay() {
+            var $state = $widget.data('state');
+
+            // Set the button's state
+            if ($state == "on") {
+                $widget.addClass(style + 'primary active');
+            } else {
+                $widget.removeClass(style + 'primary active');
+            }
+            // Set the button's icon
+            $widget.find('.state-icon')
+                .removeClass()
+                .addClass('state-icon ' + settings[$widget.data('state')].icon);
+
+        }
+
+        // Initialization
+        function init() {
+            
+            
+            updateDisplay();
+
+            // Inject the icon if applicable
+            if ($widget.find('.state-icon').length == 0) {
+                $widget.prepend('<span class="state-icon ' + settings[$widget.data('state')].icon + '"></span>');
+            }
+        }
+        init();
+    });
+
+
+    //colorpicker
+
+    $('.colorpicker-input').colorpicker({
+            customClass: 'colorpicker-2x',
+            align: 'left',
+            sliders: {
+                saturation: {
+                    maxLeft: 200,
+                    maxTop: 200
+                },
+                hue: {
+                    maxTop: 200
+                },
+                alpha: {
+                    maxTop: 200
+                }
+            }
+        });
+
+
+
     $('#activation_checkbox').click(function() {
         $('#password_fields').toggle(1);
+    });
+
+    $('#deleteimage_checkbox').click(function() {
+        $('#cat_image_upload').toggle(1);
     });
 
     $('.checkbox-form').submit(function() {
@@ -203,6 +301,7 @@
         $(this).append($hiddenAdmin);
         return true;
     });
+
 
     $(".alert-fadeout").fadeTo(2000, 500).slideUp(500, function(){
         $(".alert-fadeout").slideUp(500);
