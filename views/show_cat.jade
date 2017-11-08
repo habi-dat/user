@@ -3,6 +3,8 @@ extends layout
 block content
     if notification && notification != ""
       .alert.alert-fadeout.alert-success=notification
+    if error && error != ""
+      .alert.alert-fadeout.alert-danger=error      
     .row
       .col-md-6
         .panel.panel-default
@@ -40,7 +42,7 @@ block content
                       td= category.name
                       td.text-right
                           a.btn.btn-default.btn-sm(href='/cat/edit/'+category.id) #[span.glyphicon.glyphicon-pencil]
-                          a.btn.btn-default.btn-sm.confirm(data-link='/category/delete/'+category.id, data-confirmtext='Willst du die Kategorie ' + category.name + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+                          a.btn.btn-default.btn-sm.confirm(data-link='/cat/delete/'+category.id, data-confirmtext='Willst du die Kategorie ' + category.name + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
                       td.hidden.groups 
                         if (category.groups && category.groups instanceof Array)
                           each group in category.groups
@@ -50,8 +52,8 @@ block content
                         td(style="padding-left:50px;")= subCategory.name
                         td.text-right
                             a.btn.btn-default.btn-sm(href='/cat/edit/'+subCategory.id) #[span.glyphicon.glyphicon-pencil]
-                            a.btn.btn-default.btn-sm.confirm(data-link='/category/delete/'+subCategory.id, data-confirmtext='Willst du die Kategorie ' + subCategory.name + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+                            a.btn.btn-default.btn-sm.confirm(data-link='/cat/delete/'+subCategory.id, data-confirmtext='Willst du die Kategorie ' + subCategory.name + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
                         td.hidden.groups 
                           if (subCategory.groups && subCategory.groups instanceof Array)
                             each group in subCategory.groups
-                              .groupname= group.group_name 
+                              .groupname= group

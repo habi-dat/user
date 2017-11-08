@@ -226,7 +226,7 @@ router.get('/show_cat', isLoggedInAdmin, function(req,res){
         //console.log('users: ' + JSON.stringify(users));
         discourse.getCategories(function (err, categories) {
             if (err) req.flash('notification', err);
-            res.render('show_cat', {groups: groups, categories: categories, notification: req.flash('notification'), title: title('Gruppen <-> Kategorien')});
+            res.render('show_cat', {groups: groups, categories: categories, error: req.flash('error'), notification: req.flash('notification'), title: title('Gruppen <-> Kategorien')});
 
         });
     });
@@ -444,6 +444,87 @@ router.get('/group/delete/:id', isLoggedInAdmin, function(req, res) {
         }
         req.flash('notification', 'Gruppe ' + req.params.cn + ' gelöscht');           
         res.redirect('/show');
+    });
+});
+
+
+router.get('/cat/edit/:id', isLoggedInAdmin, function(req, res) {
+    ldaphelper.fetchGroups(function(groups) {
+        discourse.getParentCategories(function(err, parents){
+            if (err) {
+                req.flash('notification', err);
+                req.redirect('/show_cat')
+            } else {
+                discourse.getCategoryWithParent(req.params.id, function(err, category) {
+                    if (err) {
+                        req.flash('notification', err);
+                        req.redirect('/show_cat')
+                    } else {
+                        res.render('cat/edit', { category: category, groups: groups, parents: parents, title: title('Kategorie Bearbeiten') });
+                    }
+                });
+                
+            }
+        });
+
+    });
+});
+
+router.get('/cat/add', isLoggedInAdmin, function(req, res) {
+    ldaphelper.fetchGroups(function(groups) {
+        discourse.getParentCategories(function(err, parents){
+            if (err) {
+                req.flash('notification', err);
+                req.redirect('/show_cat')
+            } else {
+                res.render('cat/add', { groups: groups, parents: parents, title: title('Kategorie Anlegen') });
+            }
+        });
+
+    });
+});
+
+router.post('/cat/add', isLoggedInAdmin, function(req, res) {
+    console.log('create cat body: ' + JSON.stringify(req.body));
+    console.log('create cat file: ' + JSON.stringify(req.file));
+    var groups = [];
+    if (req.body.groups) {
+        groups = JSON.parse(req.body.groups);
+    }
+    discourse.createCategory({
+        name: req.body.name,
+        color: req.body.color,
+        parent: req.body.parent,
+        logo: req.file,
+        groups: groups
+    }, function(err) {
+        if (err) {
+            req.flash('error', 'Error: ' + err);
+            ldaphelper.fetchGroups(function(groups) {
+                discourse.getParentCategories(function(err, parents){
+                    if (err) {
+                        req.flash('notification', err);
+                        req.redirect('/show_cat')
+                    } else {
+                        res.render('cat/add', { category: {name:req.body.name, color:req.body.color, parent:req.body.parent, groups:req.body.groups}, groups: groups, message: req.flash('error'), parents: parents, title: title('Kategorie Anlegen') });
+                    }
+                });
+            });
+        } else {
+            req.flash('notification', 'Kategorie ' + req.body.name + ' angelegt');            
+            res.redirect('/show_cat');
+        }
+    })
+});
+
+router.get('/cat/delete/:id', isLoggedInAdmin, function(req, res) {
+    discourse.deleteCategory(req.params.id, function(err) {
+        if (err) {
+            req.flash('error', 'Fehler beim Löschen der Kategorie ' + req.params.id + ': ' + err);
+        } else {
+            req.flash('notification', 'Kategorie ' + req.params.id + ' gelöscht');  
+        }   
+        res.redirect('/show_cat');
     });
 });
 

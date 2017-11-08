@@ -6,6 +6,7 @@ html
     title= title
     meta(name='viewport', content='width=device-width, initial-scale=1.0')
     link(href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css', rel='stylesheet', media='screen')
+    link(href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.5.1/css/bootstrap-colorpicker.min.css', rel='stylesheet')
     link(rel="stylesheet" href="/public/stylesheets/dataTables.bootstrap.min.css")
     link(rel="stylesheet" href="/public/stylesheets/jquery.dataTables.min.css")
     link(rel="stylesheet" href="/public/stylesheets/style.css")
@@ -15,20 +16,21 @@ html
     script(type='text/javascript' src='/public/javascripts/bootstrap.min.js')
     script(type='text/javascript' src='/public/javascripts/custom.js')     
     script(type='text/javascript' src='/public/javascripts/bootbox.min.js')    
+    script(type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.5.1/js/bootstrap-colorpicker.min.js')
   body
+    +nav("habiDAT Benutzer*innen", "dropdown_menu")
+      if (session && !currentUser)
+        +nav_item( "/login") Login
+      if (session && !currentUser)
+        +nav_item( "/lostpasswd") Passwort vergessen?         
+      if (currentUser)
+        +nav_item( "/edit_me") Daten Ändern
+      if (currentUser && currentUser.isAdmin)
+        +nav_item( "/show" ) Benutzer*innen <-> Gruppen   
+      if (currentUser && currentUser.isAdmin)
+        +nav_item( "/show_cat" ) Gruppen <-> Kategorien  
+      if (currentUser)
+        +nav_item( "/logout" ) Abmelden
     .container.col-md-8.col-md-offset-2.col-sm-offset-0.col-xs-offset-0.col-xs-12.col-sm-12
-      +nav("habiDAT Benutzer*innen", "dropdown_menu")
-        if (session && !currentUser)
-          +nav_item( "/login") Login
-        if (session && !currentUser)
-          +nav_item( "/lostpasswd") Passwort vergessen?         
-        if (currentUser)
-          +nav_item( "/edit_me") Daten Ändern
-        if (currentUser && currentUser.isAdmin)
-          +nav_item( "/show" ) Benutzer*innen <-> Gruppen   
-        if (currentUser && currentUser.isAdmin)
-          +nav_item( "/show_cat" ) Gruppen <-> Kategorien  
-        if (currentUser)
-          +nav_item( "/logout" ) Abmelden
       block content
 

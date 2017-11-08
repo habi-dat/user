@@ -1,0 +1,8 @@
+extends ../layout
+include cat
+
+block content
+    if message && message != ""
+      .alert.alert-danger=message
+    +cat_form('/cat/edit', category, groups, parents)
+      
