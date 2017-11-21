@@ -51,7 +51,7 @@ block content
                           each group in category.groups
                             .groupname= group 
                     each subCategory in category.subCategories  
-                      tr.hidden
+                      tr.hidden.sub-category
                         td(style="padding-left:50px;")= subCategory.name
                         td.text-right
                             a.btn.btn-default.btn-sm(href='/cat/edit/'+subCategory.id) #[span.glyphicon.glyphicon-pencil]

@@ -78,14 +78,25 @@
     $('#cattable tbody').on('click', 'span.subcategories-button', function () {
         var tr = $(this).closest('tr').next('tr');
         if (tr.hasClass('hidden')) {
-            tr.removeClass('hidden');
             $(this).removeClass('glyphicon-plus').addClass('glyphicon-minus');
         } else {
-            tr.addClass('hidden');
             $(this).removeClass('glyphicon-minus').addClass('glyphicon-plus');
-
         }
 
+        var switchRow = function(tableRow) {
+            if (tableRow.hasClass('sub-category')) {
+                if (tableRow.hasClass('hidden')) {
+                    tableRow.removeClass('hidden');
+                } else {
+                    tableRow.addClass('hidden');
+                }            
+                switchRow(tableRow.next('tr'));
+            } else {
+                return;
+            }
+        };
+
+        switchRow(tr);
     } );
 
     $('#cattable tbody').on( 'click', 'tr', function () {
