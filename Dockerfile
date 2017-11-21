@@ -1,4 +1,4 @@
-FROM node:boron
+FROM node:carbon
 
 RUN git clone https://github.com/soudis/habidat-user.git
 WORKDIR /habidat-user
