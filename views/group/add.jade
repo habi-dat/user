@@ -1,8 +1,8 @@
 extends ../layout
 include group
+include ../various
 
 block content
-    if message
-      .alert.alert-danger=message
+    +notification(null, message, responses)
     +group_form('/group/add', group)   
       

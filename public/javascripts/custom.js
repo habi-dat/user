@@ -8,15 +8,6 @@
     } );
 
 
-    var table = $('.datatable_nosort').dataTable( {
-        "info":           false,
-        "paging":         false,
-        "order": [],
-        "oLanguage": {
-          "sSearch": "Suche: "
-        }
-    } );
-
     $('[data-toggle="tooltip"]').tooltip(); 
 
     $('#usertable tbody').on( 'click', 'tr', function () {
@@ -72,6 +63,29 @@
           }
         });
     }
+    } );
+
+
+    var cat_table = $('#cattable').dataTable( {
+        "info":           false,
+        "paging":         false,
+        "order": [],
+        "oLanguage": {
+          "sSearch": "Suche: "
+        }
+    });
+
+    $('#cattable tbody').on('click', 'span.subcategories-button', function () {
+        var tr = $(this).closest('tr').next('tr');
+        if (tr.hasClass('hidden')) {
+            tr.removeClass('hidden');
+            $(this).removeClass('glyphicon-plus').addClass('glyphicon-minus');
+        } else {
+            tr.addClass('hidden');
+            $(this).removeClass('glyphicon-minus').addClass('glyphicon-plus');
+
+        }
+
     } );
 
     $('#cattable tbody').on( 'click', 'tr', function () {

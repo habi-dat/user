@@ -1,8 +1,8 @@
 extends ../layout
+include ../various
 include user
 
 block content
-    if message
-      .alert.alert-danger=message
+    +notification(null, message, responses)
     +user_form('/user/add', user, groups)   
       

@@ -2,4 +2,4 @@
 
 cd /app  
 npm install  
-./node_modules/nodemon/bin/nodemon.js --legacy-watch app.js
+./node_modules/nodemon/bin/nodemon.js --legacy-watch app.js --ignore './data/'

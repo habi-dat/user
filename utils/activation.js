@@ -1,7 +1,7 @@
 var jsonfile = require('jsonfile');
 var path = require('path');
 
-var activationStoreFile = path.join(__dirname, '../../data/activationStore.json');
+var activationStoreFile = path.join(__dirname, '../data/activationStore.json');
 
 exports.createAndSaveToken = function(uid, done) {
 

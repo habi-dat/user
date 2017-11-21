@@ -1,8 +1,8 @@
 extends layout
+include various
 
 block content
-    if notification && notification != ""
-      .alert.alert-fadeout.alert-success=notification
+    +notification(notification, error, responses)
     .row
       .col-md-7
         .panel.panel-default

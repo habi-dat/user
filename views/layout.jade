@@ -26,9 +26,9 @@ html
       if (currentUser)
         +nav_item( "/edit_me") Daten Ändern
       if (currentUser && currentUser.isAdmin)
-        +nav_item( "/show" ) Benutzer*innen <-> Gruppen   
+        +nav_item( "/show" ) Benutzer*innen / Gruppen   
       if (currentUser && currentUser.isAdmin)
-        +nav_item( "/show_cat" ) Gruppen <-> Kategorien  
+        +nav_item( "/show_cat" ) Gruppen / Kategorien  
       if (currentUser)
         +nav_item( "/logout" ) Abmelden
     .container.col-md-8.col-md-offset-2.col-sm-offset-0.col-xs-offset-0.col-xs-12.col-sm-12

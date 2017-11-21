@@ -1,6 +1,6 @@
 var nodemailer = require('nodemailer');
-var activation = require('../activation');
-var config = require('../../config/config.json');
+var activation = require('./activation');
+var config = require('../config/config.json');
 
 exports.sendActivationEmail = function(user, done) {
     activation.createAndSaveToken(user.uid, function(token, err) {
@@ -15,7 +15,7 @@ exports.sendActivationEmail = function(user, done) {
             var link = config.settings.activation.base_url + '/passwd/' + user.uid + '/'+token.token;
 
             var transport = nodemailer.createTransport(config.smtp);       
-
+            console.log('after transport');
 
             var mailOptions = {
                 from: (config.settings.activation.email_from?config.settings.activation.email_from:'no-reply@habidat.org'),

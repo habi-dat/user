@@ -1,10 +1,8 @@
 extends ../layout
 include user
+include ../various
 
 block content
-    if message
-      .alert.alert-danger=message
-    if notification && notification != ""
-      .alert.alert-success=notification      
-    +user_form('/user/edit_me', currentUser)   
+    +notification(notification, message, responses)
+    +user_form('/edit_me', currentUser)   
       

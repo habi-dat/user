@@ -1,0 +1,19 @@
+mixin notification(notification, error, responses)
+    div(id="messages")
+      if notification && notification != "" || error && error != ""
+        .alert.fade.in.alert-white.rounded(class=notification && notification != ""?"alert-success":"alert-danger") 
+          button.close(type="button",data-dismiss="alert",aria-hidden="true") × 
+          .icon 
+            i.glyphicon(class=notification && notification != ""?"glyphicon-ok-sign":"glyphicon-exclamation-sign") 
+          raw #{notification && notification != ""?notification:error} &nbsp;  
+          button.btn.btn-default.btn-sm(data-toggle="collapse", href="#collapseresponse") 
+            small Details
+          if responses            
+            .collapse.panel-collapse(id="collapseresponse")   
+              ul.list-group
+              each response in responses 
+                if response.message
+                  if (response.status == true) 
+                    li.list-group-item.list-group-item-success.alert-white #[.icon #[i.glyphicon.glyphicon-ok-sign]] #[small #{response.message}]
+                  else
+                    li.list-group-item.list-group-item-danger.alert-white #[.icon #[i.glyphicon.glyphicon-exclamation-sign]] #[small #{response.message}]           

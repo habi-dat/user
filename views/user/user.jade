@@ -4,7 +4,7 @@ mixin user_form(action, user, admin)
           input.hidden(name="dn", value=user.dn)
         if user && user.uid
           input.hidden(name="uid", value=user.uid)            
-        legend #{(user && action == "/user/edit_me"? "Daten Ändern" : "Benutzer*in " + (user && action=="/user/edit"? "Bearbeiten": "Anlegen"))}
+        legend #{(user && action == "/edit_me"? "Daten Ändern" : "Benutzer*in " + (user && action=="/user/edit"? "Bearbeiten": "Anlegen"))}
         .col-md-6
           if user && user.uid != null
             .form-group
@@ -25,7 +25,7 @@ mixin user_form(action, user, admin)
                 span.input-group-addon
                   i.glyphicon.glyphicon-user
                 input.form-control(type="text" id="sn" name="sn" value=(user?user.sn:undefined) required)
-          if action != "/user/edit_me"
+          if action != "/edit_me"
             .form-group.required
               label.control-label.col-md-4(for="sn") Projekt
               .col-md-8
@@ -39,7 +39,7 @@ mixin user_form(action, user, admin)
               .col-md-8
                 p.form-control-static= user.businessCategory
                 input.hidden(name="businessCategory", value=(user?user.businessCategory:undefined)) 
-          if action != "/user/edit_me"                
+          if action != "/edit_me"                
             .form-group.required
               label.control-label.col-md-4 E-Mail
               .col-md-8
