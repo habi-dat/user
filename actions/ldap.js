@@ -197,8 +197,16 @@ var modifyUser = async function(user) {
 
         var actions = [];
 
-        var cn = user.givenName + ' ' + user.surname;
-        var dn = 'cn=' + cn + ',ou=users,'+ config.ldap.server.base;
+        var cn, dn, givenName = user.givenName, surname = user.surname;
+        if (user.givenName === false) {
+        	givenName = oldUser.givenName;
+        } 
+        if (user.surname === false) {
+        	surname = oldUser.sn;
+        }
+       	cn = givenName + ' ' + surname;
+       	dn = 'cn=' + cn + ',ou=users,'+ config.ldap.server.base;
+
         var changedDn = (user.surname != false || user.givenName != false) && dn != oldDn;
         
         if (changedDn) {

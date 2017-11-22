@@ -1,10 +1,8 @@
 extends ../layout
 include user
+include ../various
 
 block content
-    if message
-      .alert.alert-danger=message
-    if notification && notification != ""
-      .alert.alert-success=notification      
+	+notification(notification, message, responses)   
     +password_form('/user/passwd', user, token)   
       
