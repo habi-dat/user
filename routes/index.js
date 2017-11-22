@@ -81,7 +81,7 @@ router.post('/edit_me', isLoggedIn, function(req, res) {
             dn: req.body.dn,
             isAdmin: req.user.isAdmin}, function(err) {
             if (!err && !response.status) {
-               req.flash('error', 'Fehler beim Ändern der Daten' + err?': ' + err: '');
+               req.flash('error', 'Fehler beim Ändern der Daten');
                res.render('user/edit_me', {message: req.flash('error'), responses: response.responses, title: title('Daten Ändern'), user: {
                  givenName: req.body.givenName,
                  sn: req.body.sn,

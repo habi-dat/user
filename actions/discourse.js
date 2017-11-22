@@ -373,7 +373,7 @@ var modifyUser = function(user) {
 	        	var actions = [];
 	        	var updatedFields = [];
 
-		        if (oldUser.email != user.email) {
+		        if (user.email !== false && oldUser.email != user.email) {
 		        	actions.push(new Promise((resolve, reject) => { 
 		        		put('users/'+ user.uid +'/preferences/email', {email: user.email})
 		        			.then((result) => resolve('E-Mail'), (error) => reject(error)); 
