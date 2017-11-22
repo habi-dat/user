@@ -176,7 +176,7 @@ router.get('/passwd/:uid/:token', function(req, res) {
 router.post('/user/passwd', function(req, res) {
     activation.isTokenValid(req.body.uid, req.body.token, function(valid) {
         if (valid) {
-            var response = actions.user.modify({
+            actions.user.modify({
                 dn: req.body.dn,
                 uid: req.body.uid, 
                 givenName: false,
@@ -187,23 +187,24 @@ router.post('/user/passwd', function(req, res) {
                 passwordRepeat: req.body.userPassword2, 
                 member: false, 
                 owner: false
+            }).then((response) => {
+                if (!response.status) {
+                    req.flash('error', 'Fehler beim Setzen des Passworts');
+                    ldaphelper.getByUID(req.body.uid, function(user) {
+                        res.render('user/passwd', {message: req.flash('error'), responses: response.responses, user: user, token: req.params.token, title: title('Passwort Ändern')});
+                    });                                   
+                } else {
+                    activation.deleteToken(req.body.uid, function(err) {
+                        if (err) {
+                            req.flash('error', 'Passwort geändert, Fehler bei Löschen des Tokens, bitte die Admin*as kontaktieren: ' + err);
+                        } else {
+                            req.flash('notification', 'Passwort geändert');
+                        }
+                        req.flash('responses', response.responses);
+                        res.redirect('/login');                    
+                    });
+                }
             });
-            if (!response.status) {
-                req.flash('error', 'Fehler beim Setzen des Passworts');
-                ldaphelper.getByUID(req.body.uid, function(user) {
-                    res.render('user/passwd', {message: req.flash('error'), responses: response.responses, user: user, token: req.params.token, title: title('Passwort Ändern')});
-                });                                   
-            } else {
-                activation.deleteToken(req.body.uid, function(err) {
-                    if (err) {
-                        req.flash('error', 'Passwort geändert, Fehler bei Löschen des Tokens, bitte die Admin*as kontaktieren: ' + err);
-                    } else {
-                        req.flash('notification', 'Passwort geändert');
-                    }
-                    req.flash('responses', response.responses);
-                    res.redirect('/login');                    
-                });
-            }
         } else {
             req.flash('error', 'Token zum Ändern des Passworts in ungültig oder abgelaufen!');
             res.redirect('login');
