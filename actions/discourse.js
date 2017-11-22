@@ -548,7 +548,6 @@ var buildCategory = function(category) {
         color: category.color.substring(1,7),
         text_color: "FFFFFF",
         parent_category_id: '',
-        uploaded_logo_id: '',
         allow_badges:true,
         sort_order: '',
         topic_featured_link_allowed:true,
@@ -572,7 +571,11 @@ var buildCategory = function(category) {
     		}
     	})
     	.then((logoId) => {
-    		post.uploaded_logo_id = logoId;
+    		if (logoId) {
+    			post.uploaded_logo_id = logoId;	
+    		} else if (category.delete_image){
+    			post.uploaded_logo_id = '';
+    		}
     		return post;
     	});
 }

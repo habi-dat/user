@@ -532,6 +532,7 @@ router.post('/cat/edit', isLoggedInAdmin, function(req, res) {
         name: req.body.name,
         color: req.body.color,
         parent: req.body.parent,
+        delete_image: req.body.delete_image,
         logo: req.file,
         groups: JSON.parse(req.body.groups)
     };
