@@ -103,7 +103,8 @@ mixin user_form(action, user, admin)
 
 mixin password_form(action, user, token)
   form.form-horizontal.checkbox-form.validation-form(action=action method="post" role="form")
-        input.hidden(name="uid", value=user.uid)    
+        input.hidden(name="uid", value=user.uid) 
+        input.hidden(name="dn", value=user.dn)      
         input.hidden(name="token", value=token)                  
         legend Passwort Ändern
         .col-md-6

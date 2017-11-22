@@ -177,6 +177,7 @@ router.post('/user/passwd', function(req, res) {
     activation.isTokenValid(req.body.uid, req.body.token, function(valid) {
         if (valid) {
             var response = actions.user.modify({
+                dn: req.body.dn,
                 uid: req.body.uid, 
                 givenName: false,
                 surname: false,
