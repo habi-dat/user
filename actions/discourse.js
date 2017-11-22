@@ -123,7 +123,7 @@ var del = function(url, parameters)  {
 // rejects with error message if user is not found
 var getUser = function(uid) {
 	return new Promise((resolve, reject) => {
-			get('u/'+ uid + '.json?stats=false', {})
+			get('users/'+ uid + '.json', {})
 			    	.then(userObject => { 
 				    			var user = userObject.user;
 						        if (!userObject){
@@ -420,13 +420,17 @@ var modifyUser = function(user) {
 				memberUpdate.then(memberActions => {
 					Promise.all(actions.concat(memberActions))
 						.then(updatedFields => {
-							checkUserGroups({user: user})
-								.then(() => {
-									resolve({status: true, message: 'DISCOURSE: Benutzer*in upgedated: (' + updatedFields.clean(undefined).join(', ') + ')'});
-								})
-								.catch((error) => {
-							    	resolve({status: false, message: 'DISCOURSE: Ändern von Benutzer*in ' + user.uid + ' fehlgeschlagen: ' +  error});
-								})
+							if (user.member === false && user.owner === false) {
+								resolve({status: true, message: 'DISCOURSE: Benutzer*in upgedated: (' + updatedFields.clean(undefined).join(', ') + ')'});								
+							} else {
+								checkUserGroups({user: user})
+									.then(() => {
+										resolve({status: true, message: 'DISCOURSE: Benutzer*in upgedated: (' + updatedFields.clean(undefined).join(', ') + ')'});
+									})
+									.catch((error) => {
+								    	resolve({status: false, message: 'DISCOURSE: Ändern von Benutzer*in ' + user.uid + ' fehlgeschlagen: ' +  error});
+									});
+							}
 
 						}, error => {						
 					    	resolve({status: false, message: 'DISCOURSE: Ändern von Benutzer*in ' + user.uid + ' fehlgeschlagen: ' +  error});
