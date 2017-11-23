@@ -32,14 +32,9 @@ var addToGroup = function(group, uid, owner) {
 		} else {
 			url = 'groups/' + group.id + '/members.json';
 		}
-		client.put(url, { usernames: uid}, function(error, body, httpCode) {
-			if (error || httpCode != "200" || body && body.success==false) {
-				resolve();
-			} else {
-				// groups/ID/members.json always returns OK, so it's not added to updatedFields
-            	resolve();
-			}
-		});
+		put(url, {usernames: uid})
+			.then(() => resolve())
+			.catch(() => resolve());		
 	});
 }
 
@@ -53,25 +48,20 @@ var removeFromGroup = function(group, uid, owner) {
 		} else {
 			url = 'groups/' + group.id + '/members.json';
 		}
-		client.delete(url, { username: uid}, function(error, body, httpCode) {
-			if (error || httpCode != "200"|| body && body.success==false) {
-				resolve();
-			} else {
-				// groups/ID/members.json always returns OK, so it's not added to updatedFields
-            	resolve();
-			}
-		});
+		del(url, {username:uid})
+			.then(() => resolve())
+			.catch(() => resolve());
 	});
 }
 
 var put = function(url, parameters) {
 	return new Promise((resolve, reject) => {
-		console.log('PUT URL: ' + url);
+		console.log('PUT URL: ' + url + ', parameters: ' + JSON.stringify(parameters));
         client.put(url, parameters, function(error, body, httpCode) {
         	if (body instanceof Object) {
-           		console.log('PUT response: ' + JSON.stringify(body));
+           		console.log('PUT response: HTTP(' + httpCode + '), body: ' + JSON.stringify(body));
         	} else {
-           		console.log('PUT response: ' + body);
+           		console.log('PUT response: HTTP(' + httpCode + '), body: ' + body);
            	}
         	if (error || httpCode != "200" || body && body.success == false) {
                 reject('HTTP(' + httpCode + ') URL: ' + url + ', Parameters: ' + JSON.stringify(parameters) + ', Error: ' +  error + ', Body: ' + body);  
@@ -84,7 +74,13 @@ var put = function(url, parameters) {
 
 var get = function(url, parameters)  {
 	return new Promise((resolve, reject) => {
+		console.log('GET URL: ' + url + ', parameters: ' + JSON.stringify(parameters));
         client.get(url, parameters, function (error, body, httpCode) {
+        	if (body instanceof Object) {
+           		console.log('GET response: HTTP(' + httpCode + '), body: ' + JSON.stringify(body));
+        	} else {
+           		console.log('GET response: HTTP(' + httpCode + '), body: ' + body);
+           	}
     		if (httpCode == "200") {
     			resolve(JSON.parse(body));
     		} else {
@@ -96,7 +92,13 @@ var get = function(url, parameters)  {
 
 var post = function(url, parameters)  {
 	return new Promise((resolve, reject) => {
+		console.log('POST URL: ' + url + ', parameters: ' + JSON.stringify(parameters));
         client.post(url, parameters, function (error, body, httpCode) {
+        	if (body instanceof Object) {
+           		console.log('POST response: HTTP(' + httpCode + '), body: ' + JSON.stringify(body));
+        	} else {
+           		console.log('POST response: HTTP(' + httpCode + '), body: ' + body);
+           	}
     		if (httpCode == "200") {
     			resolve(JSON.parse(body));
     		} else {
@@ -108,7 +110,13 @@ var post = function(url, parameters)  {
 
 var del = function(url, parameters)  {
 	return new Promise((resolve, reject) => {
+		console.log('DEL URL: ' + url + ', parameters: ' + JSON.stringify(parameters));
         client.delete(url, parameters, function (error, body, httpCode) {
+        	if (body instanceof Object) {
+           		console.log('DEL response: HTTP(' + httpCode + '), body: ' + JSON.stringify(body));
+        	} else {
+           		console.log('DEL response: HTTP(' + httpCode + '), body: ' + body);
+           	}
     		if (httpCode == "200") {
     			resolve(JSON.parse(body));
     		} else {
@@ -129,8 +137,9 @@ var getUser = function(uid) {
 						        if (!userObject){
 						        	reject('Benutzer*in nicht gefunden');
 						        } else {
-					    			get('users/'+ user.username + '/emails.json', {})
+					    			get('users/'+ user.username + '/emails.json', {context: 'admin/users/'+user.id+'/'+uid})
 					    				.then((emailObject) => {
+					    					console.log('found email for ' + uid + ': ' + emailObject.email);
 					    					user.email = emailObject.email;
 					    					resolve(user);
 					    				})
@@ -282,13 +291,12 @@ var createUser = async function(user) {
 	var createUser = function(user) {
 		return new Promise((resolve, reject) => {
 
-	        var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_?!&%$#+-';
+	        var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_?!';
 	        var uncrackable = '';
 	        for (var i = 20; i > 0; --i) {
 	          uncrackable += chars[Math.round(Math.random() * (chars.length - 1))];
 	        }
 	        password = uncrackable;
-
 
 	    	client.createUser(user.givenName + ' ' + user.surname + ' - ' + user.project, user.email, user.uid, password, true, function(error, body, httpCode) { 
 		    	if (error || httpCode != "200" || body && body.success == false) {
@@ -299,9 +307,8 @@ var createUser = async function(user) {
 	                	var assignedGroups = JSON.parse(user.member);
 	                	var assignedAdminGroups = JSON.parse(user.owner);
 
-	                	client.get('admin/groups.json', {}, async function (error, body, httpCode) {
-	                		if (httpCode == "200") {
-	                			var groups = JSON.parse(body);
+	                	get('admin/groups.json', {})
+	                		.then((groups) => {
 	                			var actions = [];
 					            for (var i = 0; i < groups.length; i++) {
 					            	var group = groups[i];
@@ -314,21 +321,11 @@ var createUser = async function(user) {
 	                				else if (assignedGroups.insensitiveIndexOf(dn) > -1) {
 	                					actions.push(addToGroup(group, user.uid, false));
 	                				}
-
-
 	                			}
-	                			try {
-	                				if (actions.length > 0) {
-	                					await Promise.all(actions);
-	                				}
-	                				resolve();
-	                			} catch (error) {
-	                				reject (error);
-	                			}                			
-	                		} else {
-	                			reject('Gruppen konnte nicht abgerufen werden: HTTP(' + httpCode + ') Error: ' +  error + ', Body: ' + JSON.stringify(body));
-	                		}
-	            		});
+	                			return Promise.all(actions);
+	                		})
+	                		.then(() => resolve())
+	                		.catch((error) => reject(error));
 	                } else {
 	                	resolve();
 	                }          
@@ -379,7 +376,7 @@ var modifyUser = function(user) {
 		        			.then((result) => resolve('E-Mail'), (error) => reject(error)); 
 		        	}));
 		        }  
-		        if (oldUser.name != user.givenName + ' ' + user.surname + ' - ' + user.project) {
+		        if (user.givenName && user.surname && user.project && oldUser.name != user.givenName + ' ' + user.surname + ' - ' + user.project) {
 		        	actions.push(new Promise((resolve, reject) => { 
 		        		put('users/'+ user.uid, {name: user.givenName + ' ' + user.surname + ' - ' + user.project})
 		        			.then((result) => resolve('Name'), (error) => reject(error)); 
@@ -412,7 +409,8 @@ var modifyUser = function(user) {
 			        				}
 			        			}
 			        			resolve(actions);
-			        		});
+			        		})
+			        		.catch((error) => reject(error));
 			        } else {
 			        	resolve([]);
 			        }
@@ -446,22 +444,20 @@ var modifyUser = function(user) {
 
 var removeUser = function(user) {
 	return new Promise((resolve, reject) => {
-	    client.getUser(user.uid, function(error, discourseUser) {    
-	    	//console.log('Delete discourse user: ' + JSON.stringify(discourseUser));
-	        if (error) {
-	            resolve({status: false, message: 'DISCOURSE: Fehler beim Löschen der*des Benutzer*in ' + user.uid + ': Benutzer*in abrufen: ' +  error});
-	        } else if (!discourseUser){
-	        	resolve({status: false, message: 'DISCOURSE: Fehler beim Löschen, Benutzer*in  ' + user.uid + ' nicht gefunden'});
-	        } else {
-		        client.deleteUser(discourseUser.user.id, user.uid, function (error, body, httpCode) {
-			        if (error || httpCode != "200" || body && body.success == false) {
-			            resolve({status: false, message: 'DISCOURSE: Fehler beim Löschen der*des Benutzer*in ' + user.uid + ': Benutzer*in löschen: HTTP(' + httpCode + ') Error: ' +  error + ', Body: ' + JSON.stringify(body)})   
-		            } else {
-		                resolve({status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' gelöscht'});
-		            }
-		        });
-		    }
-	    });
+		getUser(user.uid)
+			.then((discourseUser) => {
+				if (!discourseUser) {
+		        	throw 'Benutzer*in  ' + user.uid + ' nicht gefunden';
+				} else {
+					return del('admin/users/' + discourseUser.id + '.json', {context: '/admin/users/' + user.uid});
+				}
+			})
+			.then(() => {
+		        resolve({status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' gelöscht'});
+			})
+			.catch((error) => {
+	            resolve({status: false, message: 'DISCOURSE: Fehler beim Löschen der*des Benutzer*in ' + user.uid + ': ' +  error});
+			})
 	});
 };
 
