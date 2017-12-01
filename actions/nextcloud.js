@@ -19,7 +19,7 @@ var modifyUser = function(user) {
    	var dn = 'cn=' + cn.toLowerCase() + ',ou=users,'+ config.ldap.server.base;
    	var changedDn = (user.surname != false || user.givenName != false) && dn.toLowerCase() != user.dn.toLowerCase();
 
-	if (changedDn || user.changedUid !== false && user.changedUid !== "" && user.changedUid !== user.uid) {
+	if (changedDn || user.changedUid != false && user.changedUid != "" && user.changedUid != user.uid) {
 		return connectDb()
 			.then((connection) => {
 		       	var statement;

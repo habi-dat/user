@@ -56,7 +56,10 @@ router.get('/', isLoggedIn, function(req, res) {
 });
 
 router.get('/edit_me', isLoggedIn, function(req, res) {
-    res.render('user/edit_me', {notification: req.flash('notification'), responses: req.flash('responses'), title: title('Daten Ändern')});
+    ldaphelper.fetchObject(req.user.dn, function(user) {
+        res.render('user/edit_me', {user:user, notification: req.flash('notification'), responses: req.flash('responses'), title: title('Daten Ändern')});
+    });
+
 });
 
 router.post('/edit_me', isLoggedIn, function(req, res) {
@@ -74,29 +77,21 @@ router.post('/edit_me', isLoggedIn, function(req, res) {
         owner: false
     };
     actions.user.modify(user).then(function(response) {
-        req.login({
-            givenName: req.body.givenName,
-            sn: req.body.sn,
-            mail: req.body.mail,
-            userPassword: req.body.userPassword,
-            dn: req.body.dn,
-            isAdmin: req.user.isAdmin}, function(err) {
-            if (!err && !response.status) {
-               req.flash('error', 'Fehler beim Ändern der Daten');
-               res.render('user/edit_me', {message: req.flash('error'), responses: response.responses, title: title('Daten Ändern'), user: {
-                 givenName: req.body.givenName,
-                 sn: req.body.sn,
-                 mail: req.body.mail,
-                 userPassword: req.body.userPassword,
-                 userPassword2: req.body.userPassword2,
-                 uid: req.body.uid
-               }});        
-            } else {
-                req.flash('notification', 'Benutzer*innendaten geändert');
-                req.flash('responses', response.responses);
-                res.redirect('/edit_me');
-            }
+        ldaphelper.fetchObject(user.changedDn, function(changedUser) {
+            changedUser.isAdmin = req.user.isAdmin;
+            req.login(changedUser, function(err) {
+                if (!err && !response.status) {
+                   req.flash('error', 'Fehler beim Ändern der Daten');
+                   res.render('user/edit_me', {message: req.flash('error'), responses: response.responses, title: title('Daten Ändern'), user: changedUser});        
+                } else {
+                    req.flash('notification', 'Benutzer*innendaten geändert');
+                    req.flash('responses', response.responses);
+                    res.redirect('/edit_me');
+                }
+            });
         });
+
+
     });
 
     // ldaphelper.updateUser(req.body.dn, {

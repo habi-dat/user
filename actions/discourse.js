@@ -423,7 +423,7 @@ var modifyUser = function(user) {
 					Promise.all(actions.concat(memberActions))
 						.then((updatedFields) => {
 							// if UID is changed change it last (to not interfere with other changes)
-							if(user.changedUid !== null && user.changedUid !== "" && user.changedUid !== user.uid) {								
+							if(user.changedUid != false && user.changedUid !== "" && user.changedUid !== user.uid) {								
 								return put('users/' + user.uid + '/preferences/username', {new_username: user.changedUid})
 									.then(() => {
 										updatedFields.push('User ID');

@@ -187,6 +187,7 @@ var modifyUser = async function(user) {
 
 	var changedDnAction, fieldActions = [];
 	var oldDn = user.dn;
+	user.changedDn = oldDn;
 
 
     var fetchObject = new Promise((resolve, reject) => {
@@ -263,8 +264,9 @@ var modifyUser = async function(user) {
         }
 
 
-		updatedFields = updatedFields.concat(await updateGroups(dn, oldDn, user.member, user.owner));    	
+		updatedFields = updatedFields.concat(await updateGroups(dn, oldDn, user.member, user.owner));  	
 		await changedDnAction;
+		user.changedDn = dn;
 		await Promise.all(fieldActions);
     	return {status: true, message: 'LDAP: Benutzer*in upgedated (' + updatedFields.join(', ') + ')'};
     }catch(error) {
