@@ -64,7 +64,7 @@ var updateGroups = function(dn, oldDn, member, owner) {
 		                            updated = true;
 		                            updatedMember[updatedMember.indexOf(oldDn)] = dn;
 		                        }
-		                    } else {
+		                    } else if (updatedMember.indexOf(dn) < 0) {
 		                        updatedMember.push(dn);
 		                        updated = true;
 		                    }
@@ -72,7 +72,9 @@ var updateGroups = function(dn, oldDn, member, owner) {
 		                    if (updatedMember.indexOf(oldDn) > -1 ) {
 		                        updatedMember.splice(updatedMember.indexOf(oldDn), 1);
 		                        updated = true;
-
+		                    } else if (updatedMember.indexOf(dn) > -1) {
+		                        updatedMember.splice(updatedMember.indexOf(dn), 1);
+		                        updated = true;		                    	
 		                    }
 		                }
 
@@ -88,7 +90,7 @@ var updateGroups = function(dn, oldDn, member, owner) {
 		                            updated = true;
 		                            updatedAdmin[updatedAdmin.indexOf(oldDn)] = dn;
 		                        }
-		                    } else {
+		                    } else if (updatedAdmin.indexOf(dn) < 0) {
 		                        updatedAdmin.push(dn);
 		                        updated = true;
 		                    }
@@ -96,8 +98,11 @@ var updateGroups = function(dn, oldDn, member, owner) {
 		                    if (updatedAdmin.indexOf(oldDn) > -1 ) {
 		                        updatedAdmin.splice(updatedAdmin.indexOf(oldDn), 1);
 		                        updated = true;
-
 		                    }
+							else if (updatedAdmin.indexOf(dn) > -1) {
+		                        updatedAdmin.splice(updatedAdmin.indexOf(dn), 1);
+		                        updated = true;		                    	
+		                    }		                    
 		                }
 
 		                if (owner != false && updated) {
