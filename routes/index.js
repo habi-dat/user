@@ -335,6 +335,7 @@ router.post('/user/edit', isLoggedInAdmin, function(req, res) {
     actions.user.modify({
         dn: req.body.dn,
         uid: req.body.uid, 
+        changedUid: req.body.changedUid,
         givenName: req.body.givenName ,
         surname: req.body.sn,
         project: req.body.businessCategory,

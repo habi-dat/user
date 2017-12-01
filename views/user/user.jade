@@ -6,11 +6,20 @@ mixin user_form(action, user, admin)
           input.hidden(name="uid", value=user.uid)            
         legend #{(user && action == "/edit_me"? "Daten Ändern" : "Benutzer*in " + (user && action=="/user/edit"? "Bearbeiten": "Anlegen"))}
         .col-md-6
-          if user && user.uid != null
-            .form-group
-              label.control-label.col-md-4 Username
+          if action != "/edit_me"
+            .form-group.required
+              label.control-label.col-md-4(for="sn") Interne User-ID
               .col-md-8
-                p.form-control-static= user.uid
+                .input-group
+                  span.input-group-addon
+                    i.glyphicon.glyphicon-user
+                  input.form-control(type="text" id="changedUid" name="changedUid" value=(user?user.uid:undefined) required)        
+          else
+            if user && user.uid != null
+              .form-group
+                label.control-label.col-md-4 Username
+                .col-md-8
+                  p.form-control-static= user.uid          
           .form-group.required
             label.control-label.col-md-4(for="givenName") Vorname
             .col-md-8

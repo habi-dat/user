@@ -1,5 +1,5 @@
 var discourse = require('./discourse');
-//var nextcloud = require('./nextcloud');
+var nextcloud = require('./nextcloud');
 var ldap = require('./ldap');
 var validate = require('./validate');
 var email = require('./email');
@@ -54,7 +54,7 @@ var hooks = {
 validate.register(hooks);
 ldap.register(hooks);
 discourse.register(hooks);
-//nextcloud.register(hooks);
+nextcloud.register(hooks);
 email.register(hooks);
 
 var execute = async function(action, step, object) {

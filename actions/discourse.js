@@ -129,7 +129,7 @@ var del = function(url, parameters)  {
 // parameter uid (LDAP uid)
 // resolves with discourse user
 // rejects with error message if user is not found
-var getUser = function(uid) {
+var getUser = function(uid, fetchEmail = true) {
 	return new Promise((resolve, reject) => {
 			get('users/'+ uid + '.json', {})
 			    	.then(userObject => { 
@@ -137,13 +137,17 @@ var getUser = function(uid) {
 						        if (!userObject){
 						        	reject('Benutzer*in nicht gefunden');
 						        } else {
-					    			get('users/'+ user.username + '/emails.json', {context: 'admin/users/'+user.id+'/'+uid})
-					    				.then((emailObject) => {
-					    					console.log('found email for ' + uid + ': ' + emailObject.email);
-					    					user.email = emailObject.email;
-					    					resolve(user);
-					    				})
-					    				.catch((error) => reject(error));
+						        	if (fetchEmail) {
+						    			get('users/'+ user.username + '/emails.json', {context: 'admin/users/'+user.id+'/'+uid})
+						    				.then((emailObject) => {
+						    					console.log('found email for ' + uid + ': ' + emailObject.email);
+						    					user.email = emailObject.email;
+						    					resolve(user);
+						    				})
+						    				.catch((error) => reject(error));						        		
+						        	} else {
+						        		resolve(user);
+						        	}
 					    		}
 					})
 					.catch((error) => reject(error));
@@ -187,7 +191,7 @@ var getNameFromDNSync = function(dn) {
 // NOTE: owner for now is disabled because the data does not come with the user object
 var checkUserGroups = function(data) {
 	return new Promise((resolve, reject) => {
-		getUser(data.user.uid)
+		getUser(data.user.uid, false)
 			.then(discourseUser => {
 				var ldapGroups = [];
 				//var ldapOwner = [];
@@ -417,6 +421,17 @@ var modifyUser = function(user) {
 		        }); 
 				memberUpdate.then(memberActions => {
 					Promise.all(actions.concat(memberActions))
+						.then((updatedFields) => {
+							// if UID is changed change it last (to not interfere with other changes)
+							if(user.changedUid !== null && user.changedUid !== "" && user.changedUid !== user.uid) {								
+								return put('users/' + user.uid + '/preferences/username', {new_username: user.changedUid})
+									.then(() => {
+										updatedFields.push('User ID');
+										user.uid=user.changedUid;
+										return Promise.resolve(updatedFields);
+									});
+							}
+						})
 						.then(updatedFields => {
 							if (user.member === false && user.owner === false) {
 								resolve({status: true, message: 'DISCOURSE: Benutzer*in upgedated: (' + updatedFields.clean(undefined).join(', ') + ')'});								
@@ -430,7 +445,8 @@ var modifyUser = function(user) {
 									});
 							}
 
-						}, error => {						
+						})
+						.catch((error )=> {						
 					    	resolve({status: false, message: 'DISCOURSE: Ändern von Benutzer*in ' + user.uid + ' fehlgeschlagen: ' +  error});
 					    });
 				})
