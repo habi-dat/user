@@ -304,7 +304,7 @@ var createUser = async function(user) {
 
 	    	client.createUser(user.givenName + ' ' + user.surname + ' - ' + user.project, user.email, user.uid, password, true, function(error, body, httpCode) { 
 		    	if (error || httpCode != "200" || body && body.success == false) {
-		    		reject('Benutzer*in einfügen: HTTP(' + httpCode + ') Error: ' +  error + ', Body: ' + JSON.stringify(body));  
+		    		reject('Benutzer*in einfügen, Parameter: ' + JSON.stringify({name: user.givenName + ' ' + user.surname + ' - ' + user.project, email: user.email, username: user.uid, password: "versteckt"}) + ': HTTP(' + httpCode + ') Error: ' +  error + ', Body: ' + JSON.stringify(body));  
 		   		} else {
 	          		if(user.member) {
 
