@@ -29,15 +29,17 @@ var modifyUser = function(user) {
 				} else {
 					statement = "update " + config.nextcloud.db.prefix + "_ldap_user_mapping set directory_uuid='" + user.changedUid + "' where ldap_dn='" + user.dn + "'";
 				}
-				return connection.queryAsync(statements).then(() => {
-					return connection.endAsync();
+				return connection.queryAsync(statements).then((results) => {
+					return connection.endAsync().then(() => {
+						return results;
+					});
 				}, (error) => {
 					connection.end();					
 					throw error;
 				});
 			})
-			.then(() => {
-				return {status : true, message: "NEXTCLOUD: Benutzer*innen-UID upgedated"};
+			.then((results) => {
+				return {status : true, message: "NEXTCLOUD: Benutzer*innen-UID Zuordnung upgedated (" + results.changedRows + ")"};
 			})
 			.catch((error) => {
 				return {status: false, message: "NEXTCLOUD: Update der Benutzer*innen-UID fehlgeschlagen: " + error};
