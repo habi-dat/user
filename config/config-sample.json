@@ -3,41 +3,44 @@
   {
     "activation":
     {
-      "email_from": "noreply.habidat.org",
-      "base_url": "https://user.habidat.org"
+      "email_from": "noreply@$HABIDAT_DOMAIN",
+      "base_url": "https://$HABIDAT_USER_SUBDOMAIN.$HABIDAT_DOMAIN"
     }
   },  
   // for more information https://www.npmjs.com/package/smtp-connection
   "smtp": {
-      "host": "mail.xaok.org",
-      "port": "25"
+      "host": "$HABIDAT_USER_SMTP_HOST",
+      "port": "$HABIDAT_USER_SMTP_PORT",
+      "tls": {
+      	"rejectUnauthorized": false
+      }	  
   },  
   "ldap": { 
   	"server": {
-	    "url": "ldap://localhost:389",
-	    "bindDn": "cn=root, dc=willy-fred, dc=org",
-      "base": "dc=willy-fred,dc=org",
-	    "bindCredentials": "",
-	    "searchBase": "ou=users, dc=willy-fred, dc=org",
+	    "url": "ldap://$HABIDAT_USER_LDAP_HOST:$HABIDAT_USER_LDAP_PORT",
+	    "bindDn": "$HABIDAT_USER_LDAP_BINDDN",
+            "base": "$HABIDAT_USER_LDAP_BASE",
+	    "bindCredentials": "$HABIDAT_USER_LDAP_PASSWORD",
+	    "searchBase": "ou=users,$HABIDAT_USER_LDAP_BASE",
 	    "searchFilter": "(cn={{username}})"
   	}
   },
   "discourse": {
   	"enabled": true,
-  	"API-URL": "",
-  	"API-KEY": "",
-  	"USER-NAME": "",
+  	"API-URL": "$HABIDAT_DISCOURSE_API_URL",
+  	"API-KEY": "$HABIDAT_DISCOURSE_API_KEY",
+  	"USER-NAME": "$HABIDAT_DISCOURSE_API_USERNAME",
     "settings": [
         { "name": "discoures internal name", "datatype" : "string / boolean / number", "Label": "Label text"}
     ]
   },
   "nextcloud": {
     "db": {
-      "host": "localhost", 
-      "port": "3306",
-      "database": "nextcloud",
-      "user": "nextcloud",
-      "password": "asdf",
+      "host": "$HABIDAT_USER_NEXTCLOUD_DB_HOST", 
+      "port": "$HABIDAT_USER_NEXTCLOUD_DB_PORT",
+      "database": "$HABIDAT_USER_NEXTCLOUD_DB_DATABASE",
+      "user": "$HABIDAT_USER_NEXTCLOUD_DB_USER",
+      "password": "$HABIDAT_USER_NEXTCLOUD_DB_PASSWORD",
       "prefix": "oc"
     }
 }
