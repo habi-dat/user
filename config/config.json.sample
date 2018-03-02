@@ -6,8 +6,7 @@
       "email_from": "noreply@$HABIDAT_DOMAIN",
       "base_url": "https://$HABIDAT_USER_SUBDOMAIN.$HABIDAT_DOMAIN"
     }
-  },  
-  // for more information https://www.npmjs.com/package/smtp-connection
+  }, 
   "smtp": {
       "host": "$HABIDAT_USER_SMTP_HOST",
       "port": "$HABIDAT_USER_SMTP_PORT",
