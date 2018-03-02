@@ -23,6 +23,12 @@ WORKDIR /habidat-user
 RUN npm install
 RUN npm install pm2 -g
 
+RUN \
+  apt-get update \
+  && apt-get -y install gettext-base \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
 RUN envsubst < config/config.json.sample > config/config.json
 
 VOLUME /habidat-user/config
