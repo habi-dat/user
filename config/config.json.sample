@@ -42,4 +42,5 @@
       "password": "$HABIDAT_USER_NEXTCLOUD_DB_PASSWORD",
       "prefix": "oc"
     }
+  }
 }
