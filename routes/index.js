@@ -68,7 +68,7 @@ router.post('/edit_me', isLoggedIn, function(req, res) {
         dn: req.body.dn,
         givenName: req.body.givenName ,
         surname: req.body.sn,
-        project: false,
+        project: req.body.businessCategory,
         changedUid: false,        
         email: req.body.mail, 
         password: req.body.userPassword, 

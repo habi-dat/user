@@ -12,13 +12,7 @@ Array.prototype.insensitiveIndexOf = function (searchElement, fromIndex) {
 };
 
 Array.prototype.clean = function(deleteValue) {
-  for (var i = 0; i < this.length; i++) {
-    if (this[i] == deleteValue) {         
-      this.splice(i, 1);
-      i--;
-    }
-  }
-  return this;
+  return this.filter(function(n){ return n != deleteValue });
 };
 
 
@@ -430,6 +424,8 @@ var modifyUser = function(user) {
 										user.uid=user.changedUid;
 										return Promise.resolve(updatedFields);
 									});
+							} else {
+								return updatedFields;
 							}
 						})
 						.then(updatedFields => {
