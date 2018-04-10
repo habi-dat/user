@@ -333,7 +333,9 @@ var createUser = async function(user) {
 	};
 	try{
 		await enableDisableLocalLogins(true);
+		await new Promise(resolve => setTimeout(resolve, 500));
     	await createUser(user);
+    	await new Promise(resolve => setTimeout(resolve, 500));
         await enableDisableLocalLogins(false);
     	return {status: true, message: 'DISCOURSE: Benutzer*in erstellt: ' + user.givenName + ' ' + user.surname};
     }catch(error) {
