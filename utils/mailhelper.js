@@ -20,14 +20,14 @@ exports.sendActivationEmail = function(user, done) {
             var mailOptions = {
                 from: (config.settings.activation.email_from?config.settings.activation.email_from:'no-reply@habidat.org'),
                 to: user.mail,
-                subject: 'Aktiviere deinen Account bei habiDAT',
-                html: '<h3>Willkommen beim habiDAT!</h3>'+
-                      '<p>Dein Account wurde angelegt, bitte klicke auf den folgenden Link um dein Passwort zu wählen: </p>'+
-                      '<a href="'+ link +'">' + link + '</a>'+
-                      '<p>Für Information zur Benutzung der Plattform bitte: </p> <a href="https://wiki.habidat.org/doku.php?id=benutzer_innenguide">HIER</a> klicken' +
-                      '<p>Für den Einstieg in die Plattform: </p><a href="https://cloud.habidat.org">cloud.habidat.org</a>' +
-                      '<p>Für Einstellungen zu deinem Account oder wennn du dein Passwort vergessen hast: </p><a href="https://user.habidat.org">user.habidat.org</a>' +
-                      '<p>Und für alle weiteren Fragen: </p><a href="mailto:support@xaok.org">support@xaok.org</a>' +
+                subject: 'habiDAT: Aktiviere deinen Account bei habiDAT',
+                html: '<h3>Willkommen beim habiDAT '+user.givenname+'!</h3>'+
+                      '<p>Dein Account wurde angelegt, bitte klicke auf den folgenden Link um dein Passwort zu wählen: <a href="'+ link +'">' + link + '</a></p>'+
+                      '<p>Dein Benutzer*innenname / Loginname ist: "'+ user.givenname + ' ' + user.surname +'"</p>'
+                      '<p>Für Information zur Benutzung der Plattform bitte: <a href="https://wiki.habidat.org/doku.php?id=benutzer_innenguide">HIER</a> klicken</p> ' +
+                      '<p>Für den Einstieg in die Plattform: <a href="https://cloud.habidat.org">cloud.habidat.org</a></p>' +
+                      '<p>Für Einstellungen zu deinem Account oder wennn du dein Passwort vergessen hast: <a href="https://user.habidat.org">user.habidat.org</a></p>' +
+                      '<p>Und für alle weiteren Fragen: <a href="mailto:support@xaok.org">support@xaok.org</a></p>' +
                       '<p>Viel Spaß!</p>' 
             }
 
