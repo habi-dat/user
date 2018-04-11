@@ -26,9 +26,9 @@
   },
   "discourse": {
   	"enabled": true,
-  	"API-URL": "$HABIDAT_DISCOURSE_API_URL",
-  	"API-KEY": "$HABIDAT_DISCOURSE_API_KEY",
-  	"USER-NAME": "$HABIDAT_DISCOURSE_API_USERNAME",
+  	"APIURL": "$HABIDAT_DISCOURSE_API_URL",
+  	"APIKEY": "$HABIDAT_DISCOURSE_API_KEY",
+  	"USERNAME": "$HABIDAT_DISCOURSE_API_USERNAME",
     "settings": [
         { "name": "discoures internal name", "datatype" : "string / boolean / number", "Label": "Label text"}
     ]
