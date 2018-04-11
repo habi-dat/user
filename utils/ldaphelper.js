@@ -32,7 +32,7 @@ exports.fetchIsAdmin = function(userDn, done) {
 
     var admin = null;
 
-    client.search('cn=admin,ou=groups,dc=willy-fred,dc=org', opts, function(err, res) {
+    client.search('cn=admin,ou=groups,'+config.server.base, opts, function(err, res) {
         res.on('searchEntry', function(entry) {
             //console.log('groupentry: '+ JSON.stringify(entry.object));
             console.log('isAdmingroup: ' + JSON.stringify(entry.object.member));
@@ -70,7 +70,7 @@ exports.fetchGroups = function(done) {
     
     var entries = [];
 
-    client.search('ou=groups,dc=willy-fred,dc=org', opts, function(err, res) {
+    client.search('ou=groups,'+config.server.base, opts, function(err, res) {
         res.on('searchEntry', function(entry) {
             //console.log('groupentry: '+ JSON.stringify(entry.object));
             //console.log(JSON.stringify(entry.object.member));
@@ -108,7 +108,7 @@ exports.fetchOwnedGroups = function(currentUser, done) {
     
     var entries = [];
 
-    client.search('ou=groups,dc=willy-fred,dc=org', opts, function(err, res) {
+    client.search('ou=groups,'+config.server.base, opts, function(err, res) {
         res.on('searchEntry', function(entry) {
             //console.log('groupentry: '+ JSON.stringify(entry.object));
             //console.log(JSON.stringify(entry.object.member));
@@ -142,7 +142,7 @@ exports.fetchUsers = function(done) {
     
     var entries = [];
 
-    client.search('ou=users,dc=willy-fred,dc=org', opts, function(err, res) {
+    client.search('ou=users,'+config.server.base, opts, function(err, res) {
         res.on('searchEntry', function(entry) {
             //console.log('userentry: '+ JSON.stringify(entry.object));
             entries.push(entry.object);
@@ -205,7 +205,7 @@ exports.getByEmail = function(mail, done) {
     
     var entries = [];
 
-    client.search('ou=users,dc=willy-fred,dc=org', opts, function(err, res) {
+    client.search('ou=users,'+config.server.base, opts, function(err, res) {
         res.on('searchEntry', function(entry) {
             //console.log('userentry: '+ JSON.stringify(entry.object));
             if (entry.object.cn)
@@ -244,7 +244,7 @@ exports.getByUID = function(uid, done) {
     
     var entries = [];
 
-    client.search('ou=users,dc=willy-fred,dc=org', opts, function(err, res) {
+    client.search('ou=users,'+config.server.base, opts, function(err, res) {
         res.on('searchEntry', function(entry) {
             //console.log('userentry: '+ JSON.stringify(entry.object));
             entries.push(entry.object)
@@ -297,7 +297,7 @@ exports.encryptAndAddUser = function(entry, done) {
 
         entry.userPassword = hash;
 
-        client.add('cn=' + entry.cn + ',ou=users,dc=willy-fred,dc=org', entry, function(err) {
+        client.add('cn=' + entry.cn + ',ou=users,'+config.server.base, entry, function(err) {
             if (err) {
                 done(err);
             } else {
@@ -384,7 +384,7 @@ exports.updatePassword = function(uid, userPassword, userPassword2, done) {
                     userPassword: hash
                 }
             });
-            client.modify('cn=' +user.cn + ',ou=users,dc=willy-fred,dc=org', change, function(err) {
+            client.modify('cn=' +user.cn + ',ou=users,'+config.server.base, change, function(err) {
                 if (err) {
                     return done(err);
                 } else {
