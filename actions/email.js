@@ -4,7 +4,7 @@ var Promise = require('bluebird');
 var activationEmail = function(user) {
     return new Promise((resolve, reject) => {
 		if (user.activation) {
-		    mail.sendActivationEmail({uid: user.uid, mail: user.email}, function(err){
+		    mail.sendActivationEmail({uid: user.uid, mail: user.email, givenName: user.givenName, sn: user.sn}, function(err){
 			    if (err) {
 			        resolve({status: false, message: 'Aktivierungse-mail konnte nicht verschickt werden, bitte die Admin*as kontaktieren: ' + err});
 			    } else {

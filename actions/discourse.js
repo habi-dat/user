@@ -349,12 +349,15 @@ var modifyUser = function(user) {
 	return new Promise((resolve, reject) => {
 		console.log('begin');
 	    get('users/'+ user.uid + '.json', {})
+	    	.catch(() => {
+	    		resolve({status: true, message: 'DISCOURSE: Benutzer*in noch nicht angelegt, überspringe Aktion'});
+	    	})	    
 	    	.then(userObject => { 
 	    		return new Promise((resolve, reject) => {
 	    			var user = userObject.user;
 			        if (!userObject){
-			        	//reject('Benutzer*in nicht gefunden');
-			        	resolve({status: true, message: 'DISCOURSE: Benutzer*in noch nicht angelegt, überspringe Aktion'});
+			        	reject('Benutzer*in nicht gefunden');
+			        	//resolve({status: true, message: 'DISCOURSE: Benutzer*in noch nicht angelegt, überspringe Aktion'});
 			        } else {
 		    			get('users/'+ user.username + '/emails.json', {})
 		    				.then((emailObject) => {
@@ -364,13 +367,6 @@ var modifyUser = function(user) {
 		    				.catch((error) => reject(error));
 		    		}
 	    		});
-	    	})
-	    	.then(result => {
-	    		if (result && result.status) {
-	      			resolve(result);
-	      		} else {
-	      			return result;
-	      		}
 	    	})
 	      	.then(oldUser => { 
 	        	console.log('oldDiscourseUser: ' + JSON.stringify(oldUser));
@@ -466,14 +462,16 @@ var modifyUser = function(user) {
 var removeUser = function(user) {
 	return new Promise((resolve, reject) => {
 		getUser(user.uid)
+	    	.catch(() => {
+	    		resolve({status: true, message: 'DISCOURSE: Benutzer*in noch nicht angelegt, überspringe Aktion'});
+	    	})				
 			.then((discourseUser) => {
 				if (!discourseUser) {
-		        	//throw 'Benutzer*in  ' + user.uid + ' nicht gefunden';
-		        	resolve({status: true, message: 'DISCOURSE: Benutzer*in noch nicht angelegt, überspringe Aktion'});
+		        	throw 'Benutzer*in  ' + user.uid + ' nicht gefunden';
 				} else {
 					return del('admin/users/' + discourseUser.id + '.json', {context: '/admin/users/' + user.uid});
 				}
-			})
+			})	
 			.then(() => {
 		        resolve({status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' gelöscht'});
 			})
