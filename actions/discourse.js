@@ -627,7 +627,8 @@ var removeCategory = function(category) {
 
 
 exports.register = function(hooks) {
-	hooks.user.create.post.push(createUser);
+	// disable user creation since it is now done automatically on first login
+	//hooks.user.create.post.push(createUser);
 	hooks.user.modify.post.push(modifyUser);
 	hooks.user.remove.post.push(removeUser);
 
