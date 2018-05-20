@@ -353,7 +353,8 @@ var modifyUser = function(user) {
 	    		return new Promise((resolve, reject) => {
 	    			var user = userObject.user;
 			        if (!userObject){
-			        	reject('Benutzer*in nicht gefunden');
+			        	//reject('Benutzer*in nicht gefunden');
+			        	resolve({status: true, message: 'DISCOURSE: Benutzer*in noch nicht angelegt, überspringe Aktion'});
 			        } else {
 		    			get('users/'+ user.username + '/emails.json', {})
 		    				.then((emailObject) => {
@@ -461,7 +462,8 @@ var removeUser = function(user) {
 		getUser(user.uid)
 			.then((discourseUser) => {
 				if (!discourseUser) {
-		        	throw 'Benutzer*in  ' + user.uid + ' nicht gefunden';
+		        	//throw 'Benutzer*in  ' + user.uid + ' nicht gefunden';
+		        	resolve({status: true, message: 'DISCOURSE: Benutzer*in noch nicht angelegt, überspringe Aktion'});
 				} else {
 					return del('admin/users/' + discourseUser.id + '.json', {context: '/admin/users/' + user.uid});
 				}
