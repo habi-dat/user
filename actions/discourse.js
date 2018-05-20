@@ -365,8 +365,14 @@ var modifyUser = function(user) {
 		    		}
 	    		});
 	    	})
+	    	.then(result => {
+	    		if (result && result.status) {
+	      			resolve(result);
+	      		} else {
+	      			return result;
+	      		}
+	    	})
 	      	.then(oldUser => { 
-
 	        	console.log('oldDiscourseUser: ' + JSON.stringify(oldUser));
 	        	var actions = [];
 	        	var updatedFields = [];
