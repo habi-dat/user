@@ -128,6 +128,7 @@ var createUser = async function(user) {
         sn: user.surname,
         mail: user.email,
         userPassword: user.password,
+        description: user.description,
         businessCategory: user.project
     };
 
@@ -237,6 +238,12 @@ var modifyUser = async function(user) {
         	fieldActions.push(ldaphelper.change(dn, 'replace', {givenName : user.givenName}));
             updatedFields.push('Vorname');		            	
         }
+
+        if(user.description != false && user.description != oldUser.description) {
+            console.log("new description: " + user.description);
+        	fieldActions.push(ldaphelper.change(dn, 'add', {description : user.description}));
+            updatedFields.push('Speicherplatz');		            	
+        }        
 
         if(user.surname != false && user.surname != oldUser.sn) {
             console.log("new sn: " + user.surname);

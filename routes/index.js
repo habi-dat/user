@@ -276,6 +276,7 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
         givenName: req.body.givenName ,
         surname: req.body.sn,
         project: req.body.businessCategory,
+        description: req.body.description, // quota
         email: req.body.mail, 
         password:  req.body.userPassword, 
         passwordRepeat: req.body.userPassword2, 
@@ -283,6 +284,10 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
         owner: req.body.admingroups,
         activation: req.body.activation == 'on'
     };
+
+    if (!user.description) {
+        user.description = "10";
+    }
 
     // if action e-mail is checked generate uncrackable password (works like user is deactived)
     if (req.body.activation) {
@@ -306,6 +311,7 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
                 givenName: req.body.givenName,
                 sn: req.body.sn,
                 mail: req.body.mail,
+                description: req.body.description, // quota
                 businessCategory: req.body.businessCategory
               }});
             })
@@ -328,20 +334,32 @@ router.get('/user/edit/:id', isLoggedInAdmin, function(req, res) {
 });
 
 router.post('/user/edit', isLoggedInAdmin, function(req, res) {
-
-    actions.user.modify({
+    var user = {
         dn: req.body.dn,
         uid: req.body.uid, 
         changedUid: req.body.changedUid,
         givenName: req.body.givenName ,
         surname: req.body.sn,
         project: req.body.businessCategory,
+        description: req.body.description, // quota
         email: req.body.mail, 
         password: req.body.userPassword, 
         passwordRepeat: req.body.userPassword2, 
         member: req.body.groups, 
         owner: req.body.admingroups
-    }).then(function(response) {
+    };
+
+    console.log("descirption: " + user.description);
+
+    if (user.description === "") {
+        console.log("descirption: " + user.description);
+        user.description = "10";
+                console.log("descirption: " + user.description);
+
+    }
+
+
+    actions.user.modify(user).then(function(response) {
         if (!response.status) {
             req.flash('error', 'Fehler beim Ändern der Daten');
             ldaphelper.fetchGroups(function(groups) {        
@@ -349,6 +367,7 @@ router.post('/user/edit', isLoggedInAdmin, function(req, res) {
                     givenName: req.body.givenName,
                     sn: req.body.sn,
                     mail: req.body.mail,
+                    description: req.body.description, // quota
                     userPassword: req.body.userPassword,
                     userPassword2: req.body.userPassword2,
                     dn: req.body.dn,
