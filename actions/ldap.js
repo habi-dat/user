@@ -241,7 +241,7 @@ var modifyUser = async function(user) {
 
         if(user.description != false && user.description != oldUser.description) {
             console.log("new description: " + user.description);
-        	fieldActions.push(ldaphelper.change(dn, 'add', {description : user.description}));
+        	fieldActions.push(ldaphelper.change(dn, 'replace', {description : user.description}));
             updatedFields.push('Speicherplatz');		            	
         }        
 

@@ -285,9 +285,10 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
         activation: req.body.activation == 'on'
     };
 
-    if (!user.description) {
-        user.description = "10";
+    if (user.description === "") {
+        user.description = "10 GB";
     }
+
 
     // if action e-mail is checked generate uncrackable password (works like user is deactived)
     if (req.body.activation) {
@@ -349,13 +350,8 @@ router.post('/user/edit', isLoggedInAdmin, function(req, res) {
         owner: req.body.admingroups
     };
 
-    console.log("descirption: " + user.description);
-
     if (user.description === "") {
-        console.log("descirption: " + user.description);
-        user.description = "10";
-                console.log("descirption: " + user.description);
-
+        user.description = "10 GB";
     }
 
 
