@@ -6,8 +6,9 @@ mixin notification(notification, error, responses)
           .icon 
             i.glyphicon(class=notification && notification != ""?"glyphicon-ok-sign":"glyphicon-exclamation-sign") 
           raw #{notification && notification != ""?notification:error} &nbsp;  
-          button.btn.btn-default.btn-sm(data-toggle="collapse", href="#collapseresponse") 
-            small Details
+          if responses       
+            button.btn.btn-default.btn-sm(data-toggle="collapse", href="#collapseresponse") 
+              small Details
           if responses            
             .collapse.panel-collapse(id="collapseresponse")   
               ul.list-group
