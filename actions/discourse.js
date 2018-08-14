@@ -348,12 +348,18 @@ var createUser = async function(user) {
 var modifyUser = function(user) {
 	//only log out user, everything else is done with SSO payload through nextcloud
   	return new Promise((resolve, reject) => {
-		post('admin/users/' + user.uid + '/log_out', {})
-			.then(() => {
-				resolve({status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' ausgeloggt'});
-			})
+  		getUser(user.uid, false)
+  			.then((discourseUser) => {
+  				post('admin/users/' + discourseUser.id + '/log_out', {})
+					.then(() => {
+						resolve({status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' ausgeloggt'});
+					})
+					.catch((error) => {
+						resolve({status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht ausgeloggt werden: ' + error});	
+					});
+  			})
 			.catch((error) => {
-				resolve({status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht ausgeloggt werden: ' + error});	
+				resolve({status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' nicht gefunden: ' + error});	
 			});
 	});
 
@@ -472,10 +478,7 @@ var modifyUser = function(user) {
 
 var removeUser = function(user) {
 	return new Promise((resolve, reject) => {
-		getUser(user.uid)
-	    	.catch(() => {
-	    		resolve({status: true, message: 'DISCOURSE: Benutzer*in noch nicht angelegt, überspringe Aktion'});
-	    	})				
+		getUser(user.uid)	
 			.then((discourseUser) => {
 				if (!discourseUser) {
 		        	throw 'Benutzer*in  ' + user.uid + ' nicht gefunden';
@@ -487,14 +490,21 @@ var removeUser = function(user) {
 		        resolve({status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' gelöscht'});
 			})
 			.catch((error) => {
-				put('admin/users/' + user.uid + '/suspend', {duration: 36500, reason: 'Gelöscht durch User Tool'})
-					.then(() => {
-						resolve({status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht gelöscht werden und wurde deshalb deaktiviert'});
-					})
+
+		  		getUser(user.uid, false)
+		  			.then((discourseUser) => {
+						put('admin/users/' + discourseUser.id + '/suspend', {suspend_until: '3018-01-01', reason: 'Gelöscht durch User Tool'})
+							.then(() => {
+								resolve({status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht gelöscht werden und wurde deshalb deaktiviert'});
+							})
+							.catch((error) => {
+								resolve({status: false, message: 'DISCOURSE: Fehler beim Löschen oder Deaktivieren der*des Benutzer*in ' + user.uid + ': ' +  error});
+							});	
+		  			})
 					.catch((error) => {
-						resolve({status: false, message: 'DISCOURSE: Fehler beim Löschen oder Deaktivieren der*des Benutzer*in ' + user.uid + ': ' +  error});
-					});	            
-			})
+						resolve({status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' nicht gefunden: ' + error});	
+					});    
+			});
 	});
 };
 
