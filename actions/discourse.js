@@ -346,7 +346,18 @@ var createUser = async function(user) {
 
 
 var modifyUser = function(user) {
-	return new Promise((resolve, reject) => {
+	//only log out user, everything else is done with SSO payload through nextcloud
+  	return new Promise((resolve, reject) => {
+		post('admin/users/' + user.uid + '/log_out', {})
+			.then(() => {
+				resolve({status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' ausgeloggt'});
+			})
+			.catch((error) => {
+				resolve({status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht ausgeloggt werden: ' + error});	
+			});
+	});
+
+/*	return new Promise((resolve, reject) => {
 		console.log('begin');
 	    get('users/'+ user.uid + '.json', {})
 	    	.catch(() => {
@@ -455,7 +466,7 @@ var modifyUser = function(user) {
 		    }, error => {
 		    	resolve({status: false, message: 'DISCOURSE: Ändern von Benutzer*in ' + user.uid + ' fehlgeschlagen: ' +  error});
 		    });
-	});
+	});*/
 };
 
 
@@ -476,7 +487,13 @@ var removeUser = function(user) {
 		        resolve({status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' gelöscht'});
 			})
 			.catch((error) => {
-	            resolve({status: false, message: 'DISCOURSE: Fehler beim Löschen der*des Benutzer*in ' + user.uid + ': ' +  error});
+				put('admin/users/' + user.uid + '/suspend', {duration: 36500, reason: 'Gelöscht durch User Tool'})
+					.then(() => {
+						resolve({status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht gelöscht werden und wurde deshalb deaktiviert'});
+					})
+					.catch((error) => {
+						resolve({status: false, message: 'DISCOURSE: Fehler beim Löschen oder Deaktivieren der*des Benutzer*in ' + user.uid + ': ' +  error});
+					});	            
 			})
 	});
 };
