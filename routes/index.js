@@ -284,6 +284,7 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
         passwordRepeat: req.body.userPassword2, 
         member: req.body.groups, 
         owner: req.body.admingroups,
+        language: req.body.language,
         activation: req.body.activation == 'on'
     };
 

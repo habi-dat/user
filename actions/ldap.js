@@ -127,6 +127,7 @@ var createUser = async function(user) {
         givenName: user.givenName,
         sn: user.surname,
         mail: user.email,
+        preferredLanguage: user.language,
         userPassword: user.password,
         description: user.description,
         businessCategory: user.project
