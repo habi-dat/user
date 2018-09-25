@@ -359,7 +359,7 @@ var modifyUser = function(user) {
 					});
   			})
 			.catch((error) => {
-				resolve({status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' nicht gefunden: ' + error});	
+				resolve({status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' nicht gefunden, Schritt wird übersprungen'});	
 			});
 	});
 
