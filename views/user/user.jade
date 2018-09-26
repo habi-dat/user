@@ -70,7 +70,7 @@ mixin user_form(action, user, admin)
                   span.input-group-addon
                     i.glyphicon.glyphicon-cloud-upload
                   input.form-control(type="text" id="description" name="description" value=(user?user.description:undefined) placeholder="10 GB")    
-          if action == "/user/add"
+          if action != "/edit_me"
             .form-group.required
               label.control-label.col-md-4(for="language") Sprache 
               .col-md-8
@@ -79,13 +79,7 @@ mixin user_form(action, user, admin)
                     i.glyphicon.glyphicon-bullhorn
                   select.form-control(id="language" name="language")
                     option(value="de") Deutsch
-                    option(value="en") English                            
-          else
-            .form-group
-              label.control-label.col-md-4 Speicherplatz (in GB)
-              .col-md-8
-                p.form-control-static= user.description
-                input.hidden(name="description", value=(user?user.description:undefined))                 
+                    option(value="en") English                                          
           if action == "/user/add"
             .form-group
               .col-md-4 &nbsp;

@@ -74,6 +74,7 @@ router.post('/edit_me', isLoggedIn, function(req, res) {
         email: req.body.mail, 
         password: req.body.userPassword, 
         passwordRepeat: req.body.userPassword2, 
+        language: false,        
         member: false, 
         owner: false
     };
@@ -183,7 +184,8 @@ router.post('/user/passwd', function(req, res) {
                 description: false,
                 changedUid: false,
                 password: req.body.userPassword, 
-                passwordRepeat: req.body.userPassword2, 
+                passwordRepeat: req.body.userPassword2,                 
+                language: false,
                 member: false, 
                 owner: false
             }).then((response) => {
@@ -349,6 +351,7 @@ router.post('/user/edit', isLoggedInAdmin, function(req, res) {
         email: req.body.mail, 
         password: req.body.userPassword, 
         passwordRepeat: req.body.userPassword2, 
+        language: req.body.language,
         member: req.body.groups, 
         owner: req.body.admingroups
     };

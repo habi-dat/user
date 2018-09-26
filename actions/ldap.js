@@ -258,6 +258,12 @@ var modifyUser = async function(user) {
             updatedFields.push('Projekt');		            	
         }        
 
+        if(user.language != false && user.language != oldUser.preferredLanguage) {
+            console.log("new businessCategory: " + user.language);
+        	fieldActions.push(ldaphelper.change(dn, 'replace', {preferredLanguage : user.language}));
+            updatedFields.push('Sprache');		            	
+        }          
+
         if(user.email != false && user.email != oldUser.mail) {
             console.log("new mail: " + user.email);
         	fieldActions.push(ldaphelper.change(dn, 'replace', {mail : user.email}));
