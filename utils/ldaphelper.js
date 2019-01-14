@@ -199,7 +199,7 @@ exports.getByEmail = function(mail, done) {
     });
 
     var opts = {
-      filter: '(mail=' + mail + ')',
+      filter: '(mail=' + mail + '*)',
       scope: 'sub'
     };
     
@@ -208,7 +208,7 @@ exports.getByEmail = function(mail, done) {
     client.search('ou=users,'+config.server.base, opts, function(err, res) {
         res.on('searchEntry', function(entry) {
             //console.log('userentry: '+ JSON.stringify(entry.object));
-            if (entry.object.cn)
+            if (entry.object.cn && entry.object.mail && entry.object.mail.toLowerCase() === mail.toLowerCase())
                 entries.push(entry.object)
         });
         res.on('searchReference', function(referral) {
