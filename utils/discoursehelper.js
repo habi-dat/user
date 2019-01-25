@@ -18,9 +18,9 @@ exports.getCategory = function(id, done) {
             if (categoryBody.category.group_permissions) {
                 categoryBody.category.group_permissions.forEach(function(group_permission) {
                     if (group_permission.permission_type == 1) {
-                        groups.push(group_permission.group_name);    
+                        groups.push(group_permission.group_name);
                     }
-                    
+
                 });
             }
             var image = null;
@@ -63,7 +63,7 @@ exports.getCategoryWithParent = function(id, done) {
                 });
 
                 done(null, category);
-            });   
+            });
         } else {
             done("Discourse API: Error fetching category: " + httpCode + " " + error);
         }
@@ -135,7 +135,7 @@ exports.getCategories = function(done) {
         else {
             done("Discourse API: Error fetching categories: " + httpCode + " " + error);
         }
-    });   
+    });
 };
 
 
@@ -156,6 +156,6 @@ exports.getParentCategories = function(done) {
         else {
             done("Discourse API: Error fetching parent categories: " + httpCode + " " + error);
         }
-    });   
+    });
 };
 

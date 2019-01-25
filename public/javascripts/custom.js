@@ -8,7 +8,7 @@
     } );
 
 
-    $('[data-toggle="tooltip"]').tooltip(); 
+    $('[data-toggle="tooltip"]').tooltip();
 
     $('#usertable tbody').on( 'click', 'tr', function () {
     if ( $(this).hasClass('selected') ) {
@@ -89,7 +89,7 @@
                     tableRow.removeClass('hidden');
                 } else {
                     tableRow.addClass('hidden');
-                }            
+                }
                 switchRow(tableRow.next('tr'));
             } else {
                 return;
@@ -117,12 +117,12 @@
           });
         });
     }
-    } );    
+    } );
   });
 
   $(document).ready(function () {
     $('.list-user-groups.checked-list-box .list-group-item').each(function () {
-        
+
         // Settings
         var $widget = $(this),
             $checkbox = $('<input type="checkbox" class="hidden" name="'+$widget.prop('id')+'"/>'),
@@ -139,7 +139,7 @@
                     icon: 'glyphicon glyphicon-edit '
                 }
             };
-            
+
         if ($widget.hasClass('admin')) {
             $widget.data('state', 'admin');
         }
@@ -162,13 +162,13 @@
                 $widget.data('state', 'off');
             } else {
                 $widget.data('state', 'on');
-            }            
+            }
             updateDisplay();
         });
         $checkbox.on('change', function () {
             updateDisplay();
         });
-          
+
 
         // Actions
         function updateDisplay() {
@@ -192,8 +192,8 @@
 
         // Initialization
         function init() {
-            
-            
+
+
             updateDisplay();
 
             // Inject the icon if applicable
@@ -205,7 +205,7 @@
     });
 
     $('.list-cat-groups.checked-list-box .list-group-item').each(function () {
-        
+
         // Settings
         var $widget = $(this),
             $checkbox = $('<input type="checkbox" class="hidden" name="'+$widget.prop('id')+'"/>'),
@@ -219,7 +219,7 @@
                     icon: 'glyphicon glyphicon-unchecked'
                 }
             };
-            
+
         if ($widget.hasClass('active')) {
             $widget.data('state', 'on');
         } else {
@@ -237,13 +237,13 @@
                 $widget.data('state', 'off');
             } else {
                 $widget.data('state', 'on');
-            }            
+            }
             updateDisplay();
         });
         $checkbox.on('change', function () {
             updateDisplay();
         });
-          
+
 
         // Actions
         function updateDisplay() {
@@ -264,8 +264,8 @@
 
         // Initialization
         function init() {
-            
-            
+
+
             updateDisplay();
 
             // Inject the icon if applicable
@@ -309,7 +309,7 @@
     $('.checkbox-form').submit(function() {
         var $hidden = $("<input type='hidden' class='hidden-groups' name='groups'/>");
         var $hiddenAdmin = $("<input type='hidden' class='hidden-groups' name='admingroups'/>");
-        //event.preventDefault(); 
+        //event.preventDefault();
         var checkedItems = [], counter = 0;
         $("#check-list-box li.active").each(function(idx, li) {
             checkedItems.push($(li).prop('id'));
@@ -333,9 +333,9 @@
     });
 
     $(document).ready(function(){
-        $('[data-toggle="tooltip"]').tooltip(); 
+        $('[data-toggle="tooltip"]').tooltip();
     });
-    
+
     $('a.confirm').click(function() {
 
         var link = $(this).data('link');
@@ -360,5 +360,4 @@
         });
     });
 });
-  
-  
+

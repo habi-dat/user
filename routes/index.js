@@ -9,23 +9,23 @@ var mail = require('../utils/mailhelper');
 var actions = require('../actions');
 
 var isLoggedIn = function(req, res, next) {
-    // if user is authenticated in the session, carry on 
+    // if user is authenticated in the session, carry on
     if (req.isAuthenticated()) {
         next();
     } else {
         //  if they aren't redirect them to the home page
-        req.session.returnTo = req.url; 
+        req.session.returnTo = req.url;
         return res.redirect('/login');
     }
 };
 
 var isLoggedInAdmin = function(req, res, next) {
-    // if user is authenticated in the session, carry on 
+    // if user is authenticated in the session, carry on
     if (req.isAuthenticated() && req.user.isAdmin) {
         next();
     } else {
         //  if they aren't redirect them to the home page
-        req.session.returnTo = req.url; 
+        req.session.returnTo = req.url;
         return res.redirect('/login');
     }
 };
@@ -64,18 +64,18 @@ router.get('/edit_me', isLoggedIn, function(req, res) {
 
 router.post('/edit_me', isLoggedIn, function(req, res) {
     var user = {
-        uid: req.body.uid, 
+        uid: req.body.uid,
         dn: req.body.dn,
         givenName: req.body.givenName ,
         surname: req.body.sn,
         project: req.body.businessCategory,
-        changedUid: false,  
-        description: false,      
-        email: req.body.mail, 
-        password: req.body.userPassword, 
-        passwordRepeat: req.body.userPassword2, 
-        language: false,        
-        member: false, 
+        changedUid: false,
+        description: false,
+        email: req.body.mail,
+        password: req.body.userPassword,
+        passwordRepeat: req.body.userPassword2,
+        language: false,
+        member: false,
         owner: false
     };
     actions.user.modify(user).then(function(response) {
@@ -84,7 +84,7 @@ router.post('/edit_me', isLoggedIn, function(req, res) {
             req.login(changedUser, function(err) {
                 if (!err && !response.status) {
                    req.flash('error', 'Fehler beim Ändern der Daten');
-                   res.render('user/edit_me', {message: req.flash('error'), responses: response.responses, title: title('Daten Ändern'), user: changedUser});        
+                   res.render('user/edit_me', {message: req.flash('error'), responses: response.responses, title: title('Daten Ändern'), user: changedUser});
                 } else {
                     req.flash('notification', 'Benutzer*innendaten geändert');
                     req.flash('responses', response.responses);
@@ -147,7 +147,7 @@ router.post('/edit_me', isLoggedIn, function(req, res) {
     //                                 if (err)
     //                                   console.log('Error updating disocurse user: ' + err);
     //                             });
-    //                         }                                        
+    //                         }
     //                         res.redirect('/edit_me');
     //                     }
 
@@ -176,24 +176,24 @@ router.post('/user/passwd', function(req, res) {
         if (valid) {
             actions.user.modify({
                 dn: req.body.dn,
-                uid: req.body.uid, 
+                uid: req.body.uid,
                 givenName: false,
                 surname: false,
                 project: false,
-                email: false, 
+                email: false,
                 description: false,
                 changedUid: false,
-                password: req.body.userPassword, 
-                passwordRepeat: req.body.userPassword2,                 
+                password: req.body.userPassword,
+                passwordRepeat: req.body.userPassword2,
                 language: false,
-                member: false, 
+                member: false,
                 owner: false
             }).then((response) => {
                 if (!response.status) {
                     req.flash('error', 'Fehler beim Setzen des Passworts');
                     ldaphelper.getByUID(req.body.uid, function(user) {
                         res.render('user/passwd', {message: req.flash('error'), responses: response.responses, user: user, token: req.params.token, title: title('Passwort Ändern')});
-                    });                                   
+                    });
                 } else {
                     activation.deleteToken(req.body.uid, function(err) {
                         if (err) {
@@ -202,7 +202,7 @@ router.post('/user/passwd', function(req, res) {
                             req.flash('notification', 'Passwort geändert');
                         }
                         req.flash('responses', response.responses);
-                        res.redirect('/login');                    
+                        res.redirect('/login');
                     });
                 }
             });
@@ -230,7 +230,7 @@ router.post('/user/lostpasswd', function(req, res) {
                 } else {
                     req.flash('notification', 'Link zum Ändern des Passworts wurde per E-Mail verschickt');
                 }
-                res.redirect('/login');                
+                res.redirect('/login');
             });
         }
     })
@@ -281,10 +281,10 @@ router.post('/user/add', isLoggedInAdmin, function(req, res) {
         surname: req.body.sn,
         project: req.body.businessCategory,
         description: req.body.description, // quota
-        email: req.body.mail, 
-        password:  req.body.userPassword, 
-        passwordRepeat: req.body.userPassword2, 
-        member: req.body.groups, 
+        email: req.body.mail,
+        password:  req.body.userPassword,
+        passwordRepeat: req.body.userPassword2,
+        member: req.body.groups,
         owner: req.body.admingroups,
         language: req.body.language,
         activation: req.body.activation == 'on'
@@ -342,17 +342,17 @@ router.get('/user/edit/:id', isLoggedInAdmin, function(req, res) {
 router.post('/user/edit', isLoggedInAdmin, function(req, res) {
     var user = {
         dn: req.body.dn,
-        uid: req.body.uid, 
+        uid: req.body.uid,
         changedUid: req.body.changedUid,
         givenName: req.body.givenName ,
         surname: req.body.sn,
         project: req.body.businessCategory,
         description: req.body.description, // quota
-        email: req.body.mail, 
-        password: req.body.userPassword, 
-        passwordRepeat: req.body.userPassword2, 
+        email: req.body.mail,
+        password: req.body.userPassword,
+        passwordRepeat: req.body.userPassword2,
         language: req.body.language,
-        member: req.body.groups, 
+        member: req.body.groups,
         owner: req.body.admingroups
     };
 
@@ -364,7 +364,7 @@ router.post('/user/edit', isLoggedInAdmin, function(req, res) {
     actions.user.modify(user).then(function(response) {
         if (!response.status) {
             req.flash('error', 'Fehler beim Ändern der Daten');
-            ldaphelper.fetchGroups(function(groups) {        
+            ldaphelper.fetchGroups(function(groups) {
                 res.render('user/edit', {message: req.flash('error'), responses: response.responses, title: title('Benutzer*in Bearbeiten'), groups: groups, user: {
                     givenName: req.body.givenName,
                     sn: req.body.sn,
@@ -375,7 +375,7 @@ router.post('/user/edit', isLoggedInAdmin, function(req, res) {
                     dn: req.body.dn,
                     uid: req.body.uid,
                     businessCategory: req.body.businessCategory
-                }});        
+                }});
             });
         } else {
             req.flash('notification', 'Benutzer*in ' + req.body.givenName + ' ' + req.body.sn + ' geändert');
@@ -398,7 +398,7 @@ router.get('/user/delete/:id', isLoggedInAdmin, function(req, res) {
                 req.flash('notification', 'Benutzer*in ' + req.params.id + ' gelöscht');
             }
             req.flash('responses', response.responses);
-            res.redirect('/show');       
+            res.redirect('/show');
         });
     });
 });
@@ -425,11 +425,11 @@ router.post('/group/add', isLoggedInAdmin, function(req, res) {
             res.render('group/add', {message: req.flash('error'), responses: response.responses, title: title('Gruppe Anlegen'),group: {
                 cn: req.body.cn,
                 description: req.body.description
-            }});            
+            }});
         } else {
-            req.flash('notification', 'Gruppe ' + req.body.cn + ' angelegt');            
+            req.flash('notification', 'Gruppe ' + req.body.cn + ' angelegt');
             req.flash('responses', response.responses);
-            res.redirect('/show');            
+            res.redirect('/show');
         }
     });
 });
@@ -448,11 +448,11 @@ router.post('/group/edit', isLoggedInAdmin, function(req, res) {
                 dn: req.body.dn,
                 cn: req.body.cn,
                 description: req.body.description
-            }});            
+            }});
         } else {
-            req.flash('notification', 'Gruppe ' + req.body.cn + ' geändert');            
+            req.flash('notification', 'Gruppe ' + req.body.cn + ' geändert');
             req.flash('responses', response.responses);
-            res.redirect('/show');            
+            res.redirect('/show');
         }
     });
 
@@ -468,7 +468,7 @@ router.get('/group/delete/:id', isLoggedInAdmin, function(req, res) {
             req.flash('notification', 'Gruppe ' + req.params.id + ' gelöscht');
         }
         req.flash('responses', response.responses);
-        res.redirect('/show');       
+        res.redirect('/show');
     });
 
 });
@@ -489,7 +489,7 @@ router.get('/cat/edit/:id', isLoggedInAdmin, function(req, res) {
                         res.render('cat/edit', { category: category, groups: groups, parents: parents, title: title('Kategorie Bearbeiten') });
                     }
                 });
-                
+
             }
         });
 
@@ -535,11 +535,11 @@ router.post('/cat/add', isLoggedInAdmin, function(req, res) {
                     }
                 });
             });
-         
-        } else {         
+
+        } else {
             req.flash('responses', response.responses);
-            req.flash('notification', 'Kategorie ' + req.body.name + ' angelegt');            
-            res.redirect('/show_cat');         
+            req.flash('notification', 'Kategorie ' + req.body.name + ' angelegt');
+            res.redirect('/show_cat');
         }
     });
 });
@@ -571,11 +571,11 @@ router.post('/cat/edit', isLoggedInAdmin, function(req, res) {
                     }
                 });
             });
-         
-        } else {         
+
+        } else {
             req.flash('responses', response.responses);
-            req.flash('notification', 'Kategorie ' + req.body.name + ' geändert');            
-            res.redirect('/show_cat');         
+            req.flash('notification', 'Kategorie ' + req.body.name + ' geändert');
+            res.redirect('/show_cat');
         }
     });
 });
@@ -590,7 +590,7 @@ router.get('/cat/delete/:id', isLoggedInAdmin, function(req, res) {
             req.flash('notification', 'Kategorie ' + req.params.id + ' gelöscht');
         }
         req.flash('responses', response.responses);
-        res.redirect('/show_cat');       
+        res.redirect('/show_cat');
     });
 
 });

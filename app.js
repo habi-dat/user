@@ -70,7 +70,7 @@ passport.deserializeUser(function(user, done) {
         });
     } else {
         done(null, user);
-    }   
+    }
 });
 
 // catch 404 and forward to error handler
