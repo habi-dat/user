@@ -54,7 +54,7 @@ exports.fetchIsAdmin = function(userDn, done) {
             done(admin);
         });
     });
-    
+
 };
 
 exports.fetchGroups = function(done) {
@@ -67,7 +67,7 @@ exports.fetchGroups = function(done) {
     var opts = {
         scope: 'sub'
     };
-    
+
     var entries = [];
 
     client.search('ou=groups,'+config.server.base, opts, function(err, res) {
@@ -105,7 +105,7 @@ exports.fetchOwnedGroups = function(currentUser, done) {
     var opts = {
         scope: 'sub'
     };
-    
+
     var entries = [];
 
     client.search('ou=groups,'+config.server.base, opts, function(err, res) {
@@ -139,7 +139,7 @@ exports.fetchUsers = function(done) {
     var opts = {
         scope: 'sub'
     };
-    
+
     var entries = [];
 
     client.search('ou=users,'+config.server.base, opts, function(err, res) {
@@ -169,7 +169,7 @@ exports.fetchObject = function(dn, done) {
 
     var opts = {
     };
-    
+
     var entries = [];
 
     client.search(dn, opts, function(err, res) {
@@ -202,7 +202,7 @@ exports.getByEmail = function(mail, done) {
       filter: '(mail=' + mail + '*)',
       scope: 'sub'
     };
-    
+
     var entries = [];
 
     client.search('ou=users,'+config.server.base, opts, function(err, res) {
@@ -241,7 +241,7 @@ exports.getByUID = function(uid, done) {
       filter: '(uid=' + uid + ')',
       scope: 'sub'
     };
-    
+
     var entries = [];
 
     client.search('ou=users,'+config.server.base, opts, function(err, res) {
@@ -280,7 +280,7 @@ exports.findUniqueUID = function(uid, number, done) {
         } else {
             exports.findUniqueUID(uid, number+1, done);
         }
-    });    
+    });
 };
 
 exports.encryptAndAddUser = function(entry, done) {
@@ -293,7 +293,7 @@ exports.encryptAndAddUser = function(entry, done) {
     ssha.ssha_pass(entry.userPassword, function(err, hash) {
         if (err) {
             return done(err);
-        } 
+        }
 
         entry.userPassword = hash;
 
@@ -321,7 +321,7 @@ exports.change = function (dn, operation, modification) {
             } else  {
                 resolve();
             }
-        });    
+        });
     });
 };
 
@@ -363,7 +363,7 @@ exports.updatePassword = function(uid, userPassword, userPassword2, done) {
         if (err) {
             console.log('Error connecting LDAP: ' + err);
         }
-    }); 
+    });
 
     exports.getByUID(uid, function(user, err) {
         if (err || !user) {
@@ -405,12 +405,12 @@ exports.remove = function(dn) {
             } else {
                 resolve();
             }
-        });        
+        });
     })
 };
 
 exports.add = function(dn, entry) {
-    return new Promise((resolve, reject) => {    
+    return new Promise((resolve, reject) => {
         client.bind(config.server.bindDn, config.server.bindCredentials, function(err) {
             if (err) {
                 console.log('Error connecting LDAP: ' + err);
@@ -422,9 +422,9 @@ exports.add = function(dn, entry) {
                     } else {
                         resolve();
                     }
-                });                    
+                });
             }
-        });       
+        });
     });
 }
 

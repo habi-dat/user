@@ -14,7 +14,7 @@ exports.sendActivationEmail = function(user, done) {
 
             var link = config.settings.activation.base_url + '/passwd/' + user.uid + '/'+token.token;
 
-            var transport = nodemailer.createTransport(config.smtp);       
+            var transport = nodemailer.createTransport(config.smtp);
             console.log('after transport');
 
             var mailOptions = {
@@ -38,7 +38,7 @@ exports.sendActivationEmail = function(user, done) {
                       '<p>Your login user name is: "'+ user.givenName + ' ' + user.surname +'"</p>' +
                       '<p>To access the cloud use: <a href="https://cloud.commoningspaces.org">cloud.commoningspaces.org</a></p>' +
                       '<p>For resetting your password use: <a href="https://user.habidat.org">user.habidat.org</a></p>' +
-                      '<p>Have fun!</p>';                
+                      '<p>Have fun!</p>';
             }
 
             transport.sendMail(mailOptions, (error, info) => {
@@ -63,7 +63,7 @@ exports.sendPasswordResetEmail = function(user, done) {
 
             var link = config.settings.activation.base_url + '/passwd/' + user.uid + '/'+token.token;
 
-            var transport = nodemailer.createTransport(config.smtp);       
+            var transport = nodemailer.createTransport(config.smtp);
 
 
             var mailOptions = {
@@ -75,12 +75,12 @@ exports.sendPasswordResetEmail = function(user, done) {
                 mailOptions.subject = 'Your password at habiDAT was resetted';
                 mailOptions.html = '<h3>Your password was resetted</h3>'+
                       '<p>Please follow the link to set a new password: </p>'+
-                      '<a href="'+ link +'">' + link + '</a>';   
+                      '<a href="'+ link +'">' + link + '</a>';
             } else {
                 mailOptions.subject = 'Dein Passwort bei habiDAT wurde zurückgesetzt';
                 mailOptions.html = '<h3>Dein Passwort wurde zurückgesetzt</h3>'+
                       '<p>Bitte klicke auf den folgenden Link um dein neues Passwort zu wählen: </p>'+
-                      '<a href="'+ link +'">' + link + '</a>';                
+                      '<a href="'+ link +'">' + link + '</a>';
             }
 
             transport.sendMail(mailOptions, (error, info) => {
