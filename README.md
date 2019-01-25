@@ -1,8 +1,20 @@
 # habi*DAT user module
 
-This app is a module for the habi\*DAT application platform. It acts as a simple overlay to the openLDAP user base and provides hooks to be able to change settings in the other modules of the platform, like Discourse and Nextcloud
+This app is a module for the habi\*DAT application platform. It acts as a simple overlay to the openLDAP user base and provides hooks to be able to change settings in the other modules of the platform, like Discourse and Nextcloud.
+
+Users can also change their passwords (in OpenLDAP).
+
+It is licensed under the MIT license (see LICENSE file) and developed in node.js.
+
+## Background
+
+(tbd: explain user need and technical difficulties, central authentication and authorization in nextcloud, dokuwiki, discourse).
 
 ## Installation
+
+### Requisites
+
+You will need a running (Open)LDAP-Server and a machine that can run nodejs or have Docker running.
 
 ### Docker
 (TBD) use the `Dockerfile` and `dev_entrypoint.sh` script.
@@ -42,6 +54,10 @@ Using the sample configuration file, most values can be directly set by using th
     * $HABIDAT_USER_NEXTCLOUD_DB_DATABASE
     * $HABIDAT_USER_NEXTCLOUD_DB_USER
     * $HABIDAT_USER_NEXTCLOUD_DB_PASSWORD
+
+## Launching
+
+Use the accompanied Dockerfile, `nodejs app.js` or a process-watcher to keep `app.js` running.
 
 ## Development
 
