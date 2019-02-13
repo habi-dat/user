@@ -32,6 +32,8 @@ RUN \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-ENTRYPOINT ./entrypoint.sh
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN ln -s usr/local/bin/docker-entrypoint.sh / # backwards compat
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 CMD pm2-docker start app.js 
