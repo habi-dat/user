@@ -22,6 +22,8 @@ ADD . /habidat-user
 
 WORKDIR /habidat-user
 
+RUN chmod +x entrypoint.sh
+
 RUN npm install && npm install pm2 -g
 
 RUN \
@@ -30,6 +32,6 @@ RUN \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-ENTRYPOINT entrypoint.sh
+ENTRYPOINT ./entrypoint.sh
 
 CMD pm2-docker start app.js 
