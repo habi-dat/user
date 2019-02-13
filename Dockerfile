@@ -22,8 +22,6 @@ ADD . /habidat-user
 
 WORKDIR /habidat-user
 
-RUN chmod +x entrypoint.sh
-
 RUN npm install && npm install pm2 -g
 
 RUN \
