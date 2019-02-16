@@ -25,7 +25,6 @@
   	}
   },
   "discourse": {
-  	"enabled": true,
   	"APIURL": "$HABIDAT_DISCOURSE_API_URL",
   	"APIKEY": "$HABIDAT_DISCOURSE_API_KEY",
   	"USERNAME": "$HABIDAT_DISCOURSE_API_USERNAME",

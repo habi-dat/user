@@ -662,14 +662,17 @@ var removeCategory = function(category) {
 exports.register = function(hooks) {
   // disable user creation since it is now done automatically on first login
   //hooks.user.create.post.push(createUser);
-  hooks.user.modify.post.push(modifyUser);
-  hooks.user.remove.post.push(removeUser);
+  if (config.discourse.APIURL && config.discourse.APIKEY && config.discourse.USERNAME) {
+    hooks.user.modify.post.push(modifyUser);
+    hooks.user.remove.post.push(removeUser);
 
-  hooks.group.create.post.push(createGroup);
-  hooks.group.modify.post.push(modifyGroup);
-  hooks.group.remove.post.push(removeGroup);
+    hooks.group.create.post.push(createGroup);
+    hooks.group.modify.post.push(modifyGroup);
+    hooks.group.remove.post.push(removeGroup);
 
-  hooks.category.create.on.push(createCategory);
-  hooks.category.modify.on.push(modifyCategory);
-  hooks.category.remove.on.push(removeCategory);
+    hooks.category.create.on.push(createCategory);
+    hooks.category.modify.on.push(modifyCategory);
+    hooks.category.remove.on.push(removeCategory);    
+  }
+
 };
