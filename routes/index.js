@@ -170,7 +170,7 @@ router.get('/passwd/:uid/:token', function(req, res) {
         }
     });
 });
-re
+
 router.post('/user/passwd', function(req, res) {
     activation.isTokenValid(req.body.uid, req.body.token, function(valid) {
         if (valid) {
