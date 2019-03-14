@@ -7,6 +7,7 @@ var config    = require('../config/config.json');
 var activation = require('../utils/activation');
 var mail = require('../utils/mailhelper');
 var actions = require('../actions');
+var bodyParser = require('body-parser');
 
 var isLoggedIn = function(req, res, next) {
     // if user is authenticated in the session, carry on
@@ -34,18 +35,72 @@ var title = function(page) {
     return 'habiDAT - ' + page;
 }
 
-router.get('/login', function(req, res) {
 
-    var errorText;
-    var error = req.flash('error');
-    if (error instanceof Array) {
-        errorText = error[0];
-    } else {
-        errorText = error;
-    }
+if (config.saml.enabled) {
 
-    res.render('login', { user : req.user , message: error, notification: req.flash('notification'), title: title('Login')});
-});
+    router.get('/login',
+        passport.authenticate('saml',{session: true, failureRedirect: '/login', failureFlash:true, successReturnToOrRedirect: '/'})
+    );
+
+    router.get('/logout', function(req, res) {
+        global.samlStrategy.logout(req, function(err, request){
+            if(!err){
+                //redirect to the IdP Logout URL
+                res.redirect(request);
+            }
+        });        
+    });
+
+    router.get('/saml/logout', function(req, res){
+        req.logout();
+        res.redirect('/');
+    });
+
+
+    router.post('/saml/consume',
+        bodyParser.urlencoded({ extended: false }),
+        passport.authenticate('saml', {session: true, failureRedirect: '/login', failureFlash:true, successReturnToOrRedirect: '/'})
+    );    
+
+    router.get('/logindirect', function(req, res) {
+
+        var errorText;
+        var error = req.flash('error');
+        if (error instanceof Array) {
+            errorText = error[0];
+        } else {
+            errorText = error;
+        }
+
+        res.render('login', { user : req.user , message: error, notification: req.flash('notification'), title: title('Login')});
+    });
+
+} else {
+
+    router.get('/logout', function(req, res) {
+        req.logout();
+        res.redirect('/login');
+    });
+
+
+    router.get('/login', function(req, res) {
+
+        var errorText;
+        var error = req.flash('error');
+        if (error instanceof Array) {
+            errorText = error[0];
+        } else {
+            errorText = error;
+        }
+
+        res.render('login', { user : req.user , message: error, notification: req.flash('notification'), title: title('Login')});
+    });
+
+}
+
+router.post('/login', passport.authenticate('ldapauth', {session: true, failureRedirect: '/login',
+ failureFlash:true, successReturnToOrRedirect: '/'}));
+
 
 router.get('/', isLoggedIn, function(req, res) {
     if (req.user.isAdmin) {
@@ -236,13 +291,7 @@ router.post('/user/lostpasswd', function(req, res) {
     })
 });
 
-router.post('/login', passport.authenticate('ldapauth', {session: true, failureRedirect: '/login',
- failureFlash:true, successReturnToOrRedirect: '/'}));
 
-router.get('/logout', function(req, res) {
-    req.logout();
-    res.redirect('/login');
-});
 
 router.get('/ping', function(req, res){
     res.status(200).send("pong!");

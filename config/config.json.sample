@@ -24,6 +24,17 @@
 	    "searchFilter": "(cn={{username}})"
   	}
   },
+  "saml": {
+    "enabled": true,
+    "parameters": {
+      "callbackUrl": "https://$HABIDAT_USER_SUBDOMAIN.$HABIDAT_DOMAIN/saml/consume",
+      "entryPoint": "https://sso.$HABIDAT_DOMAIN/simplesaml/saml2/idp/SSOService.php",
+      "logoutCallbackUrl": "https://$HABIDAT_USER_SUBDOMAIN.$HABIDAT_DOMAIN/saml/logout",
+      "logoutUrl": "https://sso.$HABIDAT_DOMAIN/simplesaml/saml2/idp/SingleLogoutService.php",      
+      "issuer": "https://$HABIDAT_USER_SUBDOMAIN.$HABIDAT_DOMAIN",
+      "cert": "$HABIDAT_SSO_CERTIFICATE"        
+    }
+  },
   "discourse": {
   	"APIURL": "$HABIDAT_DISCOURSE_API_URL",
   	"APIKEY": "$HABIDAT_DISCOURSE_API_KEY",

@@ -11,6 +11,7 @@ var flash    = require('connect-flash');
 var http = require('http');
 var ldaphelper = require('./utils/ldaphelper');
 var multer = require('multer');
+var SamlStrategy = require('passport-saml').Strategy;
 
 var routes = require('./routes/index');
 
@@ -55,6 +56,24 @@ app.use('/', routes);
 
 // passport config
 passport.use(new LdapStrategy(config.ldap));
+
+if (config.saml.enabled) {
+    global.samlStrategy = new SamlStrategy(config.saml.parameters, 
+        function(profile, done) {
+            if (config.debug) {
+                console.log("DEBUG: SAML profile: " + JSON.stringify(profile));
+            }
+            ldaphelper.getByUID(profile.nameID, function(user, err) {
+              if (err) {
+                return done(err);
+              }
+              user.nameID = profile.nameID;
+              user.nameIDFormat= profile.nameIDFormat;
+              return done(null, user);
+            });
+        });
+    passport.use(global.samlStrategy);    
+}
 
 passport.serializeUser(function(user, done) {
   done(null, user);
