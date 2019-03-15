@@ -62,6 +62,11 @@ if (config.saml.enabled) {
         passport.authenticate('saml', {session: true, failureRedirect: '/login', failureFlash:true, successReturnToOrRedirect: '/'})
     );    
 
+    router.get('/saml/consume',
+        //bodyParser.urlencoded({ extended: false }),
+        passport.authenticate('saml', {session: true, failureRedirect: '/login', failureFlash:true, successReturnToOrRedirect: '/'})
+    );      
+
     router.get('/logindirect', function(req, res) {
 
         var errorText;
