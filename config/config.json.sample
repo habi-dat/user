@@ -25,7 +25,7 @@
   	}
   },
   "saml": {
-    "enabled": true,
+    "enabled": $HABIDAT_USER_SAML,
     "parameters": {
       "callbackUrl": "https://$HABIDAT_USER_SUBDOMAIN.$HABIDAT_DOMAIN/saml/consume",
       "entryPoint": "https://sso.$HABIDAT_DOMAIN/simplesaml/saml2/idp/SSOService.php",
