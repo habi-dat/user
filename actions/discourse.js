@@ -74,7 +74,7 @@ var get = function(url, parameters)  {
               console.log('GET response: HTTP(' + httpCode + '), body: ' + JSON.stringify(body));
           } else {
               console.log('GET response: HTTP(' + httpCode + '), body: ' + body);
-            }
+          }
         if (httpCode == "200") {
           resolve(JSON.parse(body));
         } else {
@@ -150,9 +150,9 @@ var getUser = function(uid, fetchEmail = true) {
 
 var getGroupId = function(name) {
   return new Promise((resolve, reject) => {
-    get('admin/groups.json', {})
-      .then(function(groups) {
-        var group = groups.find(function(group) {
+    get('groups.json', {})
+      .then(function(result) {
+        var group = result.groups.find(function(group) {
           return group.name.toLowerCase() === name.toLowerCase();
         });
         if (group) {
@@ -160,7 +160,8 @@ var getGroupId = function(name) {
         } else {
           reject('Gruppe ' + name + ' nicht gefunden');
         }
-      });
+      })
+      .catch(error => reject(error));
   });
 };
 
@@ -305,11 +306,11 @@ var createUser = async function(user) {
                     var assignedGroups = JSON.parse(user.member);
                     var assignedAdminGroups = JSON.parse(user.owner);
 
-                    get('admin/groups.json', {})
-                      .then((groups) => {
+                    get('groups.json', {})
+                      .then((result) => {
                         var actions = [];
-                      for (var i = 0; i < groups.length; i++) {
-                        var group = groups[i];
+                      for (var i = 0; i < result.groups.length; i++) {
+                        var group = result.groups[i];
 
                           var dn = 'cn=' + group.name.toLowerCase() + ',ou=groups,' + config.ldap.server.base;
 
@@ -516,7 +517,7 @@ var removeGroup = function(group) {
       .then(name => getGroupId(name))
       .then(id => del('admin/groups/' + id, {}))
       .catch(function(error) {
-        resolve({status : true, message: 'DISCOURSE: Gruppe nicht vorhanden'});
+        resolve({status : true, message: 'DISCOURSE: Gruppe nicht vorhanden: ' + error});
       })
       .then(function () {
         resolve({status: true, message: 'DISCOURSE: Gruppe gelöscht'});
