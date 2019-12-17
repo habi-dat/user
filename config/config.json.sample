@@ -10,7 +10,7 @@
   "smtp": {
       "host": "$HABIDAT_USER_SMTP_HOST",
       "port": "$HABIDAT_USER_SMTP_PORT",
-      "secure": "$HABIDAT_USER_SMTP_TLS",
+      "requireTLS": "$HABIDAT_USER_SMTP_TLS",
       "authMethod": "$HABIDAT_USER_SMTP_AUTHMETHOD",
       "auth": {
         "user": "$HABIDAT_USER_SMTP_USER",
