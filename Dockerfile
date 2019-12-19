@@ -1,6 +1,8 @@
 FROM node:carbon
 
 ENV HABIDAT_DOMAIN example.com
+ENV HABIDAT_TITLE habi*DAT
+ENV HABIDAT_ADMIN_EMAIL admin@example.com
 ENV HABIDAT_USER_SUBDOMAIN user
 ENV HABIDAT_USER_SMTP_EMAILFROM noreply@example.com
 ENV HABIDAT_USER_SMTP_HOST mail.example.com

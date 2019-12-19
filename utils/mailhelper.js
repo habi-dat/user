@@ -30,22 +30,23 @@ exports.sendActivationEmail = function(user, done) {
                 to: user.mail
             }
             if (user.language && user.language == 'de')  {
-                mailOptions.subject = 'habiDAT: Aktiviere deinen Account bei habiDAT';
-                mailOptions.html = '<h3>Willkommen beim habiDAT '+user.givenName+'!</h3>'+
+                mailOptions.subject = config.general.site_title + ': Aktiviere deinen Account!';
+                mailOptions.html = '<h3>Willkommen beim ' + config.general.site_title + ' '+user.givenName+'!</h3>'+
                       '<p>Dein Account wurde angelegt, bitte klicke auf den folgenden Link um dein Passwort zu wählen: <a href="'+ link +'">' + link + '</a></p>'+
                       '<p>Dein Benutzer*innenname / Loginname ist: "'+ user.givenName + ' ' + user.surname +'"</p>' +
                       '<p>Für Information zur Benutzung der Plattform bitte: <a href="https://wiki.habidat.org/doku.php?id=benutzer_innenguide">HIER</a> klicken</p> ' +
-                      '<p>Für den Einstieg in die Plattform: <a href="https://cloud.habidat.org">cloud.habidat.org</a></p>' +
-                      '<p>Für Einstellungen zu deinem Account oder wennn du dein Passwort vergessen hast: <a href="https://user.habidat.org">user.habidat.org</a></p>' +
-                      '<p>Und für alle weiteren Fragen: <a href="mailto:support@xaok.org">support@xaok.org</a></p>' +
+                      '<p>Für den Einstieg in die Plattform: <a href="https://' + config.general.domain + '">' + config.general.domain + '</a></p>' +
+                      '<p>Für Einstellungen zu deinem Account oder wennn du dein Passwort vergessen hast: <a href="https://' config.general.subdomain + '.' + config.general.domain '">' + config.general.subdomain + '.' + config.general.domain + '</a></p>' +
+                      '<p>Und für alle weiteren Fragen: <a href="mailto:' + config.general.contact + '">' + config.general.contact + '</a></p>' +
                       '<p>Viel Spaß!</p>';
             } else {
-                mailOptions.subject = 'habiDAT Cloud: Activate your account';
-                mailOptions.html = '<h3>Welcome to the habiDAT cloud '+user.givenName+' ' + user.surname+'!</h3>'+
+                mailOptions.subject = config.general.site_title + ' Cloud: Activate your account';
+                mailOptions.html = '<h3>Welcome to the ' + config.general.site_title + ' cloud '+user.givenName+' ' + user.surname+'!</h3>'+
                       '<p>Your account was created, please click the following link to set your password: <a href="'+ link +'">' + link + '</a></p>'+
                       '<p>Your login user name is: "'+ user.givenName + ' ' + user.surname +'"</p>' +
-                      '<p>To access the cloud use: <a href="https://cloud.commoningspaces.org">cloud.commoningspaces.org</a></p>' +
-                      '<p>For resetting your password use: <a href="https://user.habidat.org">user.habidat.org</a></p>' +
+                      '<p>To access the cloud use: <a href="https://' + config.general.domain + '">' + config.general.domain + '</a></p>' +
+                      '<p>For resetting your password use: <a href="https://' config.general.subdomain + '.' + config.general.domain '">' + config.general.subdomain + '.' + config.general.domain + '</a></p>' +
+                      '<p>If you have any questions, feel free to contact us: <a href="mailto:' + config.general.contact + '">' + config.general.contact + '</a></p>' +                      
                       '<p>Have fun!</p>';
             }
 
@@ -80,12 +81,12 @@ exports.sendPasswordResetEmail = function(user, done) {
             }
 
             if (user.preferredLanguage && user.preferredLanguage == 'en')  {
-                mailOptions.subject = 'Your password at habiDAT was resetted';
+                mailOptions.subject = 'Your password at ' + config.general.site_title + ' was resetted';
                 mailOptions.html = '<h3>Your password was resetted</h3>'+
                       '<p>Please follow the link to set a new password: </p>'+
                       '<a href="'+ link +'">' + link + '</a>';
             } else {
-                mailOptions.subject = 'Dein Passwort bei habiDAT wurde zurückgesetzt';
+                mailOptions.subject = 'Dein Passwort bei ' + config.general.site_title + ' wurde zurückgesetzt';
                 mailOptions.html = '<h3>Dein Passwort wurde zurückgesetzt</h3>'+
                       '<p>Bitte klicke auf den folgenden Link um dein neues Passwort zu wählen: </p>'+
                       '<a href="'+ link +'">' + link + '</a>';

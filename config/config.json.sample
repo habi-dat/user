@@ -1,6 +1,12 @@
 {
   "settings":
-  {
+  { 
+    "general": {
+      "title": "$HABIDAT_TITLE",
+      "domain": "$HABIDAT_DOMAIN",
+      "subdomain: "$HABIDAT_USER_SUBDOMAIN",
+      "contact": "$HABIDAT_ADMIN_EMAIL"
+    },
     "activation":
     {
       "email_from": "$HABIDAT_USER_SMTP_EMAILFROM",
