@@ -3,7 +3,7 @@
   {
     "activation":
     {
-      "email_from": "noreply@$HABIDAT_DOMAIN",
+      "email_from": "$HABIDAT_USER_SMTP_EMAILFROM",
       "base_url": "https://$HABIDAT_USER_SUBDOMAIN.$HABIDAT_DOMAIN"
     }
   }, 
