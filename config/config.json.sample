@@ -4,7 +4,7 @@
     "general": {
       "title": "$HABIDAT_TITLE",
       "domain": "$HABIDAT_DOMAIN",
-      "subdomain: "$HABIDAT_USER_SUBDOMAIN",
+      "subdomain": "$HABIDAT_USER_SUBDOMAIN",
       "contact": "$HABIDAT_ADMIN_EMAIL"
     },
     "activation":
