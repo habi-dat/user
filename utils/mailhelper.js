@@ -36,7 +36,7 @@ exports.sendActivationEmail = function(user, done) {
                       '<p>Dein Benutzer*innenname / Loginname ist: "'+ user.givenName + ' ' + user.surname +'"</p>' +
                       '<p>Für Information zur Benutzung der Plattform bitte: <a href="https://wiki.habidat.org/doku.php?id=benutzer_innenguide">HIER</a> klicken</p> ' +
                       '<p>Für den Einstieg in die Plattform: <a href="https://' + config.general.domain + '">' + config.general.domain + '</a></p>' +
-                      '<p>Für Einstellungen zu deinem Account oder wennn du dein Passwort vergessen hast: <a href="https://' config.general.subdomain + '.' + config.general.domain '">' + config.general.subdomain + '.' + config.general.domain + '</a></p>' +
+                      '<p>Für Einstellungen zu deinem Account oder wennn du dein Passwort vergessen hast: <a href="https://' + config.general.subdomain + '.' + config.general.domain '">' + config.general.subdomain + '.' + config.general.domain + '</a></p>' +
                       '<p>Und für alle weiteren Fragen: <a href="mailto:' + config.general.contact + '">' + config.general.contact + '</a></p>' +
                       '<p>Viel Spaß!</p>';
             } else {
@@ -45,7 +45,7 @@ exports.sendActivationEmail = function(user, done) {
                       '<p>Your account was created, please click the following link to set your password: <a href="'+ link +'">' + link + '</a></p>'+
                       '<p>Your login user name is: "'+ user.givenName + ' ' + user.surname +'"</p>' +
                       '<p>To access the cloud use: <a href="https://' + config.general.domain + '">' + config.general.domain + '</a></p>' +
-                      '<p>For resetting your password use: <a href="https://' config.general.subdomain + '.' + config.general.domain '">' + config.general.subdomain + '.' + config.general.domain + '</a></p>' +
+                      '<p>For resetting your password use: <a href="https://' + config.general.subdomain + '.' + config.general.domain '">' + config.general.subdomain + '.' + config.general.domain + '</a></p>' +
                       '<p>If you have any questions, feel free to contact us: <a href="mailto:' + config.general.contact + '">' + config.general.contact + '</a></p>' +                      
                       '<p>Have fun!</p>';
             }
