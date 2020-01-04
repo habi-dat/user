@@ -2,12 +2,8 @@ var nodemailer = require('nodemailer');
 var activation = require('./activation');
 var config = require('../config/config.json');
 
-if (config.smtp.auth.user == 'none') {
-  config.smtp.auth.user = null;
-}
-
-if (config.smtp.auth.pass == 'none') {
-  config.smtp.auth.pass = null;
+if (config.auth.authmethod == 'none') {
+  config.smtp.auth = undefined;
 }
 
 exports.sendActivationEmail = function(user, done) {
