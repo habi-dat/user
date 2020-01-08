@@ -176,6 +176,7 @@ var createUser = async function(user) {
     await createUser;
     var cn = user.givenName + ' ' + user.surname;
     var dn = 'cn=' + cn + ',ou=users,' + config.ldap.server.base;
+    user.dn = dn;
     await updateGroups(dn, dn, user.member, user.owner);
     return {status: true, message: "LDAP: Benutzer*in " + entry.cn + " im LDAP erstellt"};
   } catch (e) {

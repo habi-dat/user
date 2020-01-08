@@ -49,6 +49,29 @@ var modifyUser = function(user) {
   }
 };
 
+// only if uid or dn changed: change uid and dn in LDAP mapping
+var createUser = function(user) {
+  return connectDb()
+    .then((connection) => {
+      var statement = "insert into " + config.nextcloud.db.prefix + "_ldap_user_mapping(ldap_dn, owncloud_name, directory_uuid) values ('" + user.dn.toLowerCase() + "','" + user.uid + "','" + user.uid + "')";
+      return connection.queryAsync(statement).then((results) => {
+        return connection.endAsync().then(() => {
+          return results;
+        });
+      }, (error) => {
+        connection.end();
+        throw error;
+      });
+    })
+    .then((results) => {
+      return {status : true, message: "NEXTCLOUD: Benutzer*innen-UID Zuordnung eingefügt (" + results.changedRows + ")"};
+    })
+    .catch((error) => {
+      return {status: false, message: "NEXTCLOUD: Einfügen der Benutzer*innen-UID fehlgeschlagen: " + error};
+    });
+};
+
 exports.register = function(hooks) {
   hooks.user.modify.post.push(modifyUser);
+  hooks.user.create.post.push(createUser);
 };
