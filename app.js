@@ -49,6 +49,7 @@ app.use('/public', express.static(path.join(__dirname, '/public'),  { maxAge: on
 app.use(function(req,res,next){
     res.locals.session = req.session;
     res.locals.currentUser = req.user;
+    res.locals.config = config;
     next();
 });
 

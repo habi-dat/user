@@ -6,7 +6,7 @@ mixin user_form(action, user, admin)
           input.hidden(name="uid", value=user.uid)            
         legend #{(user && action == "/edit_me"? "Daten Ändern" : "Benutzer*in " + (user && action=="/user/edit"? "Bearbeiten": "Anlegen"))}
         .col-md-6
-          if action == "/user/edit"
+          if action == "/user/edit" && (!config.saml || !config.saml.enabled)
             .form-group.required
               label.control-label.col-md-4(for="sn") Interne User-ID
               .col-md-8
