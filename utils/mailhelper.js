@@ -2,7 +2,7 @@ var nodemailer = require('nodemailer');
 var activation = require('./activation');
 var config = require('../config/config.json');
 
-if (config.auth.authMethod == 'none') {
+if (config.smtp.authMethod == 'none') {
   config.smtp.auth = undefined;
 }
 
