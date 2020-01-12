@@ -59,7 +59,6 @@ email.register(hooks);
 
 var execute = async function(action, step, object) {
   var responses = await Promise.all(action[step].map(callback => callback(object)));
-  console.log("responses promise.all: " + JSON.stringify(responses));
   var status = true;
   responses.forEach(function(response) {
     status = response.status && status;
@@ -79,11 +78,8 @@ var executeAll = async function(action, steps, object) {
     };
 
     for(i=0; i<steps.length; i++) {
-      console.log("step " + steps[i]);
       var newResponse = await execute(action, steps[i], object);
-      console.log("object: " + JSON.stringify(object));
       flattenResponses(response, newResponse);
-      console.log('response: ' + JSON.stringify(response) + ', newResponse: ' + JSON.stringify(newResponse));
       if (!response.status) {
         return response;
       }
