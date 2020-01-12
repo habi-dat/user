@@ -65,7 +65,7 @@
       "prefix": "oc"
     },
     "api": {
-      "url": "$HABIDAT_USER_NEXTCLOUD_API_URL",
+      "url": "$HABIDAT_USER_NEXTCLOUD_API_URL"
     }
   }
 }
