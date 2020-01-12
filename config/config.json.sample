@@ -63,6 +63,9 @@
       "user": "$HABIDAT_USER_NEXTCLOUD_DB_USER",
       "password": "$HABIDAT_USER_NEXTCLOUD_DB_PASSWORD",
       "prefix": "oc"
+    },
+    "api": {
+      "url": "$HABIDAT_USER_NEXTCLOUD_API_URL",
     }
   }
 }
