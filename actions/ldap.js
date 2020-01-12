@@ -229,7 +229,7 @@ var modifyUser = async function(user) {
             updatedFields.push('Name');
         }
 
-        if (user.changedUid != false && user.changedUid !== "" && user.changedUid !== user.uid) {
+        if (user.changedUid && user.changedUid !== "" && user.changedUid !== user.uid) {
             console.log("new uid: " + user.changedUid);
           fieldActions.push(ldaphelper.change(dn, 'replace', {uid : user.changedUid}));
             updatedFields.push('User ID');
