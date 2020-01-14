@@ -1,5 +1,5 @@
 mixin user_form(action, user, admin)
-  form.form-horizontal.checkbox-form.validation-form(action=action method="post" role="form")
+  form.form-horizontal.checkbox-form.validation-form(action=action method="post" role="form" is-admin=currentUser.isAdmin)
         if user && user.dn
           input.hidden(name="dn", value=user.dn)
         if user && user.uid
@@ -69,7 +69,7 @@ mixin user_form(action, user, admin)
                 .input-group
                   span.input-group-addon
                     i.glyphicon.glyphicon-cloud-upload
-                  input.form-control(type="text" id="description" name="description" value=(user?user.description:undefined) placeholder="10 GB")    
+                  input.form-control(type="text" id="description" autocomplete="off" name="description" value=(user?user.description:undefined) placeholder="10 GB")    
           if action != "/edit_me"
             .form-group.required
               label.control-label.col-md-4(for="language") Sprache 
@@ -92,21 +92,23 @@ mixin user_form(action, user, admin)
                 .input-group
                   span.input-group-addon
                     i.glyphicon.glyphicon-lock
-                  input.form-control(type="password" data-toggle="tooltip" title="Min. 8 Zeichen, je min. 1 Groß- und 1 Kleinbuchstabe, 1 Zahl und 1 Sonderzeichen" id="password" name="userPassword" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$")     
+                  input(name = "DummyUsername" type="text" style="display:none;")
+                  input(name = "DummyPassword" type="password" style="display:none;")                      
+                  input.form-control(type="password" autocomplete="off" data-toggle="tooltip" title="Min. 8 Zeichen, je min. 1 Groß- und 1 Kleinbuchstabe, 1 Zahl und 1 Sonderzeichen" id="password" name="userPassword" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$")     
             .form-group   
               label.control-label.col-md-4 
               .col-md-8
                 .input-group
                   span.input-group-addon
                     i.glyphicon.glyphicon-lock
-                  input.form-control(type="password" id="password_confirmation" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$" name="userPassword2")
+                  input.form-control(type="password" autocomplete="off" id="password_confirmation" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$" name="userPassword2")
         if (admin)
           .col-md-6
             .form-group
               label.control-label.col-md-2 Gruppen
               .col-md-10
                 .well
-                  ul.list-group.list-user-groups.checked-list-box(id="check-list-box")
+                  ul.list-group.list-user-groups.checked-list-box(id="check-list-box" is-admin=currentUser.isAdmin)
                     each group in groups
                       if (group.cn)
                         if user && user.dn && group.owner && group.owner.indexOf(user.dn) > -1

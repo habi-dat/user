@@ -57,8 +57,8 @@ discourse.register(hooks);
 nextcloud.register(hooks);
 email.register(hooks);
 
-var execute = async function(action, step, object) {
-  var responses = await Promise.all(action[step].map(callback => callback(object)));
+var execute = async function(action, step, object, currentUser) {
+  var responses = await Promise.all(action[step].map(callback => callback(object, currentUser)));
   var status = true;
   responses.forEach(function(response) {
     status = response.status && status;
@@ -71,14 +71,14 @@ var flattenResponses = function(response, newResponse) {
   response.responses = response.responses.concat(newResponse.responses);
 };
 
-var executeAll = async function(action, steps, object) {
+var executeAll = async function(action, steps, object, currentUser) {
     var response = {
         status: true,
         responses: []
     };
 
     for(i=0; i<steps.length; i++) {
-      var newResponse = await execute(action, steps[i], object);
+      var newResponse = await execute(action, steps[i], object, currentUser);
       flattenResponses(response, newResponse);
       if (!response.status) {
         return response;
@@ -89,46 +89,46 @@ var executeAll = async function(action, steps, object) {
 }
 
 exports.user = {
-  create: async function(user) {
-    return await executeAll(hooks.user.create, ["validate", "pre", "on", "post"], user);
+  create: async function(user, currentUser) {
+    return await executeAll(hooks.user.create, ["validate", "pre", "on", "post"], user, currentUser);
   },
-  modify: async function(user) {
-    return await executeAll(hooks.user.modify, ["validate", "pre", "on", "post"], user);
+  modify: async function(user, currentUser) {
+    return await executeAll(hooks.user.modify, ["validate", "pre", "on", "post"], user, currentUser);
   },
-  remove: async function(user) {
-    return await executeAll(hooks.user.remove, ["validate", "pre", "on", "post"], user);
+  remove: async function(user, currentUser) {
+    return await executeAll(hooks.user.remove, ["validate", "pre", "on", "post"], user, currentUser);
   }
 };
 
 exports.group = {
-  create: async function(group) {
-    return await executeAll(hooks.group.create, ["validate", "pre", "on", "post"], group);
+  create: async function(group, currentUser) {
+    return await executeAll(hooks.group.create, ["validate", "pre", "on", "post"], group, currentUser);
   },
-  modify: async function(group) {
-    return await executeAll(hooks.group.modify, ["validate", "pre", "on", "post"], group);
+  modify: async function(group, currentUser) {
+    return await executeAll(hooks.group.modify, ["validate", "pre", "on", "post"], group, currentUser);
   },
-  remove:  async function(group) {
-    return await executeAll(hooks.group.remove, ["validate", "pre", "on", "post"], group);
+  remove:  async function(group, currentUser) {
+    return await executeAll(hooks.group.remove, ["validate", "pre", "on", "post"], group, currentUser);
   }
 }
 
 exports.category = {
-  create: async function(category) {
-    return await executeAll(hooks.category.create, ["validate", "pre", "on", "post"], category);
+  create: async function(category, currentUser) {
+    return await executeAll(hooks.category.create, ["validate", "pre", "on", "post"], category, currentUser);
   },
-  modify: async function(category) {
-    return await executeAll(hooks.category.modify, ["validate", "pre", "on", "post"], category);
+  modify: async function(category, currentUser) {
+    return await executeAll(hooks.category.modify, ["validate", "pre", "on", "post"], category, currentUser);
   },
-  remove:  async function(category) {
-    return await executeAll(hooks.category.remove, ["validate", "pre", "on", "post"], category);
+  remove:  async function(category, currentUser) {
+    return await executeAll(hooks.category.remove, ["validate", "pre", "on", "post"], category, currentUser);
   }
 }
 
 exports.setting = {
-  modify: async function (setting) {
-    return await executeAll(hooks.setting.modify, ["validate", "pre", "on", "post"], setting);
+  modify: async function (setting, currentUser) {
+    return await executeAll(hooks.setting.modify, ["validate", "pre", "on", "post"], setting, currentUser);
   },
-  fetch: async function(list) {
-    return await executeAll(hooks.category.modify, ["fetch"], list);
+  fetch: async function(list, currentUser) {
+    return await executeAll(hooks.category.modify, ["fetch"], list, currentUser);
   }
 }

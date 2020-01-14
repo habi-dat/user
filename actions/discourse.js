@@ -150,13 +150,10 @@ var getUser = function(uid, fetchEmail = true) {
 
 var getGroupId = function(name) {
   return new Promise((resolve, reject) => {
-    get('groups.json', {})
+    get('groups/' + name + '.json', {})
       .then(function(result) {
-        var group = result.groups.find(function(group) {
-          return group.name.toLowerCase() === name.toLowerCase();
-        });
-        if (group) {
-          resolve(group.id);
+        if (result.group) {
+          resolve(result.group.id);
         } else {
           reject('Gruppe ' + name + ' nicht gefunden');
         }
@@ -274,79 +271,79 @@ var checkUserGroups = function(data) {
 };
 
 
-var createUser = async function(user) {
-  var enableDisableLocalLogins = function(enable) {
-    return new Promise((resolve, reject) => {
-        client.put('admin/site_settings/enable_local_logins', { enable_local_logins:enable }, function(error, bodyELL, httpCode) {
-          if (error) {
-              reject(error);
-          } else {
-            resolve();
-          }
-      });
-    });
-  };
+// var createUser = async function(user) {
+//   var enableDisableLocalLogins = function(enable) {
+//     return new Promise((resolve, reject) => {
+//         client.put('admin/site_settings/enable_local_logins', { enable_local_logins:enable }, function(error, bodyELL, httpCode) {
+//           if (error) {
+//               reject(error);
+//           } else {
+//             resolve();
+//           }
+//       });
+//     });
+//   };
 
-  var createUser = function(user) {
-    return new Promise((resolve, reject) => {
+//   var createUser = function(user, currentUser) {
+//     return new Promise((resolve, reject) => {
 
-          var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_?!';
-          var uncrackable = '';
-          for (var i = 20; i > 0; --i) {
-            uncrackable += chars[Math.round(Math.random() * (chars.length - 1))];
-          }
-          password = uncrackable;
+//           var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_?!';
+//           var uncrackable = '';
+//           for (var i = 20; i > 0; --i) {
+//             uncrackable += chars[Math.round(Math.random() * (chars.length - 1))];
+//           }
+//           password = uncrackable;
 
-        client.createUser(user.givenName + ' ' + user.surname + ' - ' + user.project, user.email, user.uid, password, true, function(error, body, httpCode) {
-          if (error || httpCode != "200" || body && body.success == false) {
-            reject('Benutzer*in einfügen, Parameter: ' + JSON.stringify({name: user.givenName + ' ' + user.surname + ' - ' + user.project, email: user.email, username: user.uid, password: "versteckt"}) + ': HTTP(' + httpCode + ') Error: ' +  error + ', Body: ' + JSON.stringify(body));
-          } else {
-                if(user.member) {
+//         client.createUser(user.givenName + ' ' + user.surname + ' - ' + user.project, user.email, user.uid, password, true, function(error, body, httpCode) {
+//           if (error || httpCode != "200" || body && body.success == false) {
+//             reject('Benutzer*in einfügen, Parameter: ' + JSON.stringify({name: user.givenName + ' ' + user.surname + ' - ' + user.project, email: user.email, username: user.uid, password: "versteckt"}) + ': HTTP(' + httpCode + ') Error: ' +  error + ', Body: ' + JSON.stringify(body));
+//           } else {
+//                 if(user.member) {
 
-                    var assignedGroups = JSON.parse(user.member);
-                    var assignedAdminGroups = JSON.parse(user.owner);
+//                     var assignedGroups = JSON.parse(user.member);
+//                     var assignedAdminGroups = JSON.parse(user.owner);
 
-                    get('groups.json', {})
-                      .then((result) => {
-                        var actions = [];
-                      for (var i = 0; i < result.groups.length; i++) {
-                        var group = result.groups[i];
+//                     get('groups.json', {})
+//                       .then((result) => {
+//                         var actions = [];
+//                       for (var i = 0; i < result.groups.length; i++) {
+//                         var group = result.groups[i];
 
-                          var dn = 'cn=' + group.name.toLowerCase() + ',ou=groups,' + config.ldap.server.base;
+//                           var dn = 'cn=' + group.name.toLowerCase() + ',ou=groups,' + config.ldap.server.base;
 
-                          if(assignedAdminGroups.insensitiveIndexOf(dn) > -1) {
-                            actions.push(addToGroup(group, user.uid, true));
-                          }
-                          else if (assignedGroups.insensitiveIndexOf(dn) > -1) {
-                            actions.push(addToGroup(group, user.uid, false));
-                          }
-                        }
-                        return Promise.all(actions);
-                      })
-                      .then(() => resolve())
-                      .catch((error) => reject(error));
-                  } else {
-                    resolve();
-                  }
-          }
-        });
-    });
-  };
-  try{
-    await enableDisableLocalLogins(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-      await createUser(user);
-      await new Promise(resolve => setTimeout(resolve, 500));
-        await enableDisableLocalLogins(false);
-      return {status: true, message: 'DISCOURSE: Benutzer*in erstellt: ' + user.givenName + ' ' + user.surname};
-    }catch(error) {
-      return {status: false, message: 'DISCOURSE: Erstellung von Benutzer*in ' + user.givenName + ' ' + user.surname + ' fehlgeschlagen: ' + error};
-    }
-};
+//                           if(assignedAdminGroups.insensitiveIndexOf(dn) > -1) {
+//                             actions.push(addToGroup(group, user.uid, true));
+//                           }
+//                           else if (assignedGroups.insensitiveIndexOf(dn) > -1) {
+//                             actions.push(addToGroup(group, user.uid, false));
+//                           }
+//                         }
+//                         return Promise.all(actions);
+//                       })
+//                       .then(() => resolve())
+//                       .catch((error) => reject(error));
+//                   } else {
+//                     resolve();
+//                   }
+//           }
+//         });
+//     });
+//   };
+//   try{
+//     await enableDisableLocalLogins(true);
+//     await new Promise(resolve => setTimeout(resolve, 500));
+//       await createUser(user);
+//       await new Promise(resolve => setTimeout(resolve, 500));
+//         await enableDisableLocalLogins(false);
+//       return {status: true, message: 'DISCOURSE: Benutzer*in erstellt: ' + user.givenName + ' ' + user.surname};
+//     }catch(error) {
+//       return {status: false, message: 'DISCOURSE: Erstellung von Benutzer*in ' + user.givenName + ' ' + user.surname + ' fehlgeschlagen: ' + error};
+//     }
+// };
 
 
 
-var modifyUser = function(user) {
+var modifyUser = function(user, currentUser) {
   //only log out user, everything else is done with SSO payload through nextcloud
     return new Promise((resolve, reject) => {
       getUser(user.uid, false)
@@ -477,7 +474,7 @@ var modifyUser = function(user) {
 };
 
 
-var removeUser = function(user) {
+var removeUser = function(user, currentUser) {
   return new Promise((resolve, reject) => {
     getUser(user.uid)
       .then((discourseUser) => {
@@ -511,14 +508,14 @@ var removeUser = function(user) {
 
 
 
-var removeGroup = function(group) {
+var removeGroup = function(group, currentUser) {
   return new Promise((resolve, reject) => {
     getNameFromDN(group.dn)
       .then(name => getGroupId(name))
-      .then(id => del('admin/groups/' + id, {}))
       .catch(function(error) {
         resolve({status : true, message: 'DISCOURSE: Gruppe nicht vorhanden: ' + error});
       })
+      .then(id => del('admin/groups/' + id + '.json', {}))
       .then(function () {
         resolve({status: true, message: 'DISCOURSE: Gruppe gelöscht'});
       })
@@ -528,7 +525,7 @@ var removeGroup = function(group) {
   });
 };
 
-var createGroup = function(group) {
+var createGroup = function(group, currentUser) {
   return new Promise((resolve, reject) => {
     post('admin/groups', {
         'group[alias_level]': 3,
@@ -549,15 +546,14 @@ var createGroup = function(group) {
   });
 };
 
-var modifyGroup = function(group) {
+var modifyGroup = function(group, currentUser) {
   return new Promise((resolve, reject) => {
     getNameFromDN(group.dn)
       .then(name => getGroupId(name))
-      .then(id => put('admin/groups/' + id, {
+      .then(id => put('groups/' + id + '.json', {
         'group[name]': group.name,
         'group[bio_raw]': group.description}))
-      .then(function () {
-        //console.log('DC response: ' + JSON.stringify(response));
+      .then(function (result) {
         resolve({status: true, message: 'DISCOURSE: Gruppe upgedated'});
       })
       .catch(function(error) {
@@ -628,7 +624,7 @@ var buildCategory = function(category) {
       });
 }
 
-var createCategory = function(category) {
+var createCategory = function(category, currentUser) {
   return new Promise((resolve, reject) => {
     buildCategory(category)
         .then((catObject) => {
@@ -639,7 +635,7 @@ var createCategory = function(category) {
   });
 };
 
-var modifyCategory = function(category) {
+var modifyCategory = function(category, currentUser) {
   return new Promise((resolve, reject) => {
     buildCategory(category)
         .then((catObject) => {
@@ -650,7 +646,7 @@ var modifyCategory = function(category) {
   });
 };
 
-var removeCategory = function(category) {
+var removeCategory = function(category, currentUser) {
   return new Promise((resolve, reject) => {
     del('categories/'+category.id, {})
       .then(() => resolve({status: true, message: 'DISCOURSE: Kategorie gelöscht'}))

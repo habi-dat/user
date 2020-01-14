@@ -41,7 +41,7 @@
     "parameters": {
       "callbackUrl": "https://$HABIDAT_USER_SUBDOMAIN.$HABIDAT_DOMAIN/saml/consume",
       "entryPoint": "https://sso.$HABIDAT_DOMAIN/simplesaml/saml2/idp/SSOService.php",
-      "logoutCallbackUrl": "https://$HABIDAT_USER_SUBDOMAIN.$HABIDAT_DOMAIN/saml/logout",
+      "logoutCallbackUrl": "https://$HABIDAT_USER_SUBDOMAIN.$HABIDAT_DOMAIN/saml/consume",
       "logoutUrl": "https://sso.$HABIDAT_DOMAIN/simplesaml/saml2/idp/SingleLogoutService.php",      
       "issuer": "https://$HABIDAT_USER_SUBDOMAIN.$HABIDAT_DOMAIN",
       "cert": "$HABIDAT_SSO_CERTIFICATE"        

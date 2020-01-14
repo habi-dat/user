@@ -1,7 +1,7 @@
 var mail = require('../utils/mailhelper');
 var Promise = require('bluebird');
 
-var activationEmail = function(user) {
+var activationEmail = function(user, currentUser) {
     return new Promise((resolve, reject) => {
     if (user.activation) {
         mail.sendActivationEmail({uid: user.uid, mail: user.email, givenName: user.givenName, surname: user.surname, language: user.language}, function(err){

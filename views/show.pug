@@ -7,7 +7,11 @@ block content
       .col-md-7
         .panel.panel-default
           .panel-heading
-            h2.panel-title Benutzer #[a.btn.btn-default.btn-sm(href='/user/add') #[span.glyphicon.glyphicon-plus]]
+            h2.panel-title 
+              span Benutzer 
+              span
+                a.btn.btn-default.btn-sm(href='/user/add') 
+                  span.glyphicon.glyphicon-plus
           .panel-body
             table.table.datatable(id='usertable')
               thead
@@ -25,19 +29,25 @@ block content
                       td= user.cn
                       td= user.businessCategory
                       td.text-right
-                          a.btn.btn-default.btn-sm(href='/user/edit/'+user.dn) #[span.glyphicon.glyphicon-pencil]
-                          a.btn.btn-default.btn-sm.confirm(data-link='/user/delete/'+user.dn, data-confirmtext='Willst du Benutzer*in ' + user.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+                        a.btn.btn-default.btn-sm(href='/user/edit/'+user.dn) #[span.glyphicon.glyphicon-pencil]
+                        a.btn.btn-default.btn-sm.confirm(data-link='/user/delete/'+user.dn, data-confirmtext='Willst du Benutzer*in ' + user.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
                       td.hidden.dn= user.dn
       .col-md-5
         .panel.panel-default
           .panel-heading
-            h2.panel-title Gruppen #[a.btn.btn-default.btn-sm(href='/group/add') #[span.glyphicon.glyphicon-plus]]
+            h2.panel-title 
+              span Gruppen 
+              if (currentUser.isAdmin)
+                span
+                  a.btn.btn-default.btn-sm(href='/group/add') 
+                    span.glyphicon.glyphicon-plus
           .panel-body
             table.table.datatable(id='grouptable')
               thead
                 tr
                   th.col-md-10 Name
-                  th.col-md-2.text-right Aktionen
+                  if currentUser.isAdmin
+                    th.col-md-2.text-right Aktionen
                   th.hidden Members
                   th.hidden Admins
               tbody
@@ -45,7 +55,8 @@ block content
                   if (group.cn)
                     tr
                       td= group.cn
-                      td.text-right
+                      if currentUser.isAdmin
+                        td.text-right
                           a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn) #[span.glyphicon.glyphicon-pencil]
                           a.btn.btn-default.btn-sm.confirm(data-link='/group/delete/'+group.dn, data-confirmtext='Willst du die Gruppe ' + group.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
                       td.hidden.dn 

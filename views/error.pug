@@ -4,5 +4,10 @@ block content
     .card
       h1.card-title Uuups 
       .card-block
-        p=message
-        p=error.stack
+        if error && error.message
+          p=error.message
+        else
+          p=message
+        if (error && error.stack)
+          each line in error.stack.split("\n")
+            p=line

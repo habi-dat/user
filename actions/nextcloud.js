@@ -15,7 +15,7 @@ var connectDb = function() {
 };
 
 // only if uid or dn changed: change uid and dn in LDAP mapping
-var modifyUser = function(user) {
+var modifyUser = function(user, currentUser) {
     var cn = user.givenName + ' ' + user.surname;
     var dn = 'cn=' + cn.toLowerCase() + ',ou=users,'+ config.ldap.server.base;
     var changedDn = (user.surname != false || user.givenName != false) && dn.toLowerCase() != user.dn.toLowerCase();
@@ -25,7 +25,7 @@ var modifyUser = function(user) {
       .then((connection) => {
             var statement;
 
-            if (changedDn) {
+        if (changedDn) {
           statement = "update " + config.nextcloud.db.prefix + "_ldap_user_mapping set directory_uuid='" + user.changedUid + "', ldap_dn='" + dn + "' where ldap_dn='" + user.dn.toLowerCase() + "'";
         } else {
           statement = "update " + config.nextcloud.db.prefix + "_ldap_user_mapping set directory_uuid='" + user.changedUid + "' where ldap_dn='" + user.dn.toLowerCase() + "'";
@@ -51,7 +51,7 @@ var modifyUser = function(user) {
 };
 
 // only if uid or dn changed: change uid and dn in LDAP mapping
-var createUser = function(user) {
+var createUser = function(user, currentUser) {
   var options = {
       uri: config.nextcloud.api.url + '/cloud/users?search=' + user.givenName + ' ' + user.surname,
       headers: {

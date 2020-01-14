@@ -7,7 +7,11 @@ mixin nav(name, id)
                 span.icon-bar
                 span.icon-bar
                 span.icon-bar
-            a.navbar-brand(href="#") #{name}
+            a.navbar-brand(href="#")
+              span
+                img(alt="Logo" src="/public/img/habidat.png" height="25")
+              span &nbsp;
+              span=name
  
         .collapse.navbar-collapse( id=id )
             ul.nav.navbar-nav

@@ -13,12 +13,12 @@ mixin group_form(action, group)
                 input.form-control(type="text" id="cn" name="cn" value=(group?group.cn:undefined) required data-msg="Darf nicht leer sein")
         .col-md-6
           .form-group
-            label.control-label.col-md-2(for="sn") Beschreibung
+            label.control-label.col-md-2(for="description") Beschreibung
             .col-md-10
               .input-group
                 span.input-group-addon
                   i.glyphicon.glyphicon-tag
-                textarea.form-control(type="text" id="description" name="description" rows="5")=group?group.description:undefined
+                textarea.form-control(type="text" id="description" name="description" rows="5" required data-msg="Darf nicht leer sein")=group?group.description:undefined
         .form-group
           .col-md-12.text-right
             button(type='submit' class='btn btn-primary') Speichern

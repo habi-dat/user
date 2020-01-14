@@ -121,6 +121,9 @@
   });
 
   $(document).ready(function () {
+
+    var isAdmin = $('.list-user-groups').attr('is-admin');
+
     $('.list-user-groups.checked-list-box .list-group-item').each(function () {
 
         // Settings
@@ -157,7 +160,12 @@
             //$checkbox.prop('checked', !$checkbox.is(':checked'));
             //$checkbox.triggerHandler('change');
             if ($state == "on") {
-                $widget.data('state', 'admin');
+                if (isAdmin) {
+                    $widget.data('state', 'admin');    
+                } else {
+                    $widget.data('state', 'off');                        
+                }
+                
             } else if ($state == "admin") {
                 $widget.data('state', 'off');
             } else {
@@ -181,7 +189,7 @@
             } else if ($state == "on") {
                 $widget.addClass(style + 'primary active');
             } else {
-                $widget.removeClass(style + 'success active admin');
+                $widget.removeClass(style + 'success ' + style + 'primary active admin');
             }
             // Set the button's icon
             $widget.find('.state-icon')
@@ -309,6 +317,7 @@
     $('.checkbox-form').submit(function() {
         var $hidden = $("<input type='hidden' class='hidden-groups' name='groups'/>");
         var $hiddenAdmin = $("<input type='hidden' class='hidden-groups' name='admingroups'/>");
+        var isAdmin = $(this).attr('is-admin');
         //event.preventDefault();
         var checkedItems = [], counter = 0;
         $("#check-list-box li.active").each(function(idx, li) {
@@ -317,9 +326,11 @@
         });
         $hidden.val(JSON.stringify(checkedItems));
         var adminItems = [];
-        $("#check-list-box li.active.admin").each(function(idx, li) {
-            adminItems.push($(li).prop('id'));
-        });
+        if (isAdmin) {
+            $("#check-list-box li.active.admin").each(function(idx, li) {
+                adminItems.push($(li).prop('id'));
+            });            
+        }
         $hiddenAdmin.val(JSON.stringify(adminItems));
         $(this).find('.hidden-groups').remove();
         $(this).append($hidden);

@@ -11,7 +11,7 @@ var http = require('http');
 var ldaphelper = require('./utils/ldaphelper');
 var multer = require('multer');
 var SamlStrategy = require('passport-saml').Strategy;
-
+var Promise = require("bluebird");
 var routes = require('./routes/index');
 
 
@@ -63,14 +63,15 @@ if (config.saml.enabled) {
             if (config.debug) {
                 console.log("DEBUG: SAML profile: " + JSON.stringify(profile));
             }
-            ldaphelper.getByUID(profile.nameID, function(user, err) {
-              if (err) {
-                return done(err);
-              }
-              user.nameID = profile.nameID;
-              user.nameIDFormat= profile.nameIDFormat;
-              return done(null, user);
-            });
+            ldaphelper.getByUID(profile.nameID)
+                .then((user) => {
+                    user.nameID = profile.nameID;
+                    user.nameIDFormat= profile.nameIDFormat;
+                    done(null, user);
+                })
+                .catch((error) => {
+                    done(error)
+                });
         });
     passport.use(global.samlStrategy);    
 }
@@ -81,11 +82,24 @@ passport.serializeUser(function(user, done) {
 
 passport.deserializeUser(function(user, done) {
     if (user.isAdmin == undefined) {
-        ldaphelper.fetchIsAdmin(user.dn, function(isAdmin) {
-            console.log('fetched admin status: ' + isAdmin);
-            user.isAdmin = isAdmin;
-            done(null, user);
-        });
+        ldaphelper.fetchIsAdmin(user.dn)
+            .then((isAdmin) => {
+                user.isAdmin = isAdmin;
+                ldaphelper.fetchOwnedGroups(user)
+                    .then((groups) => {
+                        user.ownedGroups = groups.map((group) => { return group.dn;});
+                        console.log('ownedGroups: ' + JSON.stringify(user.ownedGroups ));
+                        if (user.isAdmin  || groups.length > 0) {
+                            user.isGroupAdmin = true;
+                        } else {
+                            user.isGroupAdmin = false;
+                        }
+                        done(null, user);
+                    })
+            })
+            .catch((error) => {
+                done(error);
+            });
     } else {
         done(null, user);
     }
