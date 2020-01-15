@@ -223,7 +223,7 @@ router.post('/user/passwd', function(req, res) {
                 language: false,
                 member: false,
                 owner: false
-            }).then((response) => {
+            }, { ownedGroups : []}).then((response) => {
                 if (!response.status) {
                     req.flash('error', 'Fehler beim Setzen des Passworts');
                     return ldaphelper.getByUID(req.body.uid)
