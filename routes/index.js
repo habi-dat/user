@@ -112,7 +112,7 @@ if (config.saml.enabled) {
 }
 
 router.get('/emailtest', function(req, res) {
-    res.render('email/welcome', { user : req.currentUser , title: 'Willkommen!'});
+    res.render('email/welcome', { user : req.currentUser , user: {givenName:'Florian', cn: 'Florian Humer'}, title: 'Hallo ' + 'Florian' + '!', longTitle: 'Willkommen bei ' + config.settings.general.title + '!'});
 })
 
 errorPage = function(req, res, error) {
