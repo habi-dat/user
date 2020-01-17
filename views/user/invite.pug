@@ -1,0 +1,8 @@
+extends ../layout
+include user
+include ../various
+
+block content
+  +notification(notification, message, responses)
+  +invite_form('/user/invite', user, groups)
+      

@@ -13,7 +13,7 @@ var changeGroup = function(group, field, users) {
       resolve('');
     } else {
       ldaphelper.change(group.dn, group[field] === undefined || group[field] === "" ?'add':'replace', parameters)
-        .then(() => resolve('Gruppe ' + group.cn + ' (' + field + ')'))
+        .then(() => resolve('Gruppe ' + group.cn + ' (' + (field=='owner'?'Admin':'Mitglied') + ')'))
         .catch(error => reject('LDAP: Fehler beim Updaten der LDAP Gruppe ' + group.cn + ' (' + field + '): ' + error));          
     }
   });
@@ -49,7 +49,7 @@ var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
       }
 
       var changedDn = dn != oldDn;
-      if (currentUser.isAdmin || currentUser.isGroupAdmin) {
+      if ((currentUser.isAdmin || currentUser.isGroupAdmin) && (member != false || owner != false)) {
           ldaphelper.fetchGroups(currentUser.ownedGroups)
             .then((groups) => {
               var actions = [];
@@ -59,41 +59,40 @@ var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
                       updated = false,
                       updatedAdmin = ldapAttributeToArray(group.owner);
 
-                  // check if member list needs to be updated
-                  if (assignedGroups.includes(group.dn)) {
-                    if (updatedMember.includes(oldDn)) {
+                  if (member != false) {
+                    // check if member list needs to be updated
+                    if (assignedGroups.includes(group.dn)) {
+                      if (updatedMember.includes(oldDn)) {
+                        if (changedDn) {
+                          updated = true;
+                          updatedMember[updatedMember.indexOf(oldDn)] = dn;                        
+                        }
+                      } else if (!updatedMember.includes(dn)) {
+                        updatedMember.push(dn);
+                        updated = true;
+                      }
+                    // no changes except user dn updates if user has no privileges for group
+                    } else if (!currentUser.ownedGroups=='all' && !currentUser.ownedGroups.includes(group.dn) && updatedMember.includes(oldDn)) {
                       if (changedDn) {
                         updated = true;
-                        updatedMember[updatedMember.indexOf(oldDn)] = dn;                        
+                        updatedMember[updatedMember.indexOf(oldDn)] = dn;
                       }
-                    } else if (!updatedMember.includes(dn)) {
-                      updatedMember.push(dn);
-                      updated = true;
+                    } else {
+                      if (updatedMember.includes(oldDn)) {
+                        updatedMember.splice(updatedMember.indexOf(oldDn), 1);
+                        updated = true;
+                      } else if (updatedMember.includes(dn)) {
+                        updatedMember.splice(updatedMember.indexOf(dn), 1);
+                        updated = true;
+                      }
                     }
-                  // no changes except user dn updates if user has no privileges for group
-                  } else if (!currentUser.ownedGroups.includes(group.dn) && updatedMember.includes(oldDn)) {
-                    if (changedDn) {
-                      updated = true;
-                      updatedMember[updatedMember.indexOf(oldDn)] = dn;
-                    }
-                  } else {
-                    if (updatedMember.includes(oldDn)) {
-                      updatedMember.splice(updatedMember.indexOf(oldDn), 1);
-                      updated = true;
-                    } else if (updatedMember.includes(dn)) {
-                      updatedMember.splice(updatedMember.indexOf(dn), 1);
-                      updated = true;
-                    }
-                  }
-
-
-
-                  if (updated) {
-                    actions.push(changeGroup(group, "member", updatedMember));
+                    if (updated) {
+                      actions.push(changeGroup(group, "member", updatedMember));
+                    }                    
                   }
 
                   // check if owner list needs to be updated (only for admins)
-                  if (currentUser.isAdmin) {
+                  if (currentUser.isAdmin && owner != false) {
                     updated = false;
                     if (assignedAdminGroups.indexOf(group.dn) > -1) {
                       if (updatedAdmin.indexOf(oldDn) > -1 ) {
@@ -135,36 +134,44 @@ var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
 var createUser = function(user, currentUser) {
   return new Promise((resolve, reject) => {
     var entry = {
-        cn: user.givenName + " " + user.surname,
-        givenName: user.givenName,
-        sn: user.surname,
-        mail: user.email,
+        cn: user.cn,
+        ou: user.ou,
+        sn: 'none',
+        givenName: 'none',
+        mail: user.mail,
         preferredLanguage: user.language,
         userPassword: user.password,
-        description: user.description,
-        businessCategory: user.project
+        description: user.description
     };
+    if (user.l && user.l != '') {
+      entry.l = user.l;
+    }
 
-    var uid = (user.givenName+ '_' + user.surname)
-                .toLowerCase()
-                .replace('ä', 'ae')
-                .replace('ö', 'oe')
-                .replace('ü', 'ue')
-                .replace('ß', 'ss')
-                .replace(' ', '_')
-                .replace(/[\W]+/g,"")
-                .substr(0,35);
-
+    var uid = user.changedUid;
+    if (!uid) {
+      uid = user.cn.toLowerCase()
+                  .replace('ä', 'ae')
+                  .replace('ö', 'oe')
+                  .replace('ü', 'ue')
+                  .replace('ß', 'ss')
+                  .replace(' ', '_')
+                  .replace(/[\W]+/g,"")
+                  .substr(0,35);
+    }
     ldaphelper.getByUID(uid)
       .then((LDAPuser) => {
         if (LDAPuser != null) {
-            return ldaphelper.findUniqueUID(uid, 2)
-              then((uniqueUID) => {
-                uid = uniqueUID;
-                entry.uid = uniqueUID;
-                user.uid = uniqueUID;                  
-                return ldaphelper.encryptAndAddUser(entry);
-            })
+            if (user.changedUid) {
+              throw "User ID bereits vergeben";
+            } else {
+              return ldaphelper.findUniqueUID(uid, 2)
+                then((uniqueUID) => {
+                  uid = uniqueUID;
+                  entry.uid = uniqueUID;
+                  user.uid = uniqueUID;                  
+                  return ldaphelper.encryptAndAddUser(entry);
+                })
+            }
         } else {
           entry.uid = uid;
           user.uid = uid;
@@ -172,7 +179,7 @@ var createUser = function(user, currentUser) {
         }
       })
       .then(() => {
-        var cn = user.givenName + ' ' + user.surname;
+        var cn = user.cn;
         var dn = 'cn=' + cn + ',ou=users,' + config.ldap.server.base;
         user.dn = dn;
         return updateGroups(currentUser, dn, dn, null, user.member, user.owner);
@@ -201,24 +208,17 @@ var modifyUser = function(user, currentUser) {
 
       var actions = [];
 
-      var cn, dn, givenName = user.givenName, surname = user.surname;
-      if (user.givenName === false) {
-        givenName = oldUser.givenName;
-      }
-      if (user.surname === false) {
-        surname = oldUser.sn;
-      }
-      cn = givenName + ' ' + surname;
+      var cn = user.cn, dn;      
       dn = 'cn=' + cn + ',ou=users,'+ config.ldap.server.base;
 
-      var changedDn = (user.surname != false || user.givenName != false) && dn != oldDn;
+      var changedDn = user.cn != false && dn != oldDn;
 
       if (changedDn) {
         changedDnAction = ldaphelper.updateDN(oldDn, dn);
         updatedFields.push('DN');
       }
 
-      if ((user.surname != false || user.givenName != false) && cn != oldUser.cn) {
+      if (user.cn != false && cn != oldUser.cn) {
         fieldActions.push(ldaphelper.change(dn, 'replace', {cn : cn}));
         updatedFields.push('Name');
       }
@@ -228,40 +228,35 @@ var modifyUser = function(user, currentUser) {
         updatedFields.push('User ID');
       }
 
-      if(user.givenName != false && user.givenName != oldUser.givenName) {
-        fieldActions.push(ldaphelper.change(dn, 'replace', {givenName : user.givenName}));
-        updatedFields.push('Vorname');
-      }
-
       if(user.description != false && user.description != oldUser.description) {
         fieldActions.push(ldaphelper.change(dn, 'replace', {description : user.description}));
         updatedFields.push('Speicherplatz');
       }
 
-      if(user.surname != false && user.surname != oldUser.sn) {
-        fieldActions.push(ldaphelper.change(dn, 'replace', {sn : user.surname}));
-        updatedFields.push('Nachname');
+      if(user.ou != false && user.ou != oldUser.ou) {
+        fieldActions.push(ldaphelper.change(dn, 'replace', {ou : user.ou}));
+        updatedFields.push('Zugehörigkeit');
       }
 
-      if(user.project != false && user.project != oldUser.businessCategory) {
-        fieldActions.push(ldaphelper.change(dn, 'replace', {businessCategory : user.project}));
-        updatedFields.push('Projekt');
-      }
+      if(user.l != false && user.l != oldUser.l) {
+        fieldActions.push(ldaphelper.change(dn, 'replace', {l : user.l}));
+        updatedFields.push('Ort');
+      }      
 
       if(user.language != false && user.language != oldUser.preferredLanguage) {
         fieldActions.push(ldaphelper.change(dn, 'replace', {preferredLanguage : user.language}));
         updatedFields.push('Sprache');
       }
 
-      if(user.email != false && user.email != oldUser.mail) {
-        fieldActions.push(ldaphelper.change(dn, 'replace', {mail : user.email}));
+      if(user.mail != false && user.mail != oldUser.mail) {
+        fieldActions.push(ldaphelper.change(dn, 'replace', {mail : user.mail}));
         updatedFields.push('E-Mail');
       }
 
       user.changedDn = dn;
       var doUpdate = updateGroups(currentUser, dn, oldDn, oldUser, user.member, user.owner)
           .then((updatedGroups) => {
-            updatedFields.concat(updatedGroups);            
+            updatedFields = updatedFields.concat(updatedGroups);            
             if (changedDn) {
               return changedDnAction;
             } else {

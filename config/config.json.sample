@@ -5,6 +5,7 @@
       "title": "$HABIDAT_TITLE",
       "domain": "$HABIDAT_DOMAIN",
       "subdomain": "$HABIDAT_USER_SUBDOMAIN",
+      "modules": "$HABIDAT_USER_INSTALLED_MODULES",
       "contact": "$HABIDAT_ADMIN_EMAIL"
     },
     "activation":
@@ -48,6 +49,7 @@
     }
   },
   "discourse": {
+    "subdomain": "$HABIDAT_USER_DISCOURSE_SUBDOMAIN",
   	"APIURL": "$HABIDAT_DISCOURSE_API_URL",
   	"APIKEY": "$HABIDAT_DISCOURSE_API_KEY",
   	"USERNAME": "$HABIDAT_DISCOURSE_API_USERNAME",
@@ -56,6 +58,8 @@
     ]
   },
   "nextcloud": {
+    "subdomain": "$HABIDAT_USER_NEXTCLOUD_SUBDOMAIN",
+    "defaultQuota": "$HABIDAT_USER_NEXTCLOUD_DEFAULTQUOTA",
     "db": {
       "host": "$HABIDAT_USER_NEXTCLOUD_DB_HOST", 
       "port": "$HABIDAT_USER_NEXTCLOUD_DB_PORT",
@@ -67,5 +71,17 @@
     "api": {
       "url": "$HABIDAT_USER_NEXTCLOUD_API_URL"
     }
+  },
+  "dokuwiki": {
+    "subdomain": "$HABIDAT_USER_DOKUWIKI_SUBDOMAIN"
+  },
+  "mediawiki": {
+    "subdomain": "$HABIDAT_USER_MEDIAWIKI_SUBDOMAIN"
+  },
+  "direktkredit": {
+    "subdomain": "$HABIDAT_USER_DIREKTKREDIT_SUBDOMAIN"
+  },
+  "mailtrain": {
+    "subdomain": "$HABIDAT_USER_MAILTRAIN_SUBDOMAIN"
   }
 }

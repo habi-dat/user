@@ -1,0 +1,14 @@
+extends layout
+include various
+
+block content
+    - var url = (config.settings.general.modules.includes('nextcloud')?config.nextcloud.subdomain:config.settings.general.subdomain)+'.'+config.settings.general.domain;    
+    +notification(notification, message, responses)
+    .row
+      .col-md-12
+        .panel.panel-default
+          .panel-heading
+            h2.panel-title 
+              span Weiterleitung...
+          .panel-body
+            p.redirect(redirect-url='https://'+url) Du wirst in Kürze auf #{url} weitergeleitet....

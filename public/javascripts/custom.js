@@ -7,6 +7,16 @@
         }
     } );
 
+    $('#cn').keyup((event) => {
+        $('#changedUid').val($('#cn').val().toLowerCase()
+              .replace('ä', 'ae')
+              .replace('ö', 'oe')
+              .replace('ü', 'ue')
+              .replace('ß', 'ss')
+              .replace(' ', '_')
+              .replace(/[\W]+/g,"")
+              .substr(0,35));
+    })
 
     $('[data-toggle="tooltip"]').tooltip();
 
@@ -121,6 +131,61 @@
   });
 
   $(document).ready(function () {
+
+    $('#cn').change((event) => {
+        var url = '/user/available/cn/' + $('#cn').val()
+        var token = $('#cn').attr('token');
+        if (token) {
+            url += '/' + token;
+        }
+        $.getJSON(url, (response) => {
+            if (!response.available) {
+                $('#cn').attr('available', false);
+                $('#cn').parent('.input-group').after('<span class="help-block" id="helpCNAvailable" style="color:red;">Der Name ist leider schon vergeben</span>');
+            } else {
+                $('#cn').attr('available', true);
+                $("#helpCNAvailable").remove();
+            }
+        })
+
+        var url = '/user/available/uid/' + $('#changedUid').val()
+        var token = $('#changedUid').attr('token');
+        if (token) {
+            url += '/' + token;
+        }
+        $.getJSON(url, (response) => {
+            if (!response.available) {
+                $('#changedUid').attr('available', false);
+                $('#changedUid').parent('.input-group').after('<span class="help-block" id="helpUidAvailable" style="color:red;">Die User ID ist leider schon vergeben</span>');
+            } else {
+                $('#changedUid').attr('available', true);
+                $("#helpUidAvailable").remove();
+            }
+        })        
+    })
+
+    $('#changedUid').change((event) => {
+        var url = '/user/available/uid/' + $('#changedUid').val()
+        var token = $('#changedUid').attr('token');
+        if (token) {
+            url += '/' + token;
+        }
+        $.getJSON(url, (response) => {
+            if (!response.available) {
+                $('#changedUid').attr('available', false);
+                $('#changedUid').parent('.input-group').after('<span class="help-block" id="helpUidAvailable" style="color:red;">Die User ID ist leider schon vergeben</span>');
+            } else {
+                $('#changedUid').attr('available', true);
+                $("#helpUidAvailable").remove();
+            }
+        })
+    })
+
+
+    $('.redirect').each(function() {
+        var url = $(this).attr('redirect-url');
+        setTimeout(function(){ window.location = url}, 3000);
+    });
 
     var isAdmin = $('.list-user-groups').attr('is-admin');
 
@@ -314,9 +379,9 @@
         $('#cat_image_upload').toggle(1);
     });
 
-    $('.checkbox-form').submit(function() {
-        var $hidden = $("<input type='hidden' class='hidden-groups' name='groups'/>");
-        var $hiddenAdmin = $("<input type='hidden' class='hidden-groups' name='admingroups'/>");
+    $('.checkbox-form').submit(function(event) {
+        var $hidden = $("<input type='hidden' class='hidden-groups' name='member'/>");
+        var $hiddenAdmin = $("<input type='hidden' class='hidden-groups' name='owner'/>");
         var isAdmin = $(this).attr('is-admin');
         //event.preventDefault();
         var checkedItems = [], counter = 0;
@@ -335,7 +400,14 @@
         $(this).find('.hidden-groups').remove();
         $(this).append($hidden);
         $(this).append($hiddenAdmin);
-        return true;
+        if ($('#cn').attr('available') == "false") {
+            $('#cn').focus();
+            event.preventDefault();
+        } else if  ($('#changedUid').attr('available') == "false") {
+            $('#changedUid').focus();
+            event.preventDefault();
+        }
+        //return true;
     });
 
 

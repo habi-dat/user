@@ -16,11 +16,11 @@ var connectDb = function() {
 
 // only if uid or dn changed: change uid and dn in LDAP mapping
 var modifyUser = function(user, currentUser) {
-    var cn = user.givenName + ' ' + user.surname;
-    var dn = 'cn=' + cn.toLowerCase() + ',ou=users,'+ config.ldap.server.base;
-    var changedDn = (user.surname != false || user.givenName != false) && dn.toLowerCase() != user.dn.toLowerCase();
+  var cn = user.cn;
+  var dn = 'cn=' + cn.toLowerCase() + ',ou=users,'+ config.ldap.server.base;
+  var changedDn = user.cn != false && dn.toLowerCase() != user.dn.toLowerCase();
 
-  if (changedDn || user.changedUid != false && user.changedUid != "" && user.changedUid != user.uid) {
+  if (changedDn || user.changedUid && user.changedUid != "" && user.changedUid != user.uid) {
     return connectDb()
       .then((connection) => {
             var statement;
@@ -40,7 +40,12 @@ var modifyUser = function(user, currentUser) {
         });
       })
       .then((results) => {
-        return {status : true, message: "NEXTCLOUD: Benutzer*innen-UID Zuordnung upgedated (" + results.changedRows + ")"};
+        if (results.changedRows > 0) {
+          return {status : true, message: "NEXTCLOUD: Benutzer*innen-UID Zuordnung upgedated (" + results.changedRows + ")"};
+        } else {
+          return {status: true, message: 'NEXTCLOUD: Benutzer*innen-UID Zuordnung nicht gefunden, überspringe Schritt'};
+        }
+        
       })
       .catch((error) => {
         return {status: false, message: "NEXTCLOUD: Update der Benutzer*innen-UID fehlgeschlagen: " + error};
@@ -53,7 +58,7 @@ var modifyUser = function(user, currentUser) {
 // only if uid or dn changed: change uid and dn in LDAP mapping
 var createUser = function(user, currentUser) {
   var options = {
-      uri: config.nextcloud.api.url + '/cloud/users?search=' + user.givenName + ' ' + user.surname,
+      uri: config.nextcloud.api.url + '/cloud/users?search=' + user.cn,
       headers: {
           'OCS-APIRequest': 'true'
       }

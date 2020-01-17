@@ -2,7 +2,7 @@ extends layout
 include various
 
 block content
-    +notification(notification, error, responses)  
+    +notification(notification, message, responses)  
     .row
       .col-md-6
         .panel.panel-default
@@ -12,13 +12,15 @@ block content
             table.table.datatable(id='grouptable_cat')
               thead
                 tr
-                  th.col-md-10 Name
+                  th.col-md-4 Name
+                  th.col-md-6 Beschreibung  
                   th.col-md-2.text-right Aktionen
               tbody
                 each group in groups
                   if (group.cn)
                     tr
                       td.groupcn= group.cn
+                      td= group.description                      
                       td.text-right
                           a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn) #[span.glyphicon.glyphicon-pencil]
                           a.btn.btn-default.btn-sm.confirm(data-link='/group/delete/'+group.dn, data-confirmtext='Willst du die Gruppe ' + group.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]

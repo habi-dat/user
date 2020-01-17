@@ -13,6 +13,7 @@ var multer = require('multer');
 var SamlStrategy = require('passport-saml').Strategy;
 var Promise = require("bluebird");
 var routes = require('./routes/index');
+var moment = require('moment');
 
 
 var config    = require('./config/config.json');
@@ -25,6 +26,7 @@ app.set('view engine', 'pug');
 
 // uncomment after placing your favicon in /public
 //app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use('/favicon.ico', express.static('public/img/favicon.png'));
 app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -47,8 +49,15 @@ app.use('/public', express.static(path.join(__dirname, '/public'),  { maxAge: on
 
 app.use(function(req,res,next){
     res.locals.session = req.session;
-    res.locals.currentUser = req.user;
+    if (req.user) {
+        res.locals.currentUser = req.user;    
+        res.locals.currentUser.loggedIn = true;
+    } else {
+        res.locals.currentUser = { loggedIn: false};
+    }
+    
     res.locals.config = config;
+    res.locals.moment = moment;
     next();
 });
 

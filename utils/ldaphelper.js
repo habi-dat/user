@@ -3,6 +3,8 @@ var ssha = require('openldap_ssha');
 var config    = require('../config/config.json').ldap;
 var discourse = require('./discoursehelper');
 var mail = require('./mailhelper');
+
+var Promise = require("bluebird");
 var client = ldap.createClient({
   url: config.server.url
 });
@@ -60,7 +62,7 @@ exports.fetchGroups = function(ownedGroups) {
 
         client.search('ou=groups,'+config.server.base, opts, function(err, res) {
             res.on('searchEntry', function(entry) {
-                if (ownedGroups && ownedGroups.includes(entry.object.dn)) {
+                if (ownedGroups && (ownedGroups == 'all' || ownedGroups.includes(entry.object.dn))) {
                     entries.push(entry.object);
                 }                
             });
@@ -262,6 +264,36 @@ exports.getByUID = function(uid) {
     });
 };
 
+exports.getByCN = function(cn) {
+    return new Promise((resolve, reject) => {
+
+        var opts = {
+          filter: '(cn=' + cn + ')',
+          scope: 'sub'
+        };
+
+        var entries = [];
+
+        client.search('ou=users,'+config.server.base, opts, function(err, res) {
+            res.on('searchEntry', function(entry) {
+                entries.push(entry.object)
+            });
+            res.on('error', function(err) {
+                reject('Error fetching user by CN ' + cn + ': ' + err.message);
+            });
+            res.on('end', function(result) {
+                if (entries.length == 0) {
+                    resolve(null);
+                } else if (entries.length > 1) {+
+                    reject("Mehrere Benutzer*innen mit CN " + cn + " gefunden");
+                } else {
+                    resolve(entries[0]);
+                }
+            });
+        });
+    });
+};
+ 
 exports.findUniqueUID = function(uid, number) {
     var uniqueUID = uid;
     uniqueUID = uid + '_' + number;
@@ -270,18 +302,18 @@ exports.findUniqueUID = function(uid, number) {
         .then((user) => {
             if (user) {
                 return exports.findUniqueUID(uid, number+1);                
-            } else {
+            } else { 
                 return uniqueUID;
             }
             
         });
-};
+}; 
 
 exports.encryptAndAddUser = function(entry) {
 
     return new Promise((resolve, reject) => {
 
-        entry.objectClass = ['inetOrgPerson','posixAccount','top'];
+        entry.objectClass = ['inetOrgPerson','posixAccount','top', 'organizationalPerson'];
         entry.gidNumber = 500;
         entry.homeDirectory = 'home/users/'+entry.uid;
         entry.uidNumber = Date.now();
@@ -292,7 +324,7 @@ exports.encryptAndAddUser = function(entry) {
             }
 
             entry.userPassword = hash;
-
+            console.log(JSON.stringify(entry));
             client.add('cn=' + entry.cn + ',ou=users,'+config.server.base, entry, function(err) {
                 if (err) {
                     reject(err);

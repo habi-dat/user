@@ -16,7 +16,10 @@ var hooks = {
     },
     remove : {
       validate : [], pre: [], on: [], post: []
-    }
+    },
+    invite : {
+      validate : [], pre: [], on: [], post: []
+    }    
   } ,
   group : {
     create : {
@@ -57,8 +60,8 @@ discourse.register(hooks);
 nextcloud.register(hooks);
 email.register(hooks);
 
-var execute = async function(action, step, object, currentUser) {
-  var responses = await Promise.all(action[step].map(callback => callback(object, currentUser)));
+var execute = async function(action, step, object, currentUser, req = undefined, res = undefined) {
+  var responses = await Promise.all(action[step].map(callback => callback(object, currentUser, req, res)));
   var status = true;
   responses.forEach(function(response) {
     status = response.status && status;
@@ -71,14 +74,14 @@ var flattenResponses = function(response, newResponse) {
   response.responses = response.responses.concat(newResponse.responses);
 };
 
-var executeAll = async function(action, steps, object, currentUser) {
+var executeAll = async function(action, steps, object, currentUser, req = undefined, res = undefined) {
     var response = {
         status: true,
         responses: []
     };
 
     for(i=0; i<steps.length; i++) {
-      var newResponse = await execute(action, steps[i], object, currentUser);
+      var newResponse = await execute(action, steps[i], object, currentUser, req , res );
       flattenResponses(response, newResponse);
       if (!response.status) {
         return response;
@@ -97,6 +100,9 @@ exports.user = {
   },
   remove: async function(user, currentUser) {
     return await executeAll(hooks.user.remove, ["validate", "pre", "on", "post"], user, currentUser);
+  },
+  invite: async function(user, currentUser, req, res) {
+    return await executeAll(hooks.user.invite, ["validate", "pre", "on", "post"], user, currentUser, req, res);
   }
 };
 

@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */ 
+
 var express = require('express');
 var passport = require('passport');
 var ldaphelper = require('../utils/ldaphelper');
@@ -8,6 +10,7 @@ var activation = require('../utils/activation');
 var mail = require('../utils/mailhelper');
 var actions = require('../actions');
 var bodyParser = require('body-parser');
+var Promise = require("bluebird");
 
 var isLoggedIn = function(req, res, next) {
     // if user is authenticated in the session, carry on
@@ -42,9 +45,9 @@ var isLoggedInGroupAdmin = function(req, res, next) {
     }
 };
 
-var title = function(page) {
-    return 'habiDAT - ' + page;
-}
+var getTitle = function(page) {
+    return config.settings.general.title + ' - ' + page;
+};
 
 if (config.saml.enabled) {
 
@@ -85,7 +88,7 @@ if (config.saml.enabled) {
             errorText = error;
         }
 
-        res.render('login', { user : req.user , message: error, notification: req.flash('notification'), title: title('Login')});
+        res.render('login', { user : req.user , message: error, notification: req.flash('notification'), title: getTitle('Login')});
     });
 
 } else {
@@ -106,14 +109,13 @@ if (config.saml.enabled) {
             errorText = error;
         }
 
-        res.render('login', { user : req.user , message: error, notification: req.flash('notification'), title: title('Login')});
+        res.render('login', { user : req.user , message: error, notification: req.flash('notification'), title: getTitle('Login')});
     });
-
 }
 
 router.get('/emailtest', function(req, res) {
-    res.render('email/welcome', { user : req.currentUser , user: {givenName:'Florian', cn: 'Florian Humer'}, title: 'Hallo ' + 'Florian' + '!', longTitle: 'Willkommen bei ' + config.settings.general.title + '!'});
-})
+    res.render('email/welcome', { user: {givenName:'Florian', cn: 'Florian Humer'}, title: 'Hallo ' + 'Florian' + '!', longTitle: 'Willkommen bei ' + config.settings.general.title + '!'});
+});
 
 errorPage = function(req, res, error) {
     console.log('error: ' + JSON.stringify(error) + "\n" + error.stack);
@@ -123,10 +125,9 @@ errorPage = function(req, res, error) {
 router.get('/error', function(req, res) {
     var error = req.flash('error');
     errorPage(req,res,error);
-})
+});
 
-router.post('/login', passport.authenticate('ldapauth', {session: true, failureRedirect: '/login',
- failureFlash:true, successReturnToOrRedirect: '/'}));
+router.post('/login', passport.authenticate('ldapauth', {session: true, failureRedirect: '/login', failureFlash:true, successReturnToOrRedirect: '/'}));
 
 
 router.get('/', isLoggedIn, function(req, res) {
@@ -137,144 +138,169 @@ router.get('/', isLoggedIn, function(req, res) {
     }
 });
 
+var render = function(req, res, template, title, data = {}, errorMessages = true) {
+    data.title = getTitle(title);
+    if (errorMessages) {
+        data.notification = req.flash('notification');
+        data.responses = req.flash('responses');
+        data.message = req.flash('error');
+    }
+    return new Promise((resolve, reject) => {
+        res.render(template, data);
+        resolve();
+    });
+};
+
 router.get('/edit_me', isLoggedIn, function(req, res) {
     ldaphelper.fetchObject(req.user.dn)
-        .then((user) => {
-            res.render('user/edit_me', {user:user, notification: req.flash('notification'), responses: req.flash('responses'), title: title('Daten Ändern')});
-        })
-        .catch((error) => {
-            req.flash('error', 'Fehler beim Ändern des Profils: ' + error);
-            res.redirect('/login');
-        });      
+        .then(user => render(req, res, 'user/edit_me', 'Daten ändern', {user:user}))
+        .catch(error => errorPage(req, res, error));
 });
+
+var updateCurrentUser = function(req, dn) {
+    return ldaphelper.fetchObject(dn)
+       .then((changedUser) => {            
+            changedUser.isAdmin = req.user.isAdmin;
+            changedUser.isGroupAdmin = req.user.isGroupAdmin;
+            changedUser.ownedGroups = req.user.ownedGroups;
+            return new Promise((resolve, reject) => {
+                req.login(changedUser, function(err) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(changedUser);
+                    }
+                });                
+            });          
+        });  
+};
+
+var setSessionData = function(req, data) {
+    req.session.data = data;
+}
+
+var retrieveSessionData = function(req) {
+    if (req.session.data) {
+        var data = req.session.data;
+        delete req.session.data;
+        return data;
+    } else {
+        return;
+    }    
+}
+
+var checkResponseAndRedirect = function(req, res, response, successMsg, errorMsg, target, errorTarget = undefined, data = undefined) {
+    return new Promise((resolve, reject) => {
+        req.flash('responses', response.responses);                        
+        if (response.status) {
+            req.flash('notification', successMsg);
+            res.redirect(target);        
+        } else {
+            req.flash('error', errorMsg);
+            if (data) {
+                setSessionData(req, data);
+            }
+            res.redirect(errorTarget?errorTarget:target);        
+        }
+        resolve();
+    });
+};
+
+var errorRedirect = function(req, res, errorMsg, target) {
+    return new Promise((resolve, reject) => {
+        req.flash('error', errorMsg);                        
+        res.redirect(target);        
+        resolve();
+    });
+};
+
+
+var successRedirect = function(req, res, successMsg, target) {
+    return new Promise((resolve, reject) => {
+        req.flash('notification', successMsg);                        
+        res.redirect(target);        
+        resolve();
+    });
+};
 
 router.post('/edit_me', isLoggedIn, function(req, res) {
     var user = {
         uid: req.body.uid,
         dn: req.body.dn,
-        givenName: req.body.givenName ,
-        surname: req.body.sn,
-        project: req.body.businessCategory,
+        cn: req.body.cn,
+        ou: req.body.ou,
+        l: req.body.l,
         changedUid: false,
         description: false,
-        email: req.body.mail,
-        password: req.body.userPassword,
-        passwordRepeat: req.body.userPassword2,
-        language: false,
+        mail: false,
+        password: req.body.password,
+        passwordRepeat: req.body.passwordRepeat,
+        language: req.body.language,
         member: false,
         owner: false
     };
     actions.user.modify(user, req.user)
         .then((response) => {
-            return ldaphelper.fetchObject(user.changedDn)
-                .then((changedUser) => {
-                    changedUser.isAdmin = req.user.isAdmin;
-                    changedUser.isGroupAdmin = req.user.isGroupAdmin;
-                    changedUser.ownedGroups = req.user.ownedGroups;
-                    req.login(changedUser, function(err) {
-                        if (!err && !response.status) {
-                            console.log("hub");
-                           req.flash('error', 'Fehler beim Ändern der Daten');
-                           res.render('user/edit_me', {message: req.flash('error'), responses: response.responses, title: title('Daten Ändern'), user: changedUser});
-                        } else {
-                            console.log("dup");
-                            req.flash('notification', 'Benutzer*innendaten geändert');
-                            req.flash('responses', response.responses);
-                            res.redirect('/edit_me');
-                        }
-                    });
-            });        
+            return updateCurrentUser(req, user.changedDn)
+                .then(user => checkResponseAndRedirect(req, res, response, 'Benutzer*innendaten geändert', 'Fehler beim Ändern der Daten', '/edit_me'));
         })
         .catch(error => errorPage(req,res,error));
 });
 
 router.get('/passwd/:uid/:token', function(req, res) {
-    activation.isTokenValid(req.params.uid, req.params.token, function(valid) {
-        if (valid) {
-            ldaphelper.getByUID(req.params.uid)
-                .then((user) => {
-                    res.render('user/passwd', {user: user, token: req.params.token, title: title('Passwort Ändern')});
-                })
-                .catch((error) => {
-                    req.flash('error', 'Fehler beim Setzen des Passworts: ' + error);
-                    res.redirect('/login');
-                });                
-        } else {
-            req.flash('error', 'Link zum Ändern des Passworts in ungültig!');
-            res.redirect('/login');
-        }
-    });
+    activation.isTokenValid(req.params.token)
+        .then((token) => {
+            return ldaphelper.getByUID(req.params.uid)
+                .then(user => render(req, res, 'user/passwd', 'Passwort Ändern', {user: user, token: req.params.token}));
+        })
+        .catch(error => errorPage(req,res,error));
 });
 
 router.post('/user/passwd', function(req, res) {
-    activation.isTokenValid(req.body.uid, req.body.token, function(valid) {
-        if (valid) {
-            actions.user.modify({
-                dn: req.body.dn,
-                uid: req.body.uid,
-                givenName: false,
-                surname: false,
-                project: false,
-                email: false,
-                description: false,
-                changedUid: false,
-                password: req.body.userPassword,
-                passwordRepeat: req.body.userPassword2,
-                language: false,
-                member: false,
-                owner: false
-            }, { ownedGroups : []}).then((response) => {
-                if (!response.status) {
-                    req.flash('error', 'Fehler beim Setzen des Passworts');
-                    return ldaphelper.getByUID(req.body.uid)
-                        .then((user) => {
-                            res.render('user/passwd', {message: req.flash('error'), responses: response.responses, user: user, token: req.params.token, title: title('Passwort Ändern')});
-                        });
-                } else {
-                    activation.deleteToken(req.body.uid, function(err) {
-                        if (err) {
-                            req.flash('error', 'Passwort geändert, Fehler bei Löschen des Tokens, bitte die Admin*as kontaktieren: ' + err);
-                        } else {
-                            req.flash('notification', 'Passwort geändert');
-                        }
-                        req.flash('responses', response.responses);
-                        res.redirect('/login');
-                    });
-                }
+    var user = {
+                    dn: req.body.dn,
+                    uid: req.body.uid,
+                    cn: false,
+                    l: false,
+                    uo: false,
+                    mail: false,
+                    description: false,
+                    changedUid: false,
+                    password: req.body.password,
+                    passwordRepeat: req.body.passwordRepeat,
+                    language: false,
+                    member: false,
+                    owner: false
+                };
+    activation.isTokenValid(req.body.token)
+        .then((token) => {
+            return actions.user.modify(user, { ownedGroups : []})
+                .then(response => {
+                    if (response.status) {
+                        return activation.deleteToken(req.body.token)
+                            .then(() => {return response;});
+                    } else {
+                        return response;
+                    }
+                })
+                .then(response => checkResponseAndRedirect(req, res, response, 'Passwort geändert', 'Fehler beim Ändern des Passworts', '/login', 'passwd/' + req.body.uid + '/' + req.body.token));
             })
-            .catch((error) => {
-                req.flash('error', 'Fehler beim Setzen des Passworts: ' + error);
-                res.redirect('/login');
-            });
-        } else {
-            req.flash('error', 'Token zum Ändern des Passworts in ungültig oder abgelaufen!');
-            res.redirect('login');
-        }
-    });
+        .catch(error => errorPage(req, res, 'Fehler beim Ändern des Passworts: ' + error));
 });
 
 router.get('/lostpasswd', function(req, res) {
-    res.render('user/lostpasswd', {title: title('Passwort Vergessen')});
+    render(req, res, 'user/lostpasswd', 'Passwort Vergessen');
 });
 
 router.post('/user/lostpasswd', function(req, res) {
     ldaphelper.getByEmail(req.body.mail)
         .then((user) => {
-            mail.sendPasswordResetEmail(user, function(err) {
-                if (err) {
-                    req.flash('error', 'Link zum Ändern des Passworts konnte nicht verschickt werden: ' + err);
-                } else {
-                    req.flash('notification', 'Link zum Ändern des Passworts wurde per E-Mail verschickt');
-                }
-                res.redirect('/lostpasswd');
-            });
+            mail.sendPasswordResetEmail(req, res, user)
+                .then(info =>  successRedirect(req, res, 'Link zum Ändern des Passworts wurde per E-Mail verschickt', '/lostpasswd'))
+                .catch(error => errorRedirect(req, res, 'Link zum Ändern des Passworts konnte nicht verschickt werden: ' + error, '/lostpasswd'));
         })
-        .catch((error) => {
-            req.flash('error', 'E-Mailadresse nicht gefunden');
-            res.redirect('/lostpasswd');
-        });
+        .catch(error => errorRedirect(req, res, 'E-Mailadresse nicht gefunden: ' + error, '/lostpasswd'));
 });
-
 
 
 router.get('/ping', function(req, res){
@@ -282,384 +308,262 @@ router.get('/ping', function(req, res){
 });
 
 router.get('/show', isLoggedInGroupAdmin, function(req,res){
-    ldaphelper.fetchUsers()
-        .then((users) => {
-            ldaphelper.fetchGroups(req.user.ownedGroups)
-                .then((groups) => {
-                    res.render('show', {users: users, groups: groups, error: req.flash('error'), notification: req.flash('notification'), responses: req.flash('responses'), title: title('Benutzer <-> Gruppen')});
-                });
-        })
-        .catch((error) => {
-            req.flash('error', error);
-            res.redirect('/error');
-        });
+    Promise.join(ldaphelper.fetchUsers(), ldaphelper.fetchGroups(req.user.ownedGroups), 
+        (users, groups) => render(req, res, 'show', 'Benutzer*innen / Gruppen', {users: users, groups: groups}))
+        .catch(error => errorPage(req, res, error));
 });
 
 router.get('/show_cat', isLoggedInAdmin, function(req,res){
-    ldaphelper.fetchGroups(req.user.ownedGroups)
-        .then((groups) => {
-            //console.log('users: ' + JSON.stringify(users));
-            discourse.getCategories(function (err, categories) {
-                if (err) req.flash('notification', err);
-                res.render('show_cat', {groups: groups, categories: categories, error: req.flash('error'), notification: req.flash('notification'), responses: req.flash('responses'), title: title('Gruppen <-> Kategorien')});
+    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups), discourse.getCategories(),
+        (groups, categories) => render(req,res,'show_cat', 'Gruppen / Kategorien',  {groups: groups, categories: categories}))
+        .catch(error => errorPage(req, res, 'Fehler beim Ändern des Passworts: ' + error));
+});
 
-            });
+router.get('/invites', isLoggedInGroupAdmin, function(req,res){
+    Promise.join(activation.getInvites(), ldaphelper.fetchGroups(req.user.ownedGroups), 
+        (invites, groups) => render(req, res, 'invites', 'Offene Einladungen', {invites: invites, groups: groups}))
+        .catch(error => errorPage(req, res, error));
+});
+
+
+router.get('/user/invite', isLoggedInGroupAdmin, function(req, res) {
+    ldaphelper.fetchGroups(req.user.ownedGroups)
+        .then(groups => render(req, res, 'user/invite', 'Benutzer*in einladen', {groups: groups, user: retrieveSessionData(req)}))
+        .catch(error => errorPage(req,res,error));
+});
+
+router.get('/user/invite/delete/:token', isLoggedInGroupAdmin, function(req, res) {
+    activation.deleteToken(req.params.token)
+        .then(() => successRedirect(req, res, 'Einladung gelöscht', '/invites'))
+        .catch(error => errorRedirect(req, res, 'Einladung konnte nicht gelöscht werden: ' + error, '/invites'));
+});
+
+router.get('/user/invite/repeat/:token', isLoggedInGroupAdmin, function(req, res) {
+    activation.getToken(req.params.token)
+        .then(() =>  activation.refreshToken(req.user, req.params.token, 7*24))
+        .then(token => mail.sendMail(req, res, token.data.mail, 'Einladung zu ' + config.settings.general.title, 'email/invite', token))
+        .then(() => successRedirect(req, res, 'Einladung erneut versendet', '/invites'))
+        .catch(error => errorRedirect(req, res, 'Fehler beim Senden der Einladung: ' + error, '/invites'));
+});
+
+router.get('/user/invite/accept/:token', function(req, res) {
+    activation.isTokenValid(req.params.token)
+        .then(token => render(req, res, 'user/accept', 'Account anlegen', { token: token, user: retrieveSessionData(req)}))
+        .catch(error => errorPage(req,res,'Fehler beim Anlegen des Accounts: ' + error));
+});
+
+router.post('/user/invite/accept',  function(req, res) {
+    activation.isTokenValid(req.body.token)
+        .then((token) => {
+            var user = {
+                changedUid : req.body.changedUid,
+                uid: req.body.uid,
+                dn: req.body.dn,
+                cn: req.body.cn,
+                ou: req.body.ou,
+                l: req.body.l,
+                changedUid: false,
+                description: false,
+                mail: false,
+                password: req.body.password,
+                passwordRepeat: req.body.passwordRepeat,
+                language: req.body.language,
+                member: false,
+                owner: false
+            };            
+            var user = req.body;
+            user.member = token.data.member;
+            user.owner = token.data.owner;
+            user.mail = token.data.mail;
+            user.description = config.nextcloud.defaultQuota || '1 GB';
+            return actions.user.create(user, { ownedGroups: 'all', isAdmin: true})
+                .then(response => {
+                    if (response.status) {
+                        return activation.deleteToken(req.body.token)
+                            .then(() => {return response;});
+                    } else {
+                        return response;
+                    }
+                })
+                .then(response => checkResponseAndRedirect(req, res, response, 'Account ' + req.body.cn + ' angelegt', 'Fehler beim Anlegen des Accounts', '/redirect', '/user/invite/accept/' + req.body.token, user))
+                .catch(error => errorPage(req,res,error));
         })
-        .catch((error) => {
-            req.flash('error', error);
-            res.redirect('/error');
-        });
+});
+
+router.get('/redirect', function(req, res) {
+    render(req, res, 'redirect', 'Weiterleitung...', {});
+});
+
+router.post('/user/invite', isLoggedInGroupAdmin, function(req, res) {
+    var user = req.body;
+    console.log('member: ' + user.member);
+    console.log('owner: ' + user.owner);
+    user.member = JSON.parse(user.member);
+    user.owner = JSON.parse(user.owner);
+
+    actions.user.invite(user, req.user, req, res)
+        .then(response => checkResponseAndRedirect(req, res, response, 'Benutzer*in ' + req.body.mail + ' eingeladen', 'Fehler beim Einladen der*des Benutzer*in', '/invites', '/user/invite', user))
+        .catch(error => errorPage(req,res,error));
 });
 
 router.get('/user/add', isLoggedInGroupAdmin, function(req, res) {
     ldaphelper.fetchGroups(req.user.ownedGroups)
-        .then((groups) => {
-            res.render('user/add', { groups: groups, title: title('Benutzer*in Anlegen') });
-        }).catch(error => errorPage(req,res,error));
+        .then(groups => render(req, res, 'user/add', 'Benutzer*in anlegen', {groups: groups, user: retrieveSessionData(req)}))
+        .catch(error => errorPage(req,res,error));
 });
 
-router.post('/user/add', isLoggedInGroupAdmin, function(req, res) {
-
-
-
-    var user = {
-        givenName: req.body.givenName ,
-        surname: req.body.sn,
-        project: req.body.businessCategory,
-        description: req.body.description, // quota
-        email: req.body.mail,
-        password:  req.body.userPassword,
-        passwordRepeat: req.body.userPassword2,
-        member: JSON.parse(req.body.groups),
-        owner: JSON.parse(req.body.admingroups),
-        language: req.body.language,
-        activation: req.body.activation == 'on'
-    };
-
-    if (user.description === "") {
-        user.description = "10 GB";
-    }
-
-
-    // if action e-mail is checked generate uncrackable password (works like user is deactived)
-    if (req.body.activation) {
-        var chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_?!&%$#+-';
-        var uncrackable = '';
-        for (var i = 20; i > 0; --i) {
-          uncrackable += chars[Math.round(Math.random() * (chars.length - 1))];
-        }
-        user.password = uncrackable;
-        user.passwordRepeat = uncrackable;
-    }
-
-    // create user
-    actions.user.create(user, req.user)
-        .then((response) => {
-            if (!response.status) {
-                req.flash('error', 'Fehler beim Anlegen der*des Benutzer*in');
-
-                ldaphelper.fetchGroups(req.user.ownedGroups)
-                    .then((groups) => {
-                        res.render('user/add', {message: req.flash('error'), responses: response.responses, groups:groups, title: title('Benutzer*in Anlegen'), user: {
-                            givenName: req.body.givenName,
-                            sn: req.body.sn,
-                            mail: req.body.mail,
-                            description: req.body.description, // quota
-                            businessCategory: req.body.businessCategory
-                        }});
-                    })
+router.get('/user/available/cn/:cn/:token', function(req, res) {
+    activation.isTokenValid(req.params.token)
+        .then(token => ldaphelper.getByCN(req.params.cn))
+        .then(user => {
+            if (user) {
+                res.json({available: false});
             } else {
-                // if user creation succeeded send activation e-mail
-                req.flash('notification', 'Benutzer*in ' + req.body.givenName + ' ' + req.body.sn + ' angelegt');
-                req.flash('responses', response.responses);
-                res.redirect('/show');
+                res.json({available: true});
             }
-        }).catch(error => errorPage(req,res,error));
+        })
+        .catch(error => { res.json({error: error})});
+});
+
+router.get('/user/available/cn/:cn', isLoggedInGroupAdmin, function(req, res) {
+    ldaphelper.getByCN(req.params.cn)
+        .then((user) => {
+            if (user) {
+                res.json({available: false});
+            } else {
+                res.json({available: true});
+            }
+        })
+        .catch(error => { res.json({error: error})});
+});
+
+
+router.get('/user/available/uid/:uid/:token', function(req, res) {
+    activation.isTokenValid(req.params.token)
+        .then(token => ldaphelper.getByUID(req.params.uid))
+        .then(user => {
+            if (user) {
+                res.json({available: false});
+            } else {
+                res.json({available: true});
+            }
+        })
+        .catch(error => { res.json({error: error})});
+});
+
+router.get('/user/available/uid/:uid', isLoggedInGroupAdmin, function(req, res) {
+    ldaphelper.getByUID(req.params.uid)
+        .then((user) => {
+            if (user) {
+                res.json({available: false});
+            } else {
+                res.json({available: true});
+            }
+        })
+        .catch(error => { res.json({error: error})});
+});
+
+
+router.post('/user/add', isLoggedInGroupAdmin, function(req, res) {
+    var user = req.body;
+    user.member = JSON.parse(user.member);
+    user.owner = JSON.parse(user.owner);
+    user.description = user.description || config.nextcloud.defaultQuota || '1 GB';
+
+    actions.user.create(user, req.user)
+        .then(response => checkResponseAndRedirect(req, res, response, 'Benutzer*in ' + req.body.cn + ' angelegt', 'Fehler beim Anlegen der*des Benutzer*in', '/show', '/user/add', user))
+        .catch(error => errorPage(req,res,error));
 });
 
 router.get('/user/edit/:id', isLoggedInGroupAdmin, function(req, res) {
-    console.log('admin: ' + req.user.isAdmin);
-    ldaphelper.fetchGroups(req.user.ownedGroups)
-        .then((groups) => {
-            ldaphelper.fetchObject(req.params.id)
-                .then((user) => {
-                    res.render('user/edit', { groups: groups, user:user, title: title('Benutzer*in Bearbeiten')});
-                });
-        }).catch(error => errorPage(req,res,error));
+    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups), ldaphelper.fetchObject(req.params.id),
+        (groups, user) => render(req, res, 'user/edit', 'Benutzer*in bearbeiten', {groups: groups, user: retrieveSessionData(req) || user}))
+        .catch(error => errorPage(req, res, error));
 });
 
 router.post('/user/edit', isLoggedInGroupAdmin, function(req, res) {
-    var user = {
-        dn: req.body.dn,
-        uid: req.body.uid,
-        changedUid: req.body.changedUid,
-        givenName: req.body.givenName ,
-        surname: req.body.sn,
-        project: req.body.businessCategory,
-        description: req.body.description, // quota
-        email: req.body.mail,
-        password: req.body.userPassword,
-        passwordRepeat: req.body.userPassword2,
-        language: req.body.language,
-        member: JSON.parse(req.body.groups),
-        owner: JSON.parse(req.body.admingroups)
-    };
-
-    if (user.description === "") {
-        user.description = "10 GB";
-    }
-
+    var user = req.body;
+    user.member = JSON.parse(user.member);
+    user.owner = JSON.parse(user.owner);
+    user.description = user.description || config.nextcloud.defaultQuota || '1 GB';
 
     actions.user.modify(user, req.user)
-        .then((response) => {
-            if (!response.status) {
-                req.flash('error', 'Fehler beim Ändern der Daten');
-                    return ldaphelper.fetchGroups(req.user.ownedGroups)
-                        .then((groups) => {
-                            res.render('user/edit', {message: req.flash('error'), responses: response.responses, title: title('Benutzer*in Bearbeiten'), groups: groups, user: {
-                                givenName: req.body.givenName,
-                                sn: req.body.sn,
-                                mail: req.body.mail,
-                                description: req.body.description, // quota
-                                userPassword: req.body.userPassword,
-                                userPassword2: req.body.userPassword2,
-                                dn: req.body.dn,
-                                uid: req.body.uid,
-                                businessCategory: req.body.businessCategory
-                            }});
-                        });
-            } else {
-                req.flash('notification', 'Benutzer*in ' + req.body.givenName + ' ' + req.body.sn + ' geändert');
-                req.flash('responses', response.responses);
-                res.redirect('/show');
-            }
-        }).catch(error => errorPage(req,res,error));
+        .then(response => checkResponseAndRedirect(req, res, response, 'Benutzer*in ' + req.body.cn + ' geändert', 'Fehler beim Ändern der*des Benutzer*in', '/show', '/user/edit/' + user.dn, user))
+        .catch(error => errorPage(req,res,error));
 });
 
 router.get('/user/delete/:id', isLoggedInGroupAdmin, function(req, res) {
     ldaphelper.fetchUser(req.params.id)
-        .then((user) => {
-            return actions.user.remove({
-                dn: req.params.id,
-                uid: user.uid,
-                email: user.mail,
-                member: user.member,
-                owner: user.owner
-            }, req.user).then(function(response) {
-                if (!response.status) {
-                    req.flash('error', 'Fehler beim Löschen von ' + req.params.id);
-                } else {
-                    req.flash('notification', 'Benutzer*in ' + req.params.id + ' gelöscht');
-                }
-                req.flash('responses', response.responses);
-                res.redirect('/show');
-            });
-        }).catch(error => errorPage(req,res,error));
+        .then(user => actions.user.remove(user, req.user))
+        .then(response => checkResponseAndRedirect(req, res, response, 'Benutzer*in ' + req.params.id + ' gelöscht', 'Fehler beim Löschen von ' + req.params.id, '/show'))
+        .catch(error => errorPage(req,res,error));
 });
 
 router.get('/group/edit/:id', isLoggedInAdmin, function(req, res) {
     ldaphelper.fetchObject(req.params.id)
-        .then((group) => {
-            res.render('group/edit', { group:group, title: title('Gruppe Bearbeiten')});
-        }).catch(error => errorPage(req,res,error));
+        .then(groups => render(req, res, 'group/edit', 'Gruppe bearbeiten', {group: retrieveSessionData(req) || group}))
+        .catch(error => errorPage(req, res, error));
 });
 
 router.get('/group/add', isLoggedInAdmin, function(req, res) {
-    res.render('group/add', { title: title('Gruppe Anlegen')});
+    render(req, res, 'group/add', 'Gruppe erstellen', {group: retrieveSessionData(req)})
+        .catch(error => errorPage(req, res, error));    
 });
 
 router.post('/group/add', isLoggedInAdmin, function(req, res) {
-    var group = {
-        name: req.body.cn,
-        description: req.body.description
-    };
-
-    actions.group.create(group, req.user)
-        .then((response) => {
-            if (!response.status) {
-                req.flash('error', 'Fehler beim Anlegen der Gruppe ' + req.body.cn);
-                res.render('group/add', {message: req.flash('error'), responses: response.responses, title: title('Gruppe Anlegen'),group: {
-                    cn: req.body.cn,
-                    description: req.body.description
-                }});
-            } else {
-                req.flash('notification', 'Gruppe ' + req.body.cn + ' angelegt');
-                req.flash('responses', response.responses);
-                res.redirect('/show');
-            }
-        }).catch(error => errorPage(req,res,error));
+    actions.group.create(req.body, req.user)
+        .then(response => checkResponseAndRedirect(req, res, response, 'Gruppe ' + req.body.cn + ' eingefügt', 'Fehler beim Einfügen der Gruppe ' + req.body.cn, '/show', '/group/add', req.body))
+        .catch(error => errorPage(req,res,error));
 });
 
 router.post('/group/edit', isLoggedInAdmin, function(req, res) {
-    var group = {
-        dn: req.body.dn,
-        name: req.body.cn,
-        description: req.body.description
-    };
-
-    actions.group.modify(group, req.user)
-        .then((response) => {
-            if (!response.status) {
-                req.flash('error', 'Fehler beim Ändern der Gruppe ' + req.body.cn);
-                res.render('group/edit', {message: req.flash('error'), responses: response.responses, title: title('Gruppe Bearbeiten'),group: {
-                    dn: req.body.dn,
-                    cn: req.body.cn,
-                    description: req.body.description
-                }});
-            } else {
-                req.flash('notification', 'Gruppe ' + req.body.cn + ' geändert');
-                req.flash('responses', response.responses);
-                res.redirect('/show');
-            }
-        }).catch(error => errorPage(req,res,error));
-
+    actions.group.modify(req.body, req.user)
+        .then(response => checkResponseAndRedirect(req, res, response, 'Gruppe ' + req.body.cn + ' geändert', 'Fehler beim Ändern der Gruppe ' + req.body.cn, '/show', '/group/edit', req.body))
+        .catch(error => errorPage(req,res,error));    
 });
 
 router.get('/group/delete/:id', isLoggedInAdmin, function(req, res) {
     actions.group.remove({ dn: req.params.id }, req.user)
-        .then((response) => {
-            if (!response.status) {
-                req.flash('error', 'Fehler beim Löschen der Gruppe ' + req.params.id);
-            } else {
-                req.flash('notification', 'Gruppe ' + req.params.id + ' gelöscht');
-            }
-            req.flash('responses', response.responses);
-            res.redirect('/show');
-        }).catch(error => errorPage(req,res,error));
+        .then(response => checkResponseAndRedirect(req, res, response, 'Gruppe ' + req.params.id  + ' gelöscht', 'Fehler beim Löschen der Gruppe ' + req.params.id, '/show'))
+        .catch(error => errorPage(req,res,error));    
 });
 
 
 router.get('/cat/edit/:id', isLoggedInAdmin, function(req, res) {
-    ldaphelper.fetchGroups(req.user.ownedGroups)
-        .then((groups) => {
-            discourse.getParentCategories(function(err, parents){
-                if (err) {
-                    req.flash('notification', err);
-                    req.redirect('/show_cat')
-                } else {
-                    discourse.getCategoryWithParent(req.params.id, function(err, category) {
-                        if (err) {
-                            req.flash('notification', err);
-                            req.redirect('/show_cat')
-                        } else {
-                            res.render('cat/edit', { category: category, groups: groups, parents: parents, title: title('Kategorie Bearbeiten') });
-                        }
-                    });
-
-                }
-            });
-        }).catch(error => errorPage(req,res,error));
+    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups), discourse.getParentCategories(), discourse.getCategoryWithParent(req.params.id),
+        (groups, parents, category) => render(req, res, 'cat/edit', 'Kategorie bearbeiten', {category: retrieveSessionData(req) || category, groups: groups, parents: parents}))
+        .catch(error => errorPage(req, res, error));
 });
 
 router.get('/cat/add', isLoggedInAdmin, function(req, res) {
-    ldaphelper.fetchGroups(req.user.ownedGroups)
-        .then((groups) => {
-            discourse.getParentCategories(function(err, parents){
-                if (err) {
-                    req.flash('notification', err);
-                    req.redirect('/show_cat')
-                } else {
-                    res.render('cat/add', { groups: groups, parents: parents, title: title('Kategorie Anlegen') });
-                }
-            });
-        }).catch((error) => {
-            req.flash('error', error);                        
-            res.redirect('/error');
-        });
+    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups), discourse.getParentCategories(), 
+        (groups, parents) => render(req, res, 'cat/add', 'Kategorie erstellen', {category: retrieveSessionData(req), groups: groups, parents: parents}))
+        .catch(error => errorPage(req, res, error));
 });
 
 router.post('/cat/add', isLoggedInAdmin, function(req, res) {
-    console.log('create cat body: ' + JSON.stringify(req.body));
-    console.log('create cat file: ' + JSON.stringify(req.file));
-
-    var category = {
-        name: req.body.name,
-        color: req.body.color,
-        parent: req.body.parent,
-        logo: req.file,
-        groups: JSON.parse(req.body.groups)
-    };
+    var category = req.body;
+    category.groups = JSON.parse(category.groups);
 
     actions.category.create(category)
-        .then((response) => {
-            if (!response.status) {
-                req.flash('error', 'Fehler beim Erstellen der Kategorie ' + req.body.name);
-                ldaphelper.fetchGroups(function(groups) {
-                    discourse.getParentCategories(function(err, parents){
-                        if (err) {
-                            req.flash('notification', 'Fehler beim Abrufen der Elternekategorien: ' + err);
-                            req.redirect('/show_cat')
-                        } else {
-                            res.render('cat/add', { category: {name:req.body.name, color:req.body.color, parent:req.body.parent, groups:req.body.groups}, groups: groups, message: req.flash('error'), responses: response.responses, parents: parents, title: title('Kategorie Anlegen') });
-                        }
-                    });
-                });
-
-            } else {
-                req.flash('responses', response.responses);
-                req.flash('notification', 'Kategorie ' + req.body.name + ' angelegt');
-                res.redirect('/show_cat');
-            }
-        }).catch((error) => {
-            req.flash('error', error);                        
-            res.redirect('/error');
-        });
+        .then(response => checkResponseAndRedirect(req, res, response, 'Kategorie ' + req.body.name + ' erstellt', 'Fehler beim Erstellen der Kategorie ' + req.body.name, '/show_cat', '/cat/add', category))
+        .catch(error => errorPage(req,res,error)); 
 });
 
 router.post('/cat/edit', isLoggedInAdmin, function(req, res) {
-    console.log('modify cat body: ' + JSON.stringify(req.body));
-    console.log('modify cat file: ' + JSON.stringify(req.file));
 
-    var category = {
-        id: req.body.id,
-        name: req.body.name,
-        color: req.body.color,
-        parent: req.body.parent,
-        delete_image: req.body.delete_image,
-        logo: req.file,
-        groups: JSON.parse(req.body.groups)
-    };
+    var category = req.body;
+    category.groups = JSON.parse(category.groups);
 
     actions.category.modify(category)
-        .then((response) => {
-            if (!response.status) {
-                req.flash('error', 'Fehler beim Ändern der Kategorie ' + req.body.name);
-                ldaphelper.fetchGroups(function(groups) {
-                    discourse.getParentCategories(function(err, parents){
-                        if (err) {
-                            req.flash('notification', 'Fehler beim Abrufen der Elternekategorien: ' + err);
-                            req.redirect('/show_cat')
-                        } else {
-                            res.render('cat/edit', { category: {name:req.body.name, color:req.body.color, parent:req.body.parent, groups:req.body.groups}, groups: groups, message: req.flash('error'), responses: response.responses, parents: parents, title: title('Kategorie Anlegen') });
-                        }
-                    });
-                });
-
-            } else {
-                req.flash('responses', response.responses);
-                req.flash('notification', 'Kategorie ' + req.body.name + ' geändert');
-                res.redirect('/show_cat');
-            }
-        }).catch((error) => {
-            req.flash('error', error);                        
-            res.redirect('/error');
-        });
+        .then(response => checkResponseAndRedirect(req, res, response, 'Kategorie ' + req.body.name + ' geändert', 'Fehler beim Ändern der Kategorie ' + req.body.name, '/show_cat', '/cat/edit', category))
+        .catch(error => errorPage(req,res,error)); 
 });
 
 router.get('/cat/delete/:id', isLoggedInAdmin, function(req, res) {
     actions.category.remove({ id: req.params.id })
-        .then((response) => {
-            if (!response.status) {
-                req.flash('error', 'Fehler beim Löschen der Kategorie ' + req.params.id);
-            } else {
-                req.flash('notification', 'Kategorie ' + req.params.id + ' gelöscht');
-            }
-            req.flash('responses', response.responses);
-            res.redirect('/show_cat');
-        }).catch((error) => {
-            req.flash('error', error);                        
-            res.redirect('/error');
-        });
+        .then(response => checkResponseAndRedirect(req, res, response, 'Kategorie ' + req.params.id  + ' gelöscht', 'Fehler beim Löschen der Kategorie ' + req.params.id, '/show_cat'))
+        .catch(error => errorPage(req,res,error));
 });
 
 module.exports = router;

@@ -12,12 +12,10 @@
   "author": "Florian Humer <florian.humer@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "async": "^3.1.0",
     "bluebird": "^3.7.2",
     "body-parser": "^1.18.3",
     "connect-flash": "~0.1.1",
     "cookie-parser": "^1.4.4",
-    "discourse-api": ">=1.8.0",
     "express": "^4.17.1",
     "express-session": "^1.17.0",
     "pug": "^2.0.4",
@@ -28,11 +26,14 @@
     "mysql": "^2.17.1",
     "nodemailer": ">=3.0.2",
     "nodemon": "^1.19.4",
+    "moment": "^2.24.0",
     "openldap_ssha": "^0.0.11",
     "passport": "^0.4.1",
     "passport-ldapauth": "^2.1.3",
     "passport-local": "^1.0.0",
     "passport-saml": "^1.2.0",
+    "query-string": "^6.10.0",
+    "request": "^2.88.0",
     "request-promise": "^4.2.5"
   }
 }

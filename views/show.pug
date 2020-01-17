@@ -2,7 +2,7 @@ extends layout
 include various
 
 block content
-    +notification(notification, error, responses)
+    +notification(notification, message, responses)
     .row
       .col-md-7
         .panel.panel-default
@@ -10,15 +10,20 @@ block content
             h2.panel-title 
               span Benutzer 
               span
-                a.btn.btn-default.btn-sm(href='/user/add') 
+                a.btn.btn-default.btn-sm(href='/user/add' title='Benutzer*in erstellen') 
                   span.glyphicon.glyphicon-plus
+              span
+                a.btn.btn-default.btn-sm(href='/user/invite' title='Benutzer*in einladen') 
+                  span.glyphicon.glyphicon-envelope
+
           .panel-body
             table.table.datatable(id='usertable')
               thead
                 tr
                   th.col-md-3 ID
-                  th.col-md-4 Name
-                  th.col-md-3 Projekt
+                  th.col-md-3 Name
+                  th.col-md-2 Zugehörigkeit
+                  th.col-md-2 Ort
                   th.col-md-2.text-right Aktionen
                   th.hidden DN
               tbody
@@ -27,7 +32,8 @@ block content
                     tr
                       td= user.uid
                       td= user.cn
-                      td= user.businessCategory
+                      td= user.ou
+                      td= user.l
                       td.text-right
                         a.btn.btn-default.btn-sm(href='/user/edit/'+user.dn) #[span.glyphicon.glyphicon-pencil]
                         a.btn.btn-default.btn-sm.confirm(data-link='/user/delete/'+user.dn, data-confirmtext='Willst du Benutzer*in ' + user.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
@@ -45,7 +51,8 @@ block content
             table.table.datatable(id='grouptable')
               thead
                 tr
-                  th.col-md-10 Name
+                  th.col-md-4 Name
+                  th.col-md-6 Beschreibung
                   if currentUser.isAdmin
                     th.col-md-2.text-right Aktionen
                   th.hidden Members
@@ -55,6 +62,7 @@ block content
                   if (group.cn)
                     tr
                       td= group.cn
+                      td= group.description
                       if currentUser.isAdmin
                         td.text-right
                           a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn) #[span.glyphicon.glyphicon-pencil]

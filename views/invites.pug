@@ -1,0 +1,40 @@
+extends layout
+include various
+
+block content
+    +notification(notification, message, responses)
+    .row
+      .col-md-12
+        .panel.panel-default
+          .panel-heading
+            h2.panel-title 
+              span Verschickte ausstehende Einladungen 
+              span
+                a.btn.btn-default.btn-sm(href='/user/invite' title='Benutzer*in einladen') 
+                  span.glyphicon.glyphicon-envelope
+
+          .panel-body
+            table.table.datatable(id='invitetable')
+              thead
+                tr
+                  th.col-md-3 E-Mail
+                  th.col-md-1 Gültig bis
+                  th.col-md-2 Eingeladen von
+                  th.col-md-1 Eingeladen am
+                  th.col-md-2 Mitglied in
+                  th.col-md-2 Admin von
+                  th.col-md-1.text-right Aktionen
+                  th.hidden token
+              tbody
+                each invite in invites
+                  tr
+                    td= invite.data.mail
+                    td(data-order=moment(invite.expires).format("YYYY-MM-DD"))= moment(invite.expires).format('DD.MM.YYYY')
+                    td= invite.currentUser.cn
+                    td(data-order=moment(invite.created).format("YYYY-MM-DD"))= moment(invite.created).format('DD.MM.YYYY')
+                    td=invite.data.member.map((item) => {return item.split(',')[0].split('=')[1];}).join(', ')
+                    td=invite.data.owner.map((item) => {return item.split(',')[0].split('=')[1];}).join(', ')
+                    td.text-right
+                      a.btn.btn-default.btn-sm.confirm(data-link='user/invite/repeat/'+invite.token, data-confirmtext='Willst du die Einladung an ' + invite.data.mail + ' noch einmal schicken?' title='E-Mail nochmal senden') #[span.glyphicon.glyphicon-repeat]
+                      a.btn.btn-default.btn-sm.confirm(data-link='user/invite/delete/'+invite.token, data-confirmtext='Willst du die Einladung an ' + invite.data.mail + ' wirklich löschen?', title='Einladung löschen') #[span.glyphicon.glyphicon-trash]
+                    td.hidden.dn= invite.token

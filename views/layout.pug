@@ -19,17 +19,19 @@ html
     script(type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.5.1/js/bootstrap-colorpicker.min.js')
   body
     +nav("Benutzer*innen", "dropdown_menu")
-      if (session && !currentUser)
+      if (session && !currentUser.loggedIn)
         +nav_item( "/login") Login
-      if (session && !currentUser)
+      if (session && !currentUser.loggedIn)
         +nav_item( "/lostpasswd") Passwort vergessen?         
-      if (currentUser)
+      if (currentUser.loggedIn)
         +nav_item( "/edit_me") Daten Ändern
+      if (currentUser && (currentUser.isAdmin || currentUser.isGroupAdmin))
+        +nav_item( "/invites" ) Einladungen   
       if (currentUser && (currentUser.isAdmin || currentUser.isGroupAdmin))
         +nav_item( "/show" ) Benutzer*innen / Gruppen   
       if (currentUser && currentUser.isAdmin)
         +nav_item( "/show_cat" ) Gruppen / Kategorien  
-      if (currentUser)
+      if (currentUser.loggedIn)
         +nav_item( "/logout" ) Abmelden
     .container.col-md-8.col-md-offset-2.col-sm-offset-0.col-xs-offset-0.col-xs-12.col-sm-12
       block content
