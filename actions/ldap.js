@@ -317,19 +317,19 @@ var removeUser = function(user, currentUser) {
 var createGroup = function(group, currentUser) {
   return new Promise((resolve, reject) => {
     var entry = {
-      cn: group.name,
+      cn: group.cn,
       description: group.description,
       objectClass: ['groupOfNames','top'],
       member: "",
       owner: ""
     };
-    ldaphelper.add('cn=' + group.name + ',ou=groups,' + config.ldap.server.base, entry)
+    ldaphelper.add('cn=' + group.cn + ',ou=groups,' + config.ldap.server.base, entry)
       .then(() => {
-        currentUser.ownedGroups.push('cn=' + group.name + ',ou=groups,' + config.ldap.server.base);
-        resolve({status: true, message: 'LDAP: Gruppe angelegt: ' + group.name});  
+        currentUser.ownedGroups.push('cn=' + group.cn + ',ou=groups,' + config.ldap.server.base);
+        resolve({status: true, message: 'LDAP: Gruppe angelegt: ' + group.cn});  
       })
       .catch((error) => {
-        resolve({status: false, message: 'LDAP: Fehler beim Erstellen der Gruppe ' + group.name + ': ' + error});
+        resolve({status: false, message: 'LDAP: Fehler beim Erstellen der Gruppe ' + group.cn + ': ' + error});
       });
   })
 }
@@ -338,9 +338,9 @@ var modifyGroup = function(group, currentUser) {
   return new Promise((resolve, reject) => {
     var updatedFields = [];
     var oldDn = group.dn;
-    var cn = group.name;
+    var cn = group.cn;
     var dn = 'cn=' + cn + ',ou=groups,'+ config.ldap.server.base;
-    var changedDn = (group.name != false) && dn != oldDn;
+    var changedDn = (group.cn != false) && dn != oldDn;
 
 
     ldaphelper.fetchObject(oldDn)
@@ -358,7 +358,7 @@ var modifyGroup = function(group, currentUser) {
         }
         nextStep
           .then(() => {
-            if (group.name != false && cn != oldGroup.cn) {
+            if (group.cn != false && cn != oldGroup.cn) {
               actions.push(ldaphelper.change(dn, 'replace', {cn : cn}));
               updatedFields.push('Name');
             }

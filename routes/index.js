@@ -501,7 +501,7 @@ router.get('/user/delete/:id', isLoggedInGroupAdmin, function(req, res) {
 
 router.get('/group/edit/:id', isLoggedInAdmin, function(req, res) {
     ldaphelper.fetchObject(req.params.id)
-        .then(groups => render(req, res, 'group/edit', 'Gruppe bearbeiten', {group: retrieveSessionData(req) || group}))
+        .then(group => render(req, res, 'group/edit', 'Gruppe bearbeiten', {group: retrieveSessionData(req) || group}))
         .catch(error => errorPage(req, res, error));
 });
 

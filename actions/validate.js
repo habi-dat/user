@@ -99,8 +99,8 @@ var validateGroup = async function(group, currentUser) {
     errorTexts.push('Keine Berechtigung für Gruppe ' + group.dn);
   }
 
-  if (group.name != false) {
-    if (group.name == null || group.name == "") {
+  if (group.cn != false) {
+    if (group.cn == null || group.cn == "") {
       errorTexts.push("Gruppenname fehlt");
     }
   }

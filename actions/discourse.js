@@ -86,21 +86,21 @@ var createGroup = function(group, currentUser) {
         'group[automatic_membership_email_domains]': "",
         'group[automatic_membership_retroactive]': false,
         'group[grant_trust_level]': 0,
-        'group[name]': group.name,
+        'group[name]': group.cn,
         'group[primary_group]': false,
         'group[title]': "",
         'group[visible]': true,
         'group[bio_raw]': group.description
     })
-    .then(() => { return {status : true, message: 'DISCOURSE: Gruppe ' + group.name + ' erstellt'}; })
-    .catch(error => { return {status : false, message: 'DISCOURSE: Fehler beim Erstellen der Gruppe ' + group.name + ': ' + error}; });
+    .then(() => { return {status : true, message: 'DISCOURSE: Gruppe ' + group.cn + ' erstellt'}; })
+    .catch(error => { return {status : false, message: 'DISCOURSE: Fehler beim Erstellen der Gruppe ' + group.cn + ': ' + error}; });
 };
 
 var modifyGroup = function(group, currentUser) {
   return getNameFromDN(group.dn)
     .then(name => getGroupId(name)
       .then(id => discourse.put('groups/' + id + '.json', {
-        'group[name]': group.name,
+        'group[name]': group.cn,
         'group[bio_raw]': group.description}))
       .then(() => { return {status: true, message: 'DISCOURSE: Gruppe upgedated'}; })
       .catch(error => { return {status: false, message: 'DISCOURSE: Fehler beim Update der Gruppe: ' + error}; })
