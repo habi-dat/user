@@ -1,3 +1,4 @@
+/*jshint esversion: 6 */ 
 var config    = require('../config/config.json');
 var discourse = require('../utils/discoursehelper');
 var Promise = require("bluebird");
@@ -50,7 +51,7 @@ var modifyUser = function(user, currentUser) {
       .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' ausgeloggt'}; })
       .catch(error => { return {status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht ausgeloggt werden: ' + error};})
     )
-    .catch(error => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' nicht gefunden, Schritt wird übersprungen'};})
+    .catch(error => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' nicht gefunden, Schritt wird übersprungen'};});
 
 };
 
@@ -136,7 +137,6 @@ var buildCategory = function(category) {
 
     var post = {
         name: category.name,
-        //slug: category.name.replace(/[^A-Z0-9]/ig, "_").toLowerCase(),
         color: category.color.substring(1,7),
         text_color: "FFFFFF",
         parent_category_id: '',
@@ -144,8 +144,32 @@ var buildCategory = function(category) {
         sort_order: '',
         topic_featured_link_allowed:true,
         default_view: 'latest',
-        default_top_period: 'all',
+        default_top_period: 'all'
+    };
+    if (category.parent && category.parent !== '-1') {
+        post.parent_category_id = category.parent;
     }
+    if (category.groups && Array.isArray(category.groups)) {
+        category.groups.forEach(function(group) {
+            post['permissions[' + group +']'] = 1;
+        });
+    }
+
+    resolve(post);
+
+  });
+
+};
+
+  var buildCategoryUpdate = function(category) {
+  return new Promise((resolve, reject) => {
+
+    var post = {
+        name: category.name,
+        text_color: "FFFFFF",
+        color: category.color.substring(1,7),
+        parent_category_id: ''
+    };
     if (category.parent && category.parent !== '-1') {
         post.parent_category_id = category.parent;
     }
@@ -174,7 +198,7 @@ var buildCategory = function(category) {
   //       }
   //       return discourse.post;
   //     });
-}
+};
 
 var createCategory = function(category, currentUser) {
   return buildCategory(category)
@@ -184,8 +208,8 @@ var createCategory = function(category, currentUser) {
 };
 
 var modifyCategory = function(category, currentUser) {
-  return buildCategory(category)
-    .then(catObject => discourse.post('categories', catObject))
+  return buildCategoryUpdate(category)
+    .then(catObject => discourse.put('categories/'+category.id, catObject))
     .then(() => { return {status:true, message: 'DISCOURSE: Kategorie geändert'}; })
     .catch(error => { return {status: false, message: 'DISCOURSE: Fehler beim Ändern der Kategorie: ' + error}; });
 };

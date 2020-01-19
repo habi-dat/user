@@ -17,6 +17,7 @@ var buildOptions = function(method, url, parameters = undefined) {
   } else if (parameters) {
     options.form = parameters;
   }
+
   return options;
 }
 
@@ -50,8 +51,8 @@ exports.getCategory = function(id) {
                     return groupPermission.group_name;
                 }
             })
-            if (categoryBody.category.uploaded_logo) {
-                categoryBody.category.image = config.discourse.APIURL + '/' + categoryBody.category.uploaded_logo.url;
+            if (categoryObject.category.uploaded_logo) {
+                categoryObject.category.image = config.discourse.APIURL + '/' + categoryObject.category.uploaded_logo.url;
             }            
             return categoryObject.category;
         })
@@ -68,10 +69,11 @@ exports.getCategoryWithParent = function(id) {
 };
 
 
-exports.getCategories = function(done) {
+exports.getCategories = function() {
 
-    exports.get('categories_and_latest')
+    return exports.get('categories_and_latest')
         .then(categoriesObject => {
+            
             var categoryIDs =[];
             categoriesObject.category_list.categories.forEach(topCategory => {
               categoryIDs.push({parent: null, id: topCategory.id});
@@ -85,15 +87,16 @@ exports.getCategories = function(done) {
                 return exports.getCategory(categoryId.id)
                     .then(category => {
                         category.parent = categoryId.parent;
+                        return category;
                     })
                 }))
         })
         .then(categories => {
             // make tree out of flat list
             return categories
-                .filter(category => { return category.parent == null })
+                .filter(category => { return category.parent == null; })
                 .map(rootCategory => {
-                    rootCategory.subCategories = categories.filter(category => { return category.parent && category.parent === rootCategory.id });
+                    rootCategory.subCategories = categories.filter(category => { return category.parent && category.parent === rootCategory.id; });
                     return rootCategory;
                 })
         });
@@ -101,7 +104,7 @@ exports.getCategories = function(done) {
 
 
 exports.getParentCategories = function(done) {
-    exports.get('categories_and_latest')
+    return exports.get('categories_and_latest')
         .then(categoriesObject => { return categoriesObject.category_list.categories; });
 };
 

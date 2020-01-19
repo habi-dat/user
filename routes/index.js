@@ -316,7 +316,7 @@ router.get('/show', isLoggedInGroupAdmin, function(req,res){
 router.get('/show_cat', isLoggedInAdmin, function(req,res){
     Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups), discourse.getCategories(),
         (groups, categories) => render(req,res,'show_cat', 'Gruppen / Kategorien',  {groups: groups, categories: categories}))
-        .catch(error => errorPage(req, res, 'Fehler beim Ändern des Passworts: ' + error));
+        .catch(error => errorPage(req, res, error));
 });
 
 router.get('/invites', isLoggedInGroupAdmin, function(req,res){
@@ -543,9 +543,9 @@ router.get('/cat/add', isLoggedInAdmin, function(req, res) {
 
 router.post('/cat/add', isLoggedInAdmin, function(req, res) {
     var category = req.body;
-    category.groups = JSON.parse(category.groups);
+    category.groups = JSON.parse(category.member);
 
-    actions.category.create(category)
+    actions.category.create(category, req.user)
         .then(response => checkResponseAndRedirect(req, res, response, 'Kategorie ' + req.body.name + ' erstellt', 'Fehler beim Erstellen der Kategorie ' + req.body.name, '/show_cat', '/cat/add', category))
         .catch(error => errorPage(req,res,error)); 
 });
@@ -553,10 +553,11 @@ router.post('/cat/add', isLoggedInAdmin, function(req, res) {
 router.post('/cat/edit', isLoggedInAdmin, function(req, res) {
 
     var category = req.body;
-    category.groups = JSON.parse(category.groups);
+    category.groups = JSON.parse(category.member);
+    console.log('category: ' + JSON.stringify(category));
 
     actions.category.modify(category)
-        .then(response => checkResponseAndRedirect(req, res, response, 'Kategorie ' + req.body.name + ' geändert', 'Fehler beim Ändern der Kategorie ' + req.body.name, '/show_cat', '/cat/edit', category))
+        .then(response => checkResponseAndRedirect(req, res, response, 'Kategorie ' + req.body.name + ' geändert', 'Fehler beim Ändern der Kategorie ' + req.body.name, '/show_cat', '/cat/edit/'+category.id, category))
         .catch(error => errorPage(req,res,error)); 
 });
 

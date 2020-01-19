@@ -40,10 +40,11 @@ mixin cat_form(action, category, groups, parents)
                 select.form-control(id="parent" name="parent")
                   option(value=-1) Keine
                   each parent in parents
-                    if category && parent.id == category.parent
-                      option(value=parent.id selected)=parent.name
-                    else
-                      option(value=parent.id)=parent.name
+                    if !category || category.id != parent.id
+                      if category && category.parent && parent.id === category.parent.id
+                        option(value=parent.id selected=true)=parent.name
+                      else
+                        option(value=parent.id)=parent.name
           .form-group.required
             label.control-label.col-md-3(for="color") Farbe
             .col-md-9
