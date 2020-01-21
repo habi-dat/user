@@ -466,8 +466,19 @@ router.get('/user/available/uid/:uid', isLoggedInGroupAdmin, function(req, res) 
 
 router.post('/user/add', isLoggedInGroupAdmin, function(req, res) {
     var user = req.body;
-    user.member = JSON.parse(user.member);
-    user.owner = JSON.parse(user.owner);
+    
+    if (user.member) {
+        user.member = JSON.parse(user.member);
+    } else {
+        user.member = [];
+    }
+
+    if (user.owner) {
+        user.owner = JSON.parse(user.owner);
+    } else {
+        user.owner = [];
+    }
+    
     user.description = user.description || config.nextcloud.defaultQuota || '1 GB';
 
     actions.user.create(user, req.user)
@@ -483,8 +494,17 @@ router.get('/user/edit/:id', isLoggedInGroupAdmin, function(req, res) {
 
 router.post('/user/edit', isLoggedInGroupAdmin, function(req, res) {
     var user = req.body;
-    user.member = JSON.parse(user.member);
-    user.owner = JSON.parse(user.owner);
+    if (user.member) {
+        user.member = JSON.parse(user.member);
+    } else {
+        user.member = [];
+    }
+
+    if (user.owner) {
+        user.owner = JSON.parse(user.owner);
+    } else {
+        user.owner = [];
+    }
     user.description = user.description || config.nextcloud.defaultQuota || '1 GB';
 
     actions.user.modify(user, req.user)

@@ -34,8 +34,6 @@ var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
       var assignedGroups;
       var assignedAdminGroups;
 
-      //console.log("member: " + member + "owner: " + owner);
-
       if(member) {
           assignedGroups = member;
       } else {
@@ -49,7 +47,7 @@ var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
       }
 
       var changedDn = dn != oldDn;
-      if ((currentUser.isAdmin || currentUser.isGroupAdmin) && (member != false || owner != false)) {
+      if ((currentUser.isAdmin || currentUser.isGroupAdmin) && (member !== false || owner !== false)) {
           ldaphelper.fetchGroups(currentUser.ownedGroups)
             .then((groups) => {
               var actions = [];
@@ -59,7 +57,7 @@ var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
                       updated = false,
                       updatedAdmin = ldapAttributeToArray(group.owner);
 
-                  if (member != false) {
+                  if (member !== false) {
                     // check if member list needs to be updated
                     if (assignedGroups.includes(group.dn)) {
                       if (updatedMember.includes(oldDn)) {
@@ -92,7 +90,7 @@ var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
                   }
 
                   // check if owner list needs to be updated (only for admins)
-                  if (currentUser.isAdmin && owner != false) {
+                  if (currentUser.isAdmin && owner !== false) {
                     updated = false;
                     if (assignedAdminGroups.indexOf(group.dn) > -1) {
                       if (updatedAdmin.indexOf(oldDn) > -1 ) {
