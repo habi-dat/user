@@ -24,36 +24,57 @@
     if ( $(this).hasClass('selected') ) {
         $(this).removeClass('selected');
         $('#grouptable tbody tr').removeClass('hidden');
+        $('#grouptable tbody tr td:first-child .priv-icon').remove();
     }
     else {
         $('#usertable tbody tr.selected').removeClass('selected');
         $(this).addClass('selected');
         var dn = $(this).find('.dn').text();
         $('#grouptable tbody tr').addClass('hidden');
-        $('#grouptable tbody tr td .memberdn').each(function() {
+        $('#grouptable tbody tr td:first-child .priv-icon').remove();
+        $('#grouptable tbody tr td .admindn').each(function() {
           if ($(this).text() == dn) {
             $(this).parent().parent().removeClass('hidden');
+            $(this).parent().parent().children().first().prepend('<span class="priv-icon glyphicon glyphicon-edit" style="color:green;"></span>');            
           }
         });
+        $('#grouptable tbody tr td .memberdn').each(function() {
+          if ($(this).parent().parent().hasClass('hidden') && $(this).text() == dn) {
+            $(this).parent().parent().removeClass('hidden');
+            $(this).parent().parent().children().first().prepend('<span class="priv-icon glyphicon glyphicon-check" style="color:blue;"></span>');            
+          }
+        });        
     }
     } );
     $('#grouptable tbody').on( 'click', 'tr', function () {
     if ( $(this).hasClass('selected') ) {
         $(this).removeClass('selected');
         $('#usertable tbody tr').removeClass('hidden');
+        $('#usertable tbody tr td:first-child .priv-icon').remove();        
     }
     else {
         $('#grouptable tbody tr.selected').removeClass('selected');
         $(this).addClass('selected');
         $('#usertable tbody tr').addClass('hidden');
-        $(this).find('.memberdn').each(function() {
+        $('#usertable tbody tr td:first-child .priv-icon').remove();
+        $(this).find('.admindn').each(function() {
           var dn = $(this).text();
           $('#usertable tbody tr .dn').each(function() {
             if($(this).text() == dn) {
               $(this).parent().removeClass('hidden');
+              $(this).parent().children().first().prepend('<span class="priv-icon glyphicon glyphicon-edit" style="color:green;"></span>');
             }
           });
         });
+        $(this).find('.memberdn').each(function() {
+          var dn = $(this).text();
+          $('#usertable tbody tr .dn').each(function() {
+            if($(this).parent().hasClass('hidden') && $(this).text() == dn) {
+              $(this).parent().removeClass('hidden');
+              $(this).parent().children().first().prepend('<span class="priv-icon glyphicon glyphicon-check" style="color:blue;"></span>');
+            }
+          });
+        });        
     }
     } );
 
