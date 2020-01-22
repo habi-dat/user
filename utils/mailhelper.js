@@ -105,24 +105,7 @@ exports.sendPasswordResetEmail = function(req, res, user) {
     return activation.createAndSaveToken(req.user, {uid: user.uid})
       .then((token) => {
           var link = config.settings.activation.base_url + '/passwd/' + user.uid + '/'+token.token;
-        
-          var mailOptions = {
-            from: (config.settings.activation.email_from || 'no-reply@habidat.org'),
-            to: user.mail
-          }
-
-          if (user.preferredLanguage && user.preferredLanguage == 'en')  {
-              mailOptions.subject = 'Your password at ' + config.settings.general.title + ' was resetted';
-              mailOptions.html = '<h3>Your password was resetted</h3>'+
-                    '<p>Please follow the link to set a new password: </p>'+
-                    '<a href="'+ link +'">' + link + '</a>';
-          } else {
-              mailOptions.subject = 'Dein Passwort bei ' + config.settings.general.title + ' wurde zurückgesetzt';
-              mailOptions.html = '<h3>Dein Passwort wurde zurückgesetzt</h3>'+
-                    '<p>Bitte klicke auf den folgenden Link um dein neues Passwort zu wählen: </p>'+
-                    '<a href="'+ link +'">' + link + '</a>';
-          }
-          return sendMail(mailOptions);
+          return exports.sendMail(req, res, user.mail, config.settings.general.title + ' Passwort wurde zurückgesetzt', 'email/passwd', { passwdLink: link })
     })    
     
 };

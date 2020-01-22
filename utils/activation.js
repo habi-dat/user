@@ -49,14 +49,17 @@ exports.createAndSaveToken = function(currentUser, data, validPeriod = 7*24, typ
       store[token] = {
         created: Date.now(),
         expires: expiresAt,
-        currentUser: {
-          uid: currentUser.uid,
-          dn: currentUser.dn,
-          cn: currentUser.cn
-        },
         data: data,
         type: type,
         token: token
+      }
+      if (currentUser && currentUser.uid) {
+        store[token].currentUser = 
+          {
+            uid: currentUser.uid,
+            dn: currentUser.dn,
+            cn: currentUser.cn
+          };
       }
       return saveStore(store)
         .then((store) => {

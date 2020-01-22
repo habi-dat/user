@@ -262,7 +262,7 @@ router.post('/user/passwd', function(req, res) {
                     uid: req.body.uid,
                     cn: false,
                     l: false,
-                    uo: false,
+                    ou: false,
                     mail: false,
                     description: false,
                     changedUid: false,
@@ -283,7 +283,7 @@ router.post('/user/passwd', function(req, res) {
                         return response;
                     }
                 })
-                .then(response => checkResponseAndRedirect(req, res, response, 'Passwort geändert', 'Fehler beim Ändern des Passworts', '/login', 'passwd/' + req.body.uid + '/' + req.body.token));
+                .then(response => checkResponseAndRedirect(req, res, response, 'Passwort geändert', 'Fehler beim Ändern des Passworts', '/redirect', '/passwd/' + req.body.uid + '/' + req.body.token));
             })
         .catch(error => errorPage(req, res, 'Fehler beim Ändern des Passworts: ' + error));
 });

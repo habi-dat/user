@@ -17,7 +17,7 @@ var connectDb = function() {
 // only if uid or dn changed: change uid and dn in LDAP mapping
 var modifyUser = function(user, currentUser) {
   var cn = user.cn;
-  var dn = 'cn=' + cn.toLowerCase() + ',ou=users,'+ config.ldap.server.base;
+  var dn = (user.cn != false?'cn=' + cn.toLowerCase() + ',ou=users,'+ config.ldap.server.base:user.dn);
   var changedDn = user.cn != false && dn.toLowerCase() != user.dn.toLowerCase();
 
   if (changedDn || user.changedUid && user.changedUid != "" && user.changedUid != user.uid) {
