@@ -23,9 +23,7 @@ const getExternalAppsByUser = function(externalApps, currentUser) {
     .then(() => {
       var externalAppsByUser = externalApps.filter(app => {
         if (app.groups && app.groups.length > 0) {
-          console.log('groups: ' + JSON.stringify(app.groups));
           if (currentUser && currentUser.memberGroups) {
-          console.log('member: ' + JSON.stringify(currentUser.memberGroups));
             var enabled = false;
             app.groups.forEach(group => { 
               if (currentUser.memberGroups.includes(group)) {
@@ -200,8 +198,19 @@ exports.getMenuEntriesSorted = function (currentUser) {
   return Promise.join(exports.getExternalApps(currentUser), exports.getEnabledApps(), exports.getAppOrder(),
     (externalApps, enabledApps, appOrder) => {
       var combined = enabledApps.concat(externalApps);
+      var findIndexOf = function(appOrder, url) {
+        var index = appOrder.indexOf(url);
+        if (index == -1) {
+          appOrder.forEach((app, i) => {
+            if (app.includes(url)) {
+              index = i;
+            }
+          })
+        }
+        return index;
+      }
       var combined = combined.sort((a, b) => {
-        return appOrder.indexOf(a.url) > appOrder.indexOf(b.url)?1:-1;
+        return findIndexOf(appOrder, a.url) > findIndexOf(appOrder, b.url)?1:-1;
       });
       return combined;
     })
