@@ -309,6 +309,9 @@ router.get('/ping', function(req, res){
 });
 
 router.get('/appmenu/:from', function(req, res){
+    if (config.settings.general.modules.includes('discourse')) {
+        res.setHeader('Access-Control-Allow-Origin', 'https://' + config.discourse.subdomain + '.' + config.settings.general.domain);
+    }                
     nextcloud.getMenuEntriesSorted(req.user)
         .then(menuEntries => render(req, res, 'appmenu/menu', '', {menuEntries: menuEntries, fromUrl: req.params.from}));
     
