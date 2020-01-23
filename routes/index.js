@@ -314,6 +314,7 @@ router.get('/appmenu/:from', function(req, res){
     }                
     nextcloud.getMenuEntriesSorted(req.user)
         .then(menuEntries => render(req, res, 'appmenu/menu', '', {menuEntries: menuEntries, fromUrl: req.params.from}));
+        .catch(error => errorPage(req, res, error));    
     
 });
 
@@ -402,7 +403,8 @@ router.post('/user/invite/accept',  function(req, res) {
 });
 
 router.get('/redirect', function(req, res) {
-    render(req, res, 'redirect', 'Weiterleitung...', {});
+    render(req, res, 'redirect', 'Weiterleitung...', {})
+            .catch(error => errorPage(req, res, error));;
 });
 
 router.post('/user/invite', isLoggedInGroupAdmin, function(req, res) {
