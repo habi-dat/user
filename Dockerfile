@@ -1,4 +1,4 @@
-FROM node:carbon
+FROM node:lts
 
 ENV HABIDAT_DOMAIN example.com
 ENV HABIDAT_TITLE habi*DAT
