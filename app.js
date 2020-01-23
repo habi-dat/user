@@ -102,7 +102,7 @@ passport.deserializeUser(function(user, done) {
                 ldaphelper.fetchOwnedGroups(user)
                     .then((groups) => {
                         user.ownedGroups = groups.owner.map((group) => { return group.dn;});
-                        user.memberGroups = groups.owner.map((group) => { return group.cn;});  
+                        user.memberGroups = groups.member.map((group) => { return group.cn;});  
                         if (user.isAdmin  || groups.owner.length > 0) {
                             user.isGroupAdmin = true;
                         } else {

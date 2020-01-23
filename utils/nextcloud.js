@@ -23,7 +23,9 @@ const getExternalAppsByUser = function(externalApps, currentUser) {
     .then(() => {
       var externalAppsByUser = externalApps.filter(app => {
         if (app.groups && app.groups.length > 0) {
+          console.log('groups: ' + JSON.stringify(app.groups));
           if (currentUser && currentUser.memberGroups) {
+          console.log('member: ' + JSON.stringify(currentUser.memberGroups));
             var enabled = false;
             app.groups.forEach(group => { 
               if (currentUser.memberGroups.includes(group)) {
@@ -38,7 +40,7 @@ const getExternalAppsByUser = function(externalApps, currentUser) {
           return true;
         }
       })
-      return externalApps.map(app => {
+      return externalAppsByUser.map(app => {
         return { 
           url:  app.redirect?app.url:'/index.php/apps/external/' + app.id,
           redirect: app.redirect,

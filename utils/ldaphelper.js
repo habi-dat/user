@@ -139,7 +139,7 @@ exports.fetchOwnedGroups = function(currentUser) {
                 if (currentUser.isAdmin || (entry.object.owner && entry.object.owner.indexOf(currentUser.dn) > -1)) {
                     owner.push(entry.object);
                 }
-                if (entry.object.member && entry.object.owner.indexOf(currentUser.dn) > -1) {
+                if (entry.object.member && entry.object.member.indexOf(currentUser.dn) > -1) {
                     member.push(entry.object);
                 }
             });
