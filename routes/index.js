@@ -309,8 +309,8 @@ router.get('/ping', function(req, res){
 });
 
 router.get('/appmenu/:from', function(req, res){
-    nextcloud.getExternalApps()
-        .then(externalApps => render(req, res, 'appmenu/menu', '', {externalApps: externalApps, fromUrl: req.params.from}));
+    nextcloud.getMenuEntriesSorted(req.user)
+        .then(menuEntries => render(req, res, 'appmenu/menu', '', {menuEntries: menuEntries, fromUrl: req.params.from}));
     
 });
 

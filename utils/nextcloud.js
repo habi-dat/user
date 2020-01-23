@@ -1,6 +1,7 @@
 var mysql       = require('mysql');
 var config      = require('../config/config.json');
 var request     = require('request-promise');
+var xml         = require('xml-js');
 var Promise   = require("bluebird");
 
 Promise.promisifyAll(require("mysql/lib/Connection").prototype);
@@ -17,9 +18,41 @@ var connectDb = function() {
 var externalApps;
 var externalAppsTime;
 
-exports.getExternalApps = function() {
+const getExternalAppsByUser = function(externalApps, currentUser) {
+  return Promise.resolve()
+    .then(() => {
+      var externalAppsByUser = externalApps.filter(app => {
+        if (app.groups && app.groups.length > 0) {
+          if (currentUser && currentUser.memberGroups) {
+            var enabled = false;
+            app.groups.forEach(group => { 
+              if (currentUser.memberGroups.includes(group)) {
+                enabled = true;
+              }
+            })
+            return enabled;
+          } else {
+            return false;
+          }
+        } else {
+          return true;
+        }
+      })
+      return externalApps.map(app => {
+        return { 
+          url:  app.redirect?app.url:'/index.php/apps/external/' + app.id,
+          redirect: app.redirect,
+          icon: app.icon,
+          name: app.name,
+          originalUrl: app.url
+        }
+      })      
+    })
+}
+
+exports.getExternalApps = function(currentUser) {
   if (externalApps && Date.now() - externalAppsTime < 1000*60*60*24) {
-    return Promise.resolve(externalApps);
+    return getExternalAppsByUser(externalApps, currentUser);
   } else {
     return connectDb()
       .then((connection) => {
@@ -28,8 +61,13 @@ exports.getExternalApps = function() {
       })
       .then((result) => {
         if (result.length > 0 && result[0].configvalue) {
-          externalApps = JSON.parse(result[0].configvalue);
+          var externalAppsObject = JSON.parse(result[0].configvalue);
+          externalApps = [];
+          Object.keys(externalAppsObject).forEach(key => {
+            externalApps.push(externalAppsObject[key]);
+          })
           externalAppsTime = Date.now();
+          return getExternalAppsByUser(externalApps, currentUser);
         } else {
           externalApps = {};
           externalAppsTime = Date.now();
@@ -37,8 +75,132 @@ exports.getExternalApps = function() {
         return externalApps;
       })
       .catch(error => {
-        console.log('Error getting external apps: ' + error);
+        console.log('Nextcloud: Error getting external apps: ' + error);
         return {};
       })
   }
+}
+
+var enabledApps;
+var enabledAppsTime;
+
+const nextcloudApps = {
+  files: {
+    id: 'files',
+    url: '/index.php/apps/files/',
+    icon: 'files.svg',
+    name: 'Dateien'
+  },
+  calendar: {
+    id: 'calendar',
+    url: '/index.php/apps/calendar/',
+    icon: 'calendar.svg',
+    name: 'Kalender'
+  },
+  contacts: {
+    id: 'contacts',
+    url: '/index.php/apps/contacts/',
+    icon: 'contacts.svg',
+    name: 'Kontakte' 
+  },
+
+  mail: {
+    id: 'mail',
+    url: '/index.php/apps/mail/',
+    icon: 'mail.svg',
+    name: 'E-Mail'
+  },
+  gallery: {
+    id: 'gallery',
+    url: '/index.php/apps/gallery/',
+    icon: 'gallery.svg',
+    name: 'Galerie'
+  },
+  tasks: {
+    id: 'tasks',
+    url: '/index.php/apps/tasks/',
+    icon: 'tasks.svg',
+    name: 'Aufgaben'
+  },
+  audioplayer: {
+    id: 'audioplayer',
+    url: '/index.php/apps/audioplayer/',
+    icon: 'audioplayer.svg',
+    name: 'Audio-Player'
+  },
+  spreed: {
+    id: 'spreed',
+    url: '/index.php/apps/spreed/',
+    icon: 'spreed.svg',
+    name: 'Talk'
+  }
+};
+
+exports.getEnabledApps = function() {
+  if (enabledApps && Date.now() - enabledAppsTime < 1000*60*60*24) {
+    return Promise.resolve(enabledApps);
+  } else {  
+    var options = {
+        uri: config.nextcloud.api.url + '/cloud/apps?filter=enabled',
+        headers: {
+            'OCS-APIRequest': 'true'
+        }
+    };
+    return request(options)
+      .then((responseXML) => {
+        var response = xml.xml2js(responseXML, {compact: true});
+        enabledApps = response.ocs.data.apps.element.map(app => {return app._text;});
+        enabledAppsTime = Date.now();
+        enabledApps = enabledApps.map(app => {
+          if (nextcloudApps[app]) {
+            return nextcloudApps[app];
+          }
+        }).filter(app => { return app?true:false; });
+        return enabledApps;
+      })
+      .catch((error) => {
+        console.log('Nextcloud: Error getting enabled apps: ' + error);
+        return [];
+      });    
+  }
+}
+
+var appOrder;
+var appOrderTime;
+
+exports.getAppOrder = function() {
+  if (appOrder && Date.now() - appOrder < 1000*60*60*24) {
+    return Promise.resolve(appOrder);
+  } else {
+    return connectDb()
+      .then((connection) => {
+        var statement = 'select configvalue from ' +  config.nextcloud.db.prefix + "_appconfig where appid='apporder' and configkey='order'";
+        return connection.queryAsync(statement);
+      })
+      .then((result) => {
+        if (result.length > 0 && result[0].configvalue) {
+          appOrder = JSON.parse(result[0].configvalue);
+          appOrderTime = Date.now();
+        } else {
+          appOrder = [];
+          appOrderTime = Date.now();
+        }        
+        return appOrder;
+      })
+      .catch(error => {
+        console.log('Nextcloud: Error getting app order: ' + error);
+        return {};
+      })
+  }
+};
+
+exports.getMenuEntriesSorted = function (currentUser) {
+  return Promise.join(exports.getExternalApps(currentUser), exports.getEnabledApps(), exports.getAppOrder(),
+    (externalApps, enabledApps, appOrder) => {
+      var combined = enabledApps.concat(externalApps);
+      var combined = combined.sort((a, b) => {
+        return appOrder.indexOf(a.url) > appOrder.indexOf(b.url)?1:-1;
+      });
+      return combined;
+    })
 }

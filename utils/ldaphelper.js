@@ -129,21 +129,25 @@ exports.fetchOwnedGroups = function(currentUser) {
             scope: 'sub'
         };
 
-        var entries = [];
+        var owner = [];
+        var member = [];
 
         client.search('ou=groups,'+config.server.base, opts, function(err, res) {
             res.on('searchEntry', function(entry) {
                 //console.log('groupentry: '+ JSON.stringify(entry.object));
                 //console.log(JSON.stringify(entry.object.member));
                 if (currentUser.isAdmin || (entry.object.owner && entry.object.owner.indexOf(currentUser.dn) > -1)) {
-                    entries.push(entry.object);
+                    owner.push(entry.object);
+                }
+                if (entry.object.member && entry.object.owner.indexOf(currentUser.dn) > -1) {
+                    member.push(entry.object);
                 }
             });
             res.on('error', function(err) {
                 reject('Error fetching users owned groups: ' + err.message);
             });
             res.on('end', function(result) {
-                resolve(entries);
+                resolve({owner: owner, member: member});
             });
         });
     });

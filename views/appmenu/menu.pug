@@ -3,19 +3,11 @@
     img(style='height: 2.57em;', src=baseUrl + '/public/img/habidat.png')
   span.habidat-spacer &nbsp;
   .dropdown-content.habidat-dropdown-content
-    a(href=baseUrl) 
-      span.habidat-icon(style='mask-image: url(' + baseUrl + '/public/img/appmenu/user.png);')
-      span.habidat-spacer &nbsp;
-      | Profil         
-    if config.settings.general.modules.includes('nextcloud')
-      a(href='https://'+config.nextcloud.subdomain+'.'+config.settings.general.domain) 
-        span.habidat-icon(style='mask-image: url(' + baseUrl + '/public/img/appmenu/files.svg);')
-        span.habidat-spacer &nbsp;
-        | Dateien
-    each key in Object.keys(externalApps)
-      - var app = externalApps[key]
-      if !app.url.includes(fromUrl) && app.url != baseUrl && (!app.groups || app.groups.length == 0)
-        a(href='https://'+config.nextcloud.subdomain+'.'+config.settings.general.domain + '/index.php/apps/external/' + app.id) 
-          span.habidat-icon(style='mask-image: url(' + baseUrl + '/public/img/appmenu/' + app.icon + ');')
+    each entry in menuEntries
+      if (!entry.url.includes(fromUrl) && (!entry.originalUrl || !entry.originalUrl.includes(fromUrl)))
+        - var url = entry.redirect?entry.url:'https://'+config.nextcloud.subdomain+'.'+config.settings.general.domain + entry.url;
+        a(href=url) 
+          span.habidat-icon(style='mask-image: url(' + baseUrl + '/public/img/appmenu/' + entry.icon + ');')
           span.habidat-spacer &nbsp;
-          span=app.name
+          span=entry.name
+

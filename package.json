@@ -34,6 +34,7 @@
     "passport-saml": "^1.2.0",
     "query-string": "^6.10.0",
     "request": "^2.88.0",
-    "request-promise": "^4.2.5"
+    "request-promise": "^4.2.5",
+    "xml-js": "^1.6.11"
   }
 }

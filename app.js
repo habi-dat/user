@@ -100,9 +100,9 @@ passport.deserializeUser(function(user, done) {
                 user.isAdmin = isAdmin;
                 ldaphelper.fetchOwnedGroups(user)
                     .then((groups) => {
-                        user.ownedGroups = groups.map((group) => { return group.dn;});
-                        console.log('ownedGroups: ' + JSON.stringify(user.ownedGroups ));
-                        if (user.isAdmin  || groups.length > 0) {
+                        user.ownedGroups = groups.owner.map((group) => { return group.dn;});
+                        user.memberGroups = groups.owner.map((group) => { return group.cn;});  
+                        if (user.isAdmin  || groups.owner.length > 0) {
                             user.isGroupAdmin = true;
                         } else {
                             user.isGroupAdmin = false;
