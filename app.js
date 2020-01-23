@@ -45,7 +45,10 @@ app.use(multer({dest:'./upload/'}).single('logo'));
 app.enable('trust proxy');
 
 var oneDay = 86400000;
-app.use('/public', express.static(path.join(__dirname, '/public'),  { maxAge: oneDay }));
+app.use('/public', express.static(path.join(__dirname, '/public'),  { maxAge: oneDay,
+        setHeaders: (res) => {
+            res.setHeader('Access-Control-Allow-Origin', 'https://discourse.habidat.local')
+        } }));
 
 app.use(function(req,res,next){
     res.locals.session = req.session;
@@ -55,7 +58,8 @@ app.use(function(req,res,next){
     } else {
         res.locals.currentUser = { loggedIn: false};
     }
-    
+    res.setHeader('Access-Control-Allow-Origin', 'https://discourse.habidat.local');
+    res.locals.baseUrl = req.protocol+"://"+req.headers.host;
     res.locals.config = config;
     res.locals.moment = moment;
     next();

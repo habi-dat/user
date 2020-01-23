@@ -7,6 +7,7 @@ var discourse = require('../utils/discoursehelper');
 var router = express.Router();
 var config    = require('../config/config.json');
 var activation = require('../utils/activation');
+var nextcloud = require('../utils/nextcloud');
 var mail = require('../utils/mailhelper');
 var actions = require('../actions');
 var bodyParser = require('body-parser');
@@ -306,6 +307,13 @@ router.post('/user/lostpasswd', function(req, res) {
 router.get('/ping', function(req, res){
     res.status(200).send("pong!");
 });
+
+router.get('/appmenu/:from', function(req, res){
+    nextcloud.getExternalApps()
+        .then(externalApps => render(req, res, 'appmenu/menu', '', {externalApps: externalApps, fromUrl: req.params.from}));
+    
+});
+
 
 router.get('/show', isLoggedInGroupAdmin, function(req,res){
     Promise.join(ldaphelper.fetchUsers(), ldaphelper.fetchGroups(req.user.ownedGroups), 
