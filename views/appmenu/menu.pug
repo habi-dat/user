@@ -7,7 +7,7 @@
       if (!entry.url.includes(fromUrl) && (!entry.originalUrl || !entry.originalUrl.includes(fromUrl)))
         - var url = entry.redirect?entry.url:'https://'+config.nextcloud.subdomain+'.'+config.settings.general.domain + entry.url;
         a(href=url) 
-          span.habidat-icon(style='mask-image: url(' + baseUrl + '/public/img/appmenu/' + entry.icon + ');')
+          span.habidat-icon(style='mask-image: url(' + baseUrl + '/public/img/appmenu/' + entry.icon + '); -webkit-mask-image: url(' + baseUrl + '/public/img/appmenu/' + entry.icon + '); -webkit-mask-size: 16px 16px;')
           span.habidat-spacer &nbsp;
           span=entry.name
 
