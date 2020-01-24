@@ -15,6 +15,9 @@ var query = function(query) {
         resolve(results);
       }
     });    
+  })
+  .finally(() => {
+    connection.end();
   });
 };
 
