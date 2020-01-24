@@ -71,8 +71,8 @@ exports.getExternalApps = function(currentUser) {
         } else {
           externalApps = {};
           externalAppsTime = Date.now();
+          return externalApps;
         }        
-        return externalApps;
       })
       .catch(error => {
         console.log('Nextcloud: Error getting external apps: ' + error);
