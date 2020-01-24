@@ -3,15 +3,19 @@ var config      = require('../config/config.json');
 var request     = require('request-promise');
 var Promise   = require("bluebird");
 
-Promise.promisifyAll(require("mysql/lib/Connection").prototype);
+var connection = mysql.createConnection(config.nextcloud.db);
 
-var connectDb = function() {
-  var connection = mysql.createConnection(config.nextcloud.db);
+var query = function(query) {
 
-  return connection.connectAsync().then(()=>{
-    return connection;
+  return new Promise((resolve, reject) => {
+    connection.query(query, function (error, results, fields) {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results);
+      }
+    });    
   });
-
 };
 
 // only if uid or dn changed: change uid and dn in LDAP mapping
@@ -21,24 +25,14 @@ var modifyUser = function(user, currentUser) {
   var changedDn = user.cn != false && dn.toLowerCase() != user.dn.toLowerCase();
 
   if (changedDn || user.changedUid && user.changedUid != "" && user.changedUid != user.uid) {
-    return connectDb()
-      .then((connection) => {
-            var statement;
+    var statement;
 
-        if (changedDn) {
-          statement = "update " + config.nextcloud.db.prefix + "_ldap_user_mapping set directory_uuid='" + user.changedUid + "', ldap_dn='" + dn + "' where ldap_dn='" + user.dn.toLowerCase() + "'";
-        } else {
-          statement = "update " + config.nextcloud.db.prefix + "_ldap_user_mapping set directory_uuid='" + user.changedUid + "' where ldap_dn='" + user.dn.toLowerCase() + "'";
-        }
-        return connection.queryAsync(statement).then((results) => {
-          return connection.endAsync().then(() => {
-            return results;
-          });
-        }, (error) => {
-          connection.end();
-          throw error;
-        });
-      })
+    if (changedDn) {
+      statement = "update " + config.nextcloud.db.prefix + "_ldap_user_mapping set directory_uuid='" + user.changedUid + "', ldap_dn='" + dn + "' where ldap_dn='" + user.dn.toLowerCase() + "'";
+    } else {
+      statement = "update " + config.nextcloud.db.prefix + "_ldap_user_mapping set directory_uuid='" + user.changedUid + "' where ldap_dn='" + user.dn.toLowerCase() + "'";
+    }
+    return query(statement)
       .then((results) => {
         if (results.changedRows > 0) {
           return {status : true, message: "NEXTCLOUD: Benutzer*innen-UID Zuordnung upgedated (" + results.changedRows + ")"};

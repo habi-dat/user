@@ -4,15 +4,19 @@ var request     = require('request-promise');
 var xml         = require('xml-js');
 var Promise   = require("bluebird");
 
-Promise.promisifyAll(require("mysql/lib/Connection").prototype);
+var connection = mysql.createConnection(config.nextcloud.db);
 
-var connectDb = function() {
-  var connection = mysql.createConnection(config.nextcloud.db);
-
-  return connection.connectAsync().then(()=>{
-    return connection;
+var query = function(query) {
+ 
+  return new Promise((resolve, reject) => {
+    connection.query(query, function (error, results, fields) {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results);
+      }
+    });    
   });
-
 };
 
 var externalApps;
@@ -54,11 +58,7 @@ exports.getExternalApps = function(currentUser) {
   if (externalApps && Date.now() - externalAppsTime < 1000*60*60*24) {
     return getExternalAppsByUser(externalApps, currentUser);
   } else {
-    return connectDb()
-      .then((connection) => {
-        var statement = 'select configvalue from ' +  config.nextcloud.db.prefix + "_appconfig where appid='external' and configkey='sites'";
-        return connection.queryAsync(statement);
-      })
+    return query('select configvalue from ' +  config.nextcloud.db.prefix + "_appconfig where appid='external' and configkey='sites'")
       .then((result) => {
         if (result.length > 0 && result[0].configvalue) {
           var externalAppsObject = JSON.parse(result[0].configvalue);
@@ -172,11 +172,7 @@ exports.getAppOrder = function() {
   if (appOrder && Date.now() - appOrder < 1000*60*60*24) {
     return Promise.resolve(appOrder);
   } else {
-    return connectDb()
-      .then((connection) => {
-        var statement = 'select configvalue from ' +  config.nextcloud.db.prefix + "_appconfig where appid='apporder' and configkey='order'";
-        return connection.queryAsync(statement);
-      })
+    return  query('select configvalue from ' +  config.nextcloud.db.prefix + "_appconfig where appid='apporder' and configkey='order'")      
       .then((result) => {
         if (result.length > 0 && result[0].configvalue) {
           appOrder = JSON.parse(result[0].configvalue);
