@@ -125,7 +125,7 @@ mixin lostpasswd_form(action)
     .col-md-12
       .form-group
         .col-md-6.text-right
-          button(type='submit' class='btn btn-primary') Speichern
+          button(type='submit' class='btn btn-primary') Senden
 
 mixin invite_form(action, user, groups)
   form.form-horizontal.checkbox-form.validation-form(action=action method="post" role="form" is-admin=currentUser.isAdmin)
@@ -137,4 +137,4 @@ mixin invite_form(action, user, groups)
     .col-md-12
       .form-group
         .col-md-6.text-right
-          button(type='submit' class='btn btn-primary') Abschicken              
+          button(type='submit' class='btn btn-primary') Senden              

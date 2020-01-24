@@ -207,7 +207,11 @@ var modifyUser = function(user, currentUser) {
       var actions = [];
 
       var cn = user.cn, dn;      
-      dn = 'cn=' + cn + ',ou=users,'+ config.ldap.server.base;
+      if (cn != false) {
+        dn = 'cn=' + cn + ',ou=users,'+ config.ldap.server.base;
+      } else {
+        dn = user.dn;;
+      }    
 
       var changedDn = user.cn != false && dn != oldDn;
 

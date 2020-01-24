@@ -82,7 +82,7 @@ var renderHtml = function (res, template, data) {
           }
         });
     });
-};  
+};   
 
 
 exports.sendMail = function(req, res, to, subject, template, data) {
