@@ -27,12 +27,10 @@ exports.sendActivationEmail = function(user, done) {
 
             //console.log('config: ' + JSON.stringify(config));
 
-            console.log('before send');
 
             var link = config.settings.activation.base_url + '/passwd/' + user.uid + '/'+token.token;
 
             var transport = nodemailer.createTransport(config.smtp);
-            console.log('after transport');
 
             var mailOptions = {
                 from: (config.settings.activation.email_from?config.settings.activation.email_from:'no-reply@habidat.org'),

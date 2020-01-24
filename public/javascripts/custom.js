@@ -154,54 +154,131 @@
   $(document).ready(function () {
 
     $('#cn').change((event) => {
-        var url = '/user/available/cn/' + $('#cn').val()
-        var token = $('#cn').attr('token');
-        if (token) {
-            url += '/' + token;
-        }
-        $.getJSON(url, (response) => {
-            if (!response.available) {
-                $('#cn').attr('available', false);
-                $('#cn').parent('.input-group').after('<span class="help-block" id="helpCNAvailable" style="color:red;">Der Name ist leider schon vergeben</span>');
-            } else {
-                $('#cn').attr('available', true);
-                $("#helpCNAvailable").remove();
+        if ($('#cn').attr('previous-value') == $('#cn').val()) {
+            $("#helpUidAvailable").remove();
+            $("#helpCNAvailable").remove();            
+        } else if ($('#cn').val() != "") {
+            var url = '/user/available/cn/' + $('#cn').val()
+            var token = $('#cn').attr('token');
+            if (token) {
+                url += '/' + token;
             }
-        })
+            $.getJSON(url, (response) => {
+                if (!response.available) {
+                    $('#cn').attr('available', false);
+                    $('#cn').parent('.input-group').after('<span class="help-block" id="helpCNAvailable" style="color:red;">Der Name ist leider schon vergeben</span>');
+                } else {
+                    $('#cn').attr('available', true);
+                    $("#helpCNAvailable").remove();
+                }
+            })
 
-        var url = '/user/available/uid/' + $('#changedUid').val()
-        var token = $('#changedUid').attr('token');
-        if (token) {
-            url += '/' + token;
-        }
-        $.getJSON(url, (response) => {
-            if (!response.available) {
-                $('#changedUid').attr('available', false);
-                $('#changedUid').parent('.input-group').after('<span class="help-block" id="helpUidAvailable" style="color:red;">Die User ID ist leider schon vergeben</span>');
+            if ($('#changedUid').length && $('#changedUid').val() != "") {
+                var url = '/user/available/uid/' + $('#changedUid').val()
+                var token = $('#changedUid').attr('token');
+                if (token) {
+                    url += '/' + token;
+                }
+                $.getJSON(url, (response) => {
+                    if (!response.available) {
+                        $('#changedUid').attr('available', false);
+                        $('#changedUid').parent('.input-group').after('<span class="help-block" id="helpUidAvailable" style="color:red;">Die User ID ist leider schon vergeben</span>');
+                    } else {
+                        $('#changedUid').attr('available', true);
+                        $("#helpUidAvailable").remove();
+                    }
+                })        
             } else {
-                $('#changedUid').attr('available', true);
                 $("#helpUidAvailable").remove();
             }
-        })        
+        } else {
+            $("#helpUidAvailable").remove();
+            $("#helpCNAvailable").remove();
+        }
     })
 
     $('#changedUid').change((event) => {
-        var url = '/user/available/uid/' + $('#changedUid').val()
-        var token = $('#changedUid').attr('token');
-        if (token) {
-            url += '/' + token;
-        }
-        $.getJSON(url, (response) => {
-            if (!response.available) {
-                $('#changedUid').attr('available', false);
-                $('#changedUid').parent('.input-group').after('<span class="help-block" id="helpUidAvailable" style="color:red;">Die User ID ist leider schon vergeben</span>');
-            } else {
-                $('#changedUid').attr('available', true);
-                $("#helpUidAvailable").remove();
+        if ($('#changedUid').val() != "") {
+            var url = '/user/available/uid/' + $('#changedUid').val()
+            var token = $('#changedUid').attr('token');
+            if (token) {
+                url += '/' + token;
             }
-        })
+            $.getJSON(url, (response) => {
+                if (!response.available) {
+                    $('#changedUid').attr('available', false);
+                    $('#changedUid').parent('.input-group').after('<span class="help-block" id="helpUidAvailable" style="color:red;">Die User ID ist leider schon vergeben</span>');
+                } else {
+                    $('#changedUid').attr('available', true);
+                    $("#helpUidAvailable").remove();
+                }
+            })            
+        } else {
+            $("#helpUidAvailable").remove();
+        }
+        
     })
 
+
+    var checkPasswordMatch = function() {
+        $('.password-error').remove();
+        if ($('#password').val() != $('#passwordRepeat').val() && $('#passwordRepeat').val() != "") {
+            $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-error" id="helpPasswordError" style="color:red;"><b>Passwörter müssen übereinstimmen</b>'); 
+        } 
+    }    
+
+    var checkPassword = function(password)  {     
+        $('.password-help').remove();
+        if (password.length > 0 ) {
+
+            var result = zxcvbn(password);
+            $('#password').attr('security-level', result.score);
+            if (result.score == 0) {
+                $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-help" id="helpPasswordSuggestion" style="color:red;"><b>Sicherheitsstufe (0/4)</b> Dieses Passwort ist sehr unsicher</span>');
+            } else if (result.score == 1) {
+                $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-help" id="helpPasswordSuggestion" style="color:red;"><b>Sicherheitsstufe (1/4)</b> Dieses Passwort ist unsicher</span>');
+            } else if (result.score == 2) {
+                $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-help" id="helpPasswordSuggestion" style="color:orange;"><b>Sicherheitsstufe (2/4)</b> Dieses Passwort reicht noch nicht ganz</span>');
+            } else if (result.score == 3) {
+                $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-help" id="helpPasswordSuggestion" style="color:green;"><b>Sicherheitsstufe (3/4)</b> Dieses Passwort ist sicher</span>');
+            } else if (result.score == 4) {
+                $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-help" id="helpPasswordSuggestion" style="color:green;"><b>Sicherheitsstufe (4/4)</b> Dieses Passwort ist sehr sicher</span>');                
+            }
+            if (result.feedback && result.feedback.warning && result.feedback.warning != "") {
+                $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-help" id="helpPasswordWarning" style="color:orange;"><b>Warnung</b> ' + result.feedback.warning + '</span>');
+            }
+            if (result.feedback && result.feedback.suggestions && result.feedback.suggestions != "") {
+                $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-help" id="helpPasswordSuggestion" style="color:grey;"><b>Vorschlag</b> ' + result.feedback.suggestions + '</span>');                    
+            }                 
+
+        }
+        checkPasswordMatch();
+        
+    }
+
+
+    $('#passwordRepeat').keyup(checkPasswordMatch);
+
+    var checkPasswordQueue;
+    $('#password').keyup((event) => {
+        checkPasswordQueue = $('#password').val();        
+    });
+
+    function passwordCheckTimer() {
+        if (checkPasswordQueue) {
+            console.log('check');
+            var password =checkPasswordQueue;
+            checkPasswordQueue = undefined;    
+            checkPassword(password);
+        }   
+    }
+
+    setInterval(passwordCheckTimer, 200);
+
+    $('#password').change((event) => {
+        var password = $('#password').val();
+        checkPassword(password);  
+    });
 
     $('.redirect').each(function() {
         var url = $(this).attr('redirect-url');
@@ -400,6 +477,7 @@
         $('#cat_image_upload').toggle(1);
     });
 
+
     $('.checkbox-form').submit(function(event) {
         var $hidden = $("<input type='hidden' class='hidden-groups' name='member'/>");
         var $hiddenAdmin = $("<input type='hidden' class='hidden-groups' name='owner'/>");
@@ -421,13 +499,22 @@
         $(this).find('.hidden-groups').remove();
         $(this).append($hidden);
         $(this).append($hiddenAdmin);
-        if ($('#cn').attr('available') == "false") {
+        if ($('#cn').attr('available') == "false" && $('#cn').attr('previous-value') != $('#cn').val()) {
             $('#cn').focus();
             event.preventDefault();
         } else if  ($('#changedUid').attr('available') == "false") {
             $('#changedUid').focus();
             event.preventDefault();
         }
+        if ($('#password').length && ($('#password').attr('security-level') != '3' && $('#password').attr('security-level') != '4' && $('#password').val() != "")) {
+            $('#password').focus();
+            event.preventDefault();
+        }
+
+        if ($('#password').length && $('#password').val() != $('#passwordRepeat').val()) {
+            $('#passwordRepeat').focus();
+            event.preventDefault();
+        }        
         //return true;
     });
 

@@ -409,8 +409,6 @@ router.get('/redirect', function(req, res) {
 
 router.post('/user/invite', isLoggedInGroupAdmin, function(req, res) {
     var user = req.body;
-    console.log('member: ' + user.member);
-    console.log('owner: ' + user.owner);
     user.member = JSON.parse(user.member);
     user.owner = JSON.parse(user.owner);
 
@@ -587,7 +585,6 @@ router.post('/cat/edit', isLoggedInAdmin, function(req, res) {
 
     var category = req.body;
     category.groups = JSON.parse(category.member);
-    console.log('category: ' + JSON.stringify(category));
 
     actions.category.modify(category)
         .then(response => checkResponseAndRedirect(req, res, response, 'Kategorie ' + req.body.name + ' geändert', 'Fehler beim Ändern der Kategorie ' + req.body.name, '/show_cat', '/cat/edit/'+category.id, category))

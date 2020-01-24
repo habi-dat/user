@@ -45,12 +45,21 @@ app.use(multer({dest:'./upload/'}).single('logo'));
 app.enable('trust proxy');
 
 var oneDay = 86400000;
-app.use('/public', express.static(path.join(__dirname, '/public'),  { maxAge: oneDay,
+app.use('/public/img', express.static(path.join(__dirname, '/public/img'),  { maxAge: oneDay,
         setHeaders: (res) => {
             if (config.settings.general.modules.includes('discourse')) {
                 res.setHeader('Access-Control-Allow-Origin', 'https://' + config.discourse.subdomain + '.' + config.settings.general.domain);
             }            
         } }));
+
+app.use('/public/javascripts', express.static(path.join(__dirname, '/public/javascripts'),  { maxAge: oneDay }));
+app.use('/public/stylesheets', express.static(path.join(__dirname, '/public/stylesheets'),  { maxAge: oneDay }));
+
+app.use('/public/bootstrap', express.static(path.join(__dirname, 'node_modules/bootstrap/dist'),  { maxAge: oneDay }));
+app.use('/public/jquery', express.static(path.join(__dirname, 'node_modules/jquery/dist'),  { maxAge: oneDay }));
+app.use('/public/colorpicker', express.static(path.join(__dirname, 'node_modules/bootstrap-colorpicker/dist'),  { maxAge: oneDay }));
+app.use('/public/validation', express.static(path.join(__dirname, 'node_modules/jquery-validation/dist'),  { maxAge: oneDay }));
+app.use('/public/bootbox', express.static(path.join(__dirname, 'node_modules/bootbox/dist'),  { maxAge: oneDay }));
 
 app.use(function(req,res,next){
     res.locals.session = req.session;

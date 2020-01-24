@@ -14,12 +14,17 @@ client.bind(config.server.bindDn, config.server.bindCredentials, function(err) {
     }
 });
 
+var zxcvbn = require('../public/javascripts/zxcvbn');
 
 var passwordValid = function(password) {
 
-    console.log("Passwort: " + password + " match: " +password.match('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$'));
-
-    return password.match('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$') != null;
+    // console.log("Passwort: " + password + " match: " +password.match('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$'));
+    var result = zxcvbn(password);
+    if (result.score <=2 ) {
+      return false;  
+    } else {
+      return true;
+    }    
 }
 
 exports.fetchIsAdmin = function(userDn) {

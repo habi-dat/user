@@ -1,11 +1,16 @@
 var Promise = require('bluebird');
 var ldaphelper = require('../utils/ldaphelper');
+var zxcvbn = require('../public/javascripts/zxcvbn');
 
 var passwordValid = function(password) {
 
     // console.log("Passwort: " + password + " match: " +password.match('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$'));
-
-    return password.match('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$') != null;
+    var result = zxcvbn(password);
+    if (result.score <=2 ) {
+      return false;  
+    } else {
+      return true;
+    }    
 }
 
 var includesAll = function(array1, array2) {
@@ -57,7 +62,7 @@ var validateUser = async function(user, currentUser) {
   }
 
   if ( user.password && !passwordValid(user.password)) {
-    errorTexts.push("Passwort muss den Vorgaben entsprechen");
+    errorTexts.push("Passwort ist zu unsicher");
   }
 
   if (errorTexts.length > 0) {

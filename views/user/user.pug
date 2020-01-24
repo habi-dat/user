@@ -5,7 +5,7 @@ mixin user_form_textinput(type, label, icon, id, value, required, placeholder, h
       .input-group
         span.input-group-addon
           i.glyphicon(class=icon)
-        input.form-control(type=type id=id name=id value=value data-toggle="tooltip" title=placeholder autocomplete="off" required=required pattern=pattern maxlength=maxlength token=token)
+        input.form-control(type=type id=id name=id value=value previous-value=value data-toggle="tooltip" title=placeholder autocomplete="off" required=required pattern=pattern maxlength=maxlength token=token)
       if helpText
         span.help-block(id="help"+id)=helpText
           
@@ -17,7 +17,7 @@ mixin user_form_static(label, value)
       p.form-control-static= value  
 
 
-mixin user_form_password()      
+mixin user_form_password(required=false)      
   .form-group
     label.control-label.col-md-4 Passwort
     .col-md-8
@@ -26,14 +26,15 @@ mixin user_form_password()
           i.glyphicon.glyphicon-lock
         input(name = "DummyUsername" type="text" style="display:none;")
         input(name = "DummyPassword" type="password" style="display:none;")                      
-        input.form-control(type="password" autocomplete="off" data-toggle="tooltip" title="Min. 8 Zeichen, je min. 1 Groß- und 1 Kleinbuchstabe, 1 Zahl und 1 Sonderzeichen" id="password" name="password" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$")     
+        input.form-control(type="password" autocomplete="off" data-toggle="tooltip"  required=required title="Mindestens Sicherheitsstufe 3" id="password" name="password")
   .form-group   
     label.control-label.col-md-4 
     .col-md-8
       .input-group
         span.input-group-addon
           i.glyphicon.glyphicon-lock
-        input.form-control(type="password" autocomplete="off" id="password_confirmation" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$" name="passwordRepeat")
+        input.form-control(type="password" autocomplete="off" id="passwordRepeat" name="passwordRepeat" title="Passwörter müssen übereinstimmen" data-rule-equalTo="#password" required=required)
+  script(type='text/javascript' src='/public/javascripts/zxcvbn.js')     
 
 mixin user_form_groups(user, groups)
   .form-group
@@ -87,7 +88,7 @@ mixin user_form(action, user, admin, token)
                   option(value="de") Deutsch
                   option(value="en") English                                          
           div(id="password_fields")                                      
-            +user_form_password()
+            +user_form_password((action == "/user/add" || action == '/user/invite/accept'))
         if ((currentUser.isAdmin || currentUser.isGroupAdmin) && groups)
           .col-md-6
             +user_form_groups(user, groups)
@@ -111,7 +112,7 @@ mixin password_form(action, user, token)
           +user_form_static('User ID', user.uid)
           +user_form_static('Anzeigename', user.cn)
           div(id="password_fields")                                      
-            +user_form_password()
+            +user_form_password(true)
         .col-md-12
           .form-group
             .col-md-6.text-right
