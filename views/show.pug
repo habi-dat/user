@@ -35,7 +35,10 @@ block content
                       td= user.ou
                       td= user.l
                       td.text-right
-                        a.btn.btn-default.btn-sm(href='/user/edit/'+user.dn) #[span.glyphicon.glyphicon-pencil]
+                        if currentUser.isAdmin
+                          a.btn.btn-default.btn-sm(href='/user/edit/'+user.dn) #[span.glyphicon.glyphicon-pencil]
+                        else if currentUser.isGroupAdmin
+                          a.btn.btn-default.btn-sm(href='/user/editgroups/'+user.dn) #[span.glyphicon.glyphicon-pencil]
                         a.btn.btn-default.btn-sm.confirm(data-link='/user/delete/'+user.dn, data-confirmtext='Willst du Benutzer*in ' + user.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
                       td.hidden.dn= user.dn
       .col-md-5

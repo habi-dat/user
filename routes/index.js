@@ -141,6 +141,7 @@ router.get('/', isLoggedIn, function(req, res) {
 
 var render = function(req, res, template, title, data = {}, errorMessages = true) {
     data.title = getTitle(title);
+    data.titleShort = title;
     if (errorMessages) {
         data.notification = req.flash('notification');
         data.responses = req.flash('responses');
@@ -154,7 +155,7 @@ var render = function(req, res, template, title, data = {}, errorMessages = true
 
 router.get('/edit_me', isLoggedIn, function(req, res) {
     ldaphelper.fetchObject(req.user.dn)
-        .then(user => render(req, res, 'user/edit_me', 'Daten ändern', {user:user}))
+        .then(user => render(req, res, 'user/form', 'Daten ändern', {action: '/edit_me', user:user}))
         .catch(error => errorPage(req, res, error));
 });
 
@@ -320,7 +321,7 @@ router.get('/appmenu/:from', function(req, res){
 
 
 router.get('/show', isLoggedInGroupAdmin, function(req,res){
-    Promise.join(ldaphelper.fetchUsers(), ldaphelper.fetchGroups(req.user.ownedGroups), 
+    Promise.join(ldaphelper.fetchUsers(), ldaphelper.fetchGroups('all'), 
         (users, groups) => render(req, res, 'show', 'Benutzer*innen / Gruppen', {users: users, groups: groups}))
         .catch(error => errorPage(req, res, error));
 });
@@ -419,7 +420,7 @@ router.post('/user/invite', isLoggedInGroupAdmin, function(req, res) {
 
 router.get('/user/add', isLoggedInGroupAdmin, function(req, res) {
     ldaphelper.fetchGroups(req.user.ownedGroups)
-        .then(groups => render(req, res, 'user/add', 'Benutzer*in anlegen', {groups: groups, user: retrieveSessionData(req)}))
+        .then(groups => render(req, res, 'user/form', 'Benutzer*in anlegen', {action: '/user/add', groups: groups, user: retrieveSessionData(req)}))
         .catch(error => errorPage(req,res,error));
 });
 
@@ -497,9 +498,15 @@ router.post('/user/add', isLoggedInGroupAdmin, function(req, res) {
         .catch(error => errorPage(req,res,error));
 });
 
-router.get('/user/edit/:id', isLoggedInGroupAdmin, function(req, res) {
+router.get('/user/edit/:id', isLoggedInAdmin, function(req, res) {
     Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups), ldaphelper.fetchObject(req.params.id),
-        (groups, user) => render(req, res, 'user/edit', 'Benutzer*in bearbeiten', {groups: groups, user: retrieveSessionData(req) || user}))
+        (groups, user) => render(req, res, 'user/form', 'Benutzer*in bearbeiten', {action: '/user/edit', groups: groups, user: retrieveSessionData(req) || user}))
+        .catch(error => errorPage(req, res, error));
+});
+
+router.get('/user/editgroups/:id', isLoggedInGroupAdmin, function(req, res) {
+    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups), ldaphelper.fetchObject(req.params.id),
+        (groups, user) => render(req, res, 'user/form', 'Gruppenzuordnung bearbeiten', {action: '/user/editgroups', groups: groups, user: retrieveSessionData(req) || user}))
         .catch(error => errorPage(req, res, error));
 });
 
@@ -520,6 +527,32 @@ router.post('/user/edit', isLoggedInGroupAdmin, function(req, res) {
 
     actions.user.modify(user, req.user)
         .then(response => checkResponseAndRedirect(req, res, response, 'Benutzer*in ' + req.body.cn + ' geändert', 'Fehler beim Ändern der*des Benutzer*in', '/show', '/user/edit/' + user.dn, user))
+        .catch(error => errorPage(req,res,error));
+});
+
+router.post('/user/editgroups', isLoggedInGroupAdmin, function(req, res) {
+
+    var user = {
+        uid: req.body.uid,
+        dn: req.body.dn,
+        cn: false,
+        ou: false,
+        l: false,
+        description: false,
+        mail: false,
+        password: false,
+        passwordRepeat: false,
+        language: false,
+        owner: false
+    };  
+    if (user.member) {
+        user.member = JSON.parse(user.member);
+    } else {
+        user.member = [];
+    }
+
+    actions.user.modify(user, req.user)
+        .then(response => checkResponseAndRedirect(req, res, response, 'Benutzer*inengruppen ' + req.body.cn + ' geändert', 'Fehler beim Ändern der*des Benutzer*innengruppen', '/show', '/user/editgroups/' + user.dn, user))
         .catch(error => errorPage(req,res,error));
 });
 

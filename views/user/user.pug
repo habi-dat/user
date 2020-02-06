@@ -59,36 +59,48 @@ mixin user_form(action, user, admin, token)
           input.hidden(name="uid", value=user.uid)      
         if token && token.token
           input.hidden(name="token" value=token.token)      
-        legend #{(user && action == "/edit_me"? "Daten Ändern" : "Benutzer*in " + (user && action=="/user/edit"? "Bearbeiten": "Anlegen"))}
+        legend=titleShort
         .col-md-6
-          +user_form_textinput("text", 'Anzeigename', 'glyphicon-user', 'cn', (user?user.cn:undefined), true, 'z.B. Theresa Stanz', undefined, undefined, undefined, token?token.token:undefined)
+          if action !== '/user/editgroups'
+            +user_form_textinput("text", 'Anzeigename', 'glyphicon-user', 'cn', (user?user.cn:undefined), true, 'z.B. Theresa Stanz', undefined, undefined, undefined, token?token.token:undefined)
+          else 
+            +user_form_static('Anzeigename', user.cn)
           if action == "/user/add" || action == '/user/invite/accept'
             +user_form_textinput("text", 'User ID', 'glyphicon-user', 'changedUid', (user?user.changedUid:undefined), true, 'z.B. resi_stanz (nur Buchstaben, Zahlen und "_")', 'Die User ID kann später nicht mehr verändert werden!', '[0-9A-Za-z_]*', 35, token?token.token:undefined)
           else if user && user.uid
             +user_form_static('User ID', user.uid)
-          +user_form_textinput("text", 'Zugehörigkeit', 'glyphicon-home', 'ou', (user?user.ou:undefined), true, 'z.B. dein Projektname, Einzelmitglied oder ähnliches')
-          +user_form_textinput("text", 'Ort', 'glyphicon-home', 'l', (user?user.l:undefined), false, 'z.B. Linz')
+          if action != '/user/editgroups'
+            +user_form_textinput("text", 'Zugehörigkeit', 'glyphicon-home', 'ou', (user?user.ou:undefined), true, 'z.B. dein Projektname, Einzelmitglied oder ähnliches')
+          else 
+            +user_form_static('Zugehörigkeit', user.ou)
+          if action != '/user/editgroups'
+            +user_form_textinput("text", 'Ort', 'glyphicon-home', 'l', (user?user.l:undefined), false, 'z.B. Linz')
+          else 
+            +user_form_static('Ort', user.l)
           if (token)
             +user_form_static('E-Mail', token.data.mail)
-          else if  action == "/edit_me"
+          else if  action == "/edit_me" || action =="/user/editgroups"
             +user_form_static('E-Mail', user.mail)
           else
             +user_form_textinput('email', 'E-Mail', 'glyphicon-envelope', 'mail', (user?user.mail:undefined), true, 'z.B. resi.stanz@beispiel.org')
-          if currentUser.isAdmin && action !== '/user/invite/accept' && action !== '/edit_me'
+          if currentUser.isAdmin && action !== '/user/invite/accept' && action !== '/edit_me' && action !== '/user/editgroups'
             +user_form_textinput("text", 'Speicherplatz', 'glyphicon-cloud-upload', 'description', (user?user.description:undefined), false, 'z.B. 10 GB')
           else if action !== '/user/invite/accept'
             +user_form_static('Speicherplatz', user?user.description:"")
-          .form-group.required
-            label.control-label.col-md-4(for="language") Sprache 
-            .col-md-8
-              .input-group
-                span.input-group-addon
-                  i.glyphicon.glyphicon-bullhorn
-                select.form-control(id="language" name="language")
-                  option(value="de") Deutsch
-                  option(value="en") English                                          
-          div(id="password_fields")                                      
-            +user_form_password((action == "/user/add" || action == '/user/invite/accept'))
+          if action != '/user/editgroups'
+            .form-group.required
+              label.control-label.col-md-4(for="language") Sprache 
+              .col-md-8
+                .input-group
+                  span.input-group-addon
+                    i.glyphicon.glyphicon-bullhorn
+                  select.form-control(id="language" name="language")
+                    option(value="de") Deutsch
+                    option(value="en") English                                          
+            div(id="password_fields")                                      
+              +user_form_password((action == "/user/add" || action == '/user/invite/accept'))
+          else
+            +user_form_static('Sprache', user.language=='en'?'English':'Deutsch')
         if ((currentUser.isAdmin || currentUser.isGroupAdmin) && groups)
           .col-md-6
             +user_form_groups(user, groups)
