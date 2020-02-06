@@ -362,8 +362,21 @@
                 $widget.addClass(style + 'success active admin');
             } else if ($state == "on") {
                 $widget.addClass(style + 'primary active');
+                var dn = $widget.attr('id');
+                $(".ou-option[ref-group-dn='" + dn + "']").removeClass('hidden');
+                if($(".ou-option[ref-group-dn='" + dn + "']").parent().val() == null) {
+                    var newSelection = $(".ou-option[ref-group-dn='" + dn + "']").parent().children("option:not(:selected):not(.hidden)").val();
+                    $(".ou-option[ref-group-dn='" + dn + "']").parent().val(newSelection).change();                    
+                }
+
             } else {
+                var dn = $widget.attr('id');
                 $widget.removeClass(style + 'success ' + style + 'primary active admin');
+                $(".ou-option[ref-group-dn='" + dn + "']").addClass('hidden');      
+                if($(".ou-option[ref-group-dn='" + dn + "']").is(':selected')) {
+                    var newSelection = $(".ou-option[ref-group-dn='" + dn + "']").parent().children("option:not(:selected):not(.hidden)").val();
+                    $(".ou-option[ref-group-dn='" + dn + "']").parent().val(newSelection).change();
+                }
             }
             // Set the button's icon
             $widget.find('.state-icon')

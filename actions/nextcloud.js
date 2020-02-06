@@ -53,7 +53,7 @@ var modifyUser = function(user, currentUser) {
 };
 
 // only if uid or dn changed: change uid and dn in LDAP mapping
-var createUser = function(user, currentUser) {
+var provisionUser = function(user, currentUser) {
   var options = {
       uri: config.nextcloud.api.url + '/cloud/users?search=' + user.cn,
       headers: {
@@ -71,5 +71,6 @@ var createUser = function(user, currentUser) {
 
 exports.register = function(hooks) {
   hooks.user.modify.post.push(modifyUser);
-  hooks.user.create.post.push(createUser);
+  hooks.user.modify.post.push(provisionUser);
+  hooks.user.create.post.push(provisionUser);
 };

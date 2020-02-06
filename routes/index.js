@@ -360,8 +360,8 @@ router.get('/user/invite/repeat/:token', isLoggedInGroupAdmin, function(req, res
 });
 
 router.get('/user/invite/accept/:token', function(req, res) {
-    activation.isTokenValid(req.params.token)
-        .then(token => render(req, res, 'user/accept', 'Account anlegen', { token: token, user: retrieveSessionData(req)}))
+    Promise.join(activation.isTokenValid(req.params.token), ldaphelper.fetchGroups('all'),
+        (token, groups) => render(req, res, 'user/accept', 'Account anlegen', { token: token, user: retrieveSessionData(req), groups: groups}))
         .catch(error => errorPage(req,res,'Fehler beim Anlegen des Accounts: ' + error));
 });
 
@@ -499,13 +499,13 @@ router.post('/user/add', isLoggedInGroupAdmin, function(req, res) {
 });
 
 router.get('/user/edit/:id', isLoggedInAdmin, function(req, res) {
-    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups), ldaphelper.fetchObject(req.params.id),
+    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups), ldaphelper.fetchUser(req.params.id),
         (groups, user) => render(req, res, 'user/form', 'Benutzer*in bearbeiten', {action: '/user/edit', groups: groups, user: retrieveSessionData(req) || user}))
         .catch(error => errorPage(req, res, error));
 });
 
 router.get('/user/editgroups/:id', isLoggedInGroupAdmin, function(req, res) {
-    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups), ldaphelper.fetchObject(req.params.id),
+    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups), ldaphelper.fetchUser(req.params.id),
         (groups, user) => render(req, res, 'user/form', 'Gruppenzuordnung bearbeiten', {action: '/user/editgroups', groups: groups, user: retrieveSessionData(req) || user}))
         .catch(error => errorPage(req, res, error));
 });
@@ -594,13 +594,13 @@ router.get('/group/delete/:id', isLoggedInAdmin, function(req, res) {
 
 
 router.get('/cat/edit/:id', isLoggedInAdmin, function(req, res) {
-    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups), discourse.getParentCategories(), discourse.getCategoryWithParent(req.params.id),
+    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups, true), discourse.getParentCategories(), discourse.getCategoryWithParent(req.params.id),
         (groups, parents, category) => render(req, res, 'cat/edit', 'Kategorie bearbeiten', {category: retrieveSessionData(req) || category, groups: groups, parents: parents}))
         .catch(error => errorPage(req, res, error));
 });
 
 router.get('/cat/add', isLoggedInAdmin, function(req, res) {
-    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups), discourse.getParentCategories(), 
+    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups, true), discourse.getParentCategories(), 
         (groups, parents) => render(req, res, 'cat/add', 'Kategorie erstellen', {category: retrieveSessionData(req), groups: groups, parents: parents}))
         .catch(error => errorPage(req, res, error));
 });

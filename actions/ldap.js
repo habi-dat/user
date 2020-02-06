@@ -156,7 +156,12 @@ var createUser = function(user, currentUser) {
                   .replace(/[\W]+/g,"")
                   .substr(0,35);
     }
-    ldaphelper.getByUID(uid)
+    ldaphelper.fetchObject(user.ou)
+      .then(group => {
+        entry.title = group.o;
+        return;
+      })
+      .then(() => ldaphelper.getByUID(uid))      
       .then((LDAPuser) => {
         if (LDAPuser != null) {
             if (user.changedUid) {
@@ -218,6 +223,7 @@ var modifyUser = function(user, currentUser) {
       if (changedDn) {
         changedDnAction = ldaphelper.updateDN(oldDn, dn);
         updatedFields.push('DN');
+        user.dn = dn;
       }
 
       if (user.cn != false && cn != oldUser.cn) {
@@ -237,6 +243,7 @@ var modifyUser = function(user, currentUser) {
 
       if(user.ou != false && user.ou != oldUser.ou) {
         fieldActions.push(ldaphelper.change(dn, 'replace', {ou : user.ou}));
+        fieldActions.push(ldaphelper.fetchObject(user.ou).then(group => ldaphelper.change(dn, 'replace', {title : group.o})));
         updatedFields.push('Zugehörigkeit');
       }
 

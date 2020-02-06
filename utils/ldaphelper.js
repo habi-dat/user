@@ -62,7 +62,7 @@ exports.fetchIsAdmin = function(userDn) {
 
 };
 
-exports.fetchGroups = function(ownedGroups) {
+exports.fetchGroups = function(ownedGroups, noAdminGroups = false) {
 
     return new Promise((resolve, reject) => {
 
@@ -75,7 +75,7 @@ exports.fetchGroups = function(ownedGroups) {
 
         client.search('ou=groups,'+config.server.base, opts, function(err, res) {
             res.on('searchEntry', function(entry) {
-                if (ownedGroups && (ownedGroups == 'all' || ownedGroups.includes(entry.object.dn))) {
+                if ((!noAdminGroups || entry.object.cn !== 'admin') && ownedGroups && (ownedGroups == 'all' || ownedGroups.includes(entry.object.dn))) {
                     entries.push(entry.object);
                 }                
             });
