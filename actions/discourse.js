@@ -88,6 +88,7 @@ var createGroup = function(group, currentUser) {
         'group[automatic_membership_retroactive]': false,
         'group[grant_trust_level]': 0,
         'group[name]': group.cn,
+        'group[full_name]': group.o,
         'group[primary_group]': false,
         'group[title]': "",
         'group[visible]': true,
@@ -102,6 +103,7 @@ var modifyGroup = function(group, currentUser) {
     .then(name => getGroupId(name)
       .then(id => discourse.put('groups/' + id + '.json', {
         'group[name]': group.cn,
+        'group[full_name]': group.o,
         'group[bio_raw]': group.description}))
       .then(() => { return {status: true, message: 'DISCOURSE: Gruppe upgedated'}; })
       .catch(error => { return {status: false, message: 'DISCOURSE: Fehler beim Update der Gruppe: ' + error}; })

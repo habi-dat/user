@@ -7,8 +7,8 @@
         }
     } );
 
-    $('#cn').keyup((event) => {
-        $('#changedUid').val($('#cn').val().toLowerCase()
+    $('.user-form #cn').keyup((event) => {
+        $('.user-form #changedUid').val($('.user-form #cn').val().toLowerCase()
               .replace('ä', 'ae')
               .replace('ö', 'oe')
               .replace('ü', 'ue')
@@ -17,6 +17,17 @@
               .replace(/[\W]+/g,"")
               .substr(0,35));
     })
+
+    $('#o').keyup((event) => {
+        $('#cn').val($('#o').val().toLowerCase()
+              .replace('ä', 'ae')
+              .replace('ö', 'oe')
+              .replace('ü', 'ue')
+              .replace('ß', 'ss')
+              .replace(' ', '_')
+              .replace(/[\W]+/g,"")
+              .substr(0,20));
+    })    
 
     $('[data-toggle="tooltip"]').tooltip();
 

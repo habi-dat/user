@@ -12,14 +12,16 @@ block content
             table.table.datatable(id='grouptable_cat')
               thead
                 tr
-                  th.col-md-4 Name
-                  th.col-md-6 Beschreibung  
+                  th.col-md-3 Interner Name
+                  th.col-md-3 Anzeigename
+                  th.col-md-4 Beschreibung  
                   th.col-md-2.text-right Aktionen
               tbody
                 each group in groups
                   if (group.cn)
                     tr
                       td.groupcn= group.cn
+                      td= group.o                      
                       td= group.description                      
                       td.text-right
                           a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn) #[span.glyphicon.glyphicon-pencil]

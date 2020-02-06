@@ -1,16 +1,24 @@
 mixin group_form(action, group)
-  form.form-horizontal.checkbox-form.validation-form(action=action method="post" role="form")
+  form.group-from.form-horizontal.checkbox-form.validation-form(action=action method="post" role="form")
         if group && group.dn
           input.hidden(name="dn", value=group.dn)
         legend Gruppe #{(group && action=="/group/edit"? "Bearbeiten": "Anlegen")}
         .col-md-6
           .form-group.required
-            label.control-label.col-md-4(for="cn") Name
+            label.control-label.col-md-4(for="cn") Anzeigename
             .col-md-8
               .input-group
                 span.input-group-addon
                   i.glyphicon.glyphicon-th-list
-                input.form-control(type="text" id="cn" name="cn" value=(group?group.cn:undefined) required data-msg="Darf nicht leer sein")
+                input.form-control(type="text" id="o" name="o" value=(group?group.o:undefined) required data-msg="Darf nicht leer sein")
+          .form-group.required
+            label.control-label.col-md-4(for="cn") Interner Name
+            .col-md-8
+              .input-group
+                span.input-group-addon
+                  i.glyphicon.glyphicon-th-list
+                input.form-control(type="text" id="cn" name="cn" value=(group?group.cn:undefined) maxlength="20" required data-msg="Darf nicht leer sein" title="max 20 Zeichen, keine Umlaute, Sonder- oder Leerzeichen")
+
         .col-md-6
           .form-group
             label.control-label.col-md-2(for="description") Beschreibung

@@ -54,8 +54,9 @@ block content
             table.table.datatable(id='grouptable')
               thead
                 tr
-                  th.col-md-4 Name
-                  th.col-md-6 Beschreibung
+                  th.col-md-3 Interner Name
+                  th.col-md-3 Anzeigename
+                  th.col-md-4 Beschreibung
                   if currentUser.isAdmin
                     th.col-md-2.text-right Aktionen
                   th.hidden Members
@@ -65,7 +66,8 @@ block content
                   if (group.cn)
                     tr
                       td= group.cn
-                      td= group.description
+                      td= group.o
+                      td= group.cn
                       if currentUser.isAdmin
                         td.text-right
                           a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn) #[span.glyphicon.glyphicon-pencil]

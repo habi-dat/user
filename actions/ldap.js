@@ -320,6 +320,7 @@ var createGroup = function(group, currentUser) {
   return new Promise((resolve, reject) => {
     var entry = {
       cn: group.cn,
+      o: group.o,
       description: group.description,
       objectClass: ['groupOfNames','top'],
       member: "",
@@ -362,8 +363,14 @@ var modifyGroup = function(group, currentUser) {
           .then(() => {
             if (group.cn != false && cn != oldGroup.cn) {
               actions.push(ldaphelper.change(dn, 'replace', {cn : cn}));
-              updatedFields.push('Name');
+              updatedFields.push('Interner Name');
             }
+
+            if (group.o != false && group.o != oldGroup.o) {
+              actions.push(ldaphelper.change(dn, 'replace', {o : group.o}));
+              updatedFields.push('Anzeigename');
+            }
+
 
             if(group.description != false && group.description != oldGroup.description) {
               actions.push(ldaphelper.change(dn, 'replace', {description : group.description}));
