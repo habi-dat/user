@@ -27,6 +27,14 @@ var passwordValid = function(password) {
     }    
 }
 
+exports.dnToCn = function(dn) {
+    if (dn && dn.includes(',') && dn.includes('=')) {
+        return dn.split(',')[0].split('=')[1];    
+    } else {
+        return;
+    }
+}
+
 exports.fetchIsAdmin = function(userDn) {
     return new Promise((resolve, reject) => {
 

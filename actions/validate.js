@@ -13,10 +13,6 @@ var passwordValid = function(password) {
     }    
 }
 
-var includesAll = function(array1, array2) {
-  return array2.every((element) => {return array1.includes(element)});
-}
-
 var validateGroups = function (groups, ownedGroups) {
     var responses = [];    
     if (groups) {
@@ -78,8 +74,10 @@ var validateRemoveUser = async function(user, currentUser) {
 
   var errorTexts = [];
 
-  if (!includesAll(currentUser.ownedGroups, user.member)) {
-    errorTexts.push('Benutzer*in existiert in anderen von dir nicht verwalteten Gruppen, alternativ kannst du die Gruppenrechte entziehen');
+  var notOwnedGroups = user.member.filter(entry => !currentUser.ownedGroups.includes(entry)).map(entry => ldaphelper.dnToCn(entry));
+
+  if (notOwnedGroups.length > 0) {
+    errorTexts.push('Benutzer*in existiert in anderen von dir nicht verwalteten Gruppen (' + notOwnedGroups.join(', ') + '). Falls der Account auch für diese Gruppen gesperrt werden soll, kontaktiere bitte die Gruppenadmin@s der anderen Gruppen. Alternativ zur Löschung kannst du die Gruppenrechte für deine Gruppen entziehen');
   }
 
   if (errorTexts.length > 0) {
