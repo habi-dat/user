@@ -79,7 +79,7 @@ mixin user_form(action, user, groups, admin, token)
                     i.glyphicon.glyphicon-home
                   select.form-control(id="ou" name="ou")
                     each group in groups
-                      if (!group.dn.startsWith('ou=groups') && !token || token.data.member.includes(group.dn))
+                      if (!group.dn.startsWith('ou=groups') && (!token || token.data.member.includes(group.dn)))
                         option.ou-option(ref-group-dn=group.dn value=group.dn selected=(user&&user.ou==group.dn) class=(!user||user.member.includes(group.dn)?"":"hidden"))=group.o
 
           else 
