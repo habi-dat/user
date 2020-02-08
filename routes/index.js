@@ -154,8 +154,8 @@ var render = function(req, res, template, title, data = {}, errorMessages = true
 };
 
 router.get('/edit_me', isLoggedIn, function(req, res) {
-    ldaphelper.fetchObject(req.user.dn)
-        .then(user => render(req, res, 'user/form', 'Daten ändern', {action: '/edit_me', user:user}))
+    Promise.join(ldaphelper.fetchUser(req.user.dn), ldaphelper.fetchGroups('all'),
+        (user, groups) => render(req, res, 'user/form', 'Daten ändern', {action: '/edit_me', user:user, groups:groups}))
         .catch(error => errorPage(req, res, error));
 });
 
