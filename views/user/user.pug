@@ -112,7 +112,7 @@ mixin user_form(action, user, groups, admin, token)
               +user_form_password((action == "/user/add" || action == '/user/invite/accept'))
           else
             +user_form_static('Sprache', user.language=='en'?'English':'Deutsch')
-        if ((currentUser.isAdmin || currentUser.isGroupAdmin) && groups)
+        if ((currentUser.isAdmin || currentUser.isGroupAdmin) && groups && action !== '/user/invite/accept')
           .col-md-6
             +user_form_groups(user, groups)
           .form-group
