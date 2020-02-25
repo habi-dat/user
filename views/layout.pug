@@ -26,6 +26,8 @@ html
         +nav_item( "/lostpasswd") Passwort vergessen?         
       if (currentUser.loggedIn)
         +nav_item( "/edit_me") Daten Ändern
+      if (currentUser.loggedIn && currentUser.imapAccounts && currentUser.imapAccounts.length > 0)
+        +nav_item( "/imap/config") E-Mail Benachrichtigungen
       if (currentUser && (currentUser.isAdmin || currentUser.isGroupAdmin))
         +nav_item( "/invites" ) Einladungen   
       if (currentUser && (currentUser.isAdmin || currentUser.isGroupAdmin))

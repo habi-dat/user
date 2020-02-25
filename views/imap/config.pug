@@ -1,0 +1,17 @@
+extends ../layout
+include ../various
+
+block content
+  +notification(notification, message, responses)
+  form.form-horizontal.checkbox-form-ldap.validation-form(action='/imap/config' method="post" role="form")
+    each account in accounts
+      .form-group.col-md-6
+        label.control-label.col-md-2= account.account
+        .col-md-10
+          .well
+            ul.list-group.folder-list.checked-list-box(ref-account=account.account)
+              each folder in account.folders
+                li.list-group-item(ref-folder=folder class=(account.subscriptions.includes(folder)?"active":""))=folder
+    .form-group.col-md-12
+      .col-md-6.text-right
+        button(type='submit' class='btn btn-primary') Speichern                

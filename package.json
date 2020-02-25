@@ -19,6 +19,7 @@
     "bootstrap-colorpicker": "^2.5.2",
     "connect-flash": "~0.1.1",
     "cookie-parser": "^1.4.4",
+    "emailjs-imap-client": "^3.0.7",
     "express": "^4.17.1",
     "express-session": "^1.17.0",
     "jquery": "^3.4.1",

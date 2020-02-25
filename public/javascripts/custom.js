@@ -471,6 +471,78 @@
         init();
     });
 
+    $('.folder-list.checked-list-box .list-group-item').each(function () {
+
+        // Settings
+        var $widget = $(this),
+            $checkbox = $('<input type="checkbox" class="hidden" name="'+$widget.prop('id')+'"/>'),
+            color = ($widget.data('color') ? $widget.data('color') : "primary"),
+            style = "btn-"; // ($widget.data('style') == "button" ? "btn-" : "list-group-item-"),
+            settings = {
+                on: {
+                    icon: 'glyphicon glyphicon-check'
+                },
+                off: {
+                    icon: 'glyphicon glyphicon-unchecked'
+                }
+            };
+
+        if ($widget.hasClass('active')) {
+            $widget.data('state', 'on');
+        } else {
+            $widget.data('state', 'off');
+        }
+        $widget.css('cursor', 'pointer');
+        $widget.append($checkbox);
+
+        // Event Handlers
+        $widget.on('click', function () {
+            var $state = $widget.data('state');
+            //$checkbox.prop('checked', !$checkbox.is(':checked'));
+            //$checkbox.triggerHandler('change');
+            if ($state == "on") {
+                $widget.data('state', 'off');
+            } else {
+                $widget.data('state', 'on');
+            }
+            updateDisplay();
+        });
+        $checkbox.on('change', function () {
+            updateDisplay();
+        });
+
+
+        // Actions
+        function updateDisplay() {
+            var $state = $widget.data('state');
+
+            // Set the button's state
+            if ($state == "on") {
+                $widget.addClass(style + 'primary active');
+            } else {
+                $widget.removeClass(style + 'primary active');
+            }
+            // Set the button's icon
+            $widget.find('.state-icon')
+                .removeClass()
+                .addClass('state-icon ' + settings[$widget.data('state')].icon);
+
+        }
+
+        // Initialization
+        function init() {
+
+
+            updateDisplay();
+
+            // Inject the icon if applicable
+            if ($widget.find('.state-icon').length == 0) {
+                $widget.prepend('<span class="state-icon ' + settings[$widget.data('state')].icon + '"></span>');
+            }
+        }
+        init();
+    });    
+
 
     //colorpicker
 
@@ -541,6 +613,27 @@
         }        
         //return true;
     });
+
+    $('.checkbox-form-ldap').submit(function(event) {
+        var $hidden = $("<input type='hidden' class='hidden-groups' name='folders'/>");
+        //event.preventDefault();
+        var checkedItems = {}, counter = 0;
+        $("ul.checked-list-box").each(function(idx, ul) {
+
+            var account = $(ul).attr('ref-account');
+            checkedItems[account] = [];
+
+            $(ul).children("li.active").each(function(idx, li) {
+                checkedItems[account].push($(li).attr('ref-folder'));
+                counter++;
+            });
+        });
+        $hidden.val(JSON.stringify(checkedItems));
+        $(this).find('.hidden-groups').remove();
+        $(this).append($hidden);
+        //return true;
+    });
+
 
 
     $(".alert-fadeout").fadeTo(2000, 500).slideUp(500, function(){

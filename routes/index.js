@@ -9,6 +9,7 @@ var config    = require('../config/config.json');
 var activation = require('../utils/activation');
 var nextcloud = require('../utils/nextcloud');
 var mail = require('../utils/mailhelper');
+var imap = require('../utils/imap');
 var actions = require('../actions');
 var bodyParser = require('body-parser');
 var Promise = require("bluebird");
@@ -582,7 +583,7 @@ router.post('/group/add', isLoggedInAdmin, function(req, res) {
 
 router.post('/group/edit', isLoggedInAdmin, function(req, res) {
     actions.group.modify(req.body, req.user)
-        .then(response => checkResponseAndRedirect(req, res, response, 'Gruppe ' + req.body.cn + ' geändert', 'Fehler beim Ändern der Gruppe ' + req.body.cn, '/show', '/group/edit', req.body))
+        .then(response => checkResponseAndRedirect(req, res, response, 'Gruppe ' + req.body.cn + ' geändert', 'Fehler beim Ändern der Gruppe ' + req.body.cn, '/show', '/group/edit/'+req.body.dn, req.body))
         .catch(error => errorPage(req,res,error));    
 });
 
@@ -630,4 +631,80 @@ router.get('/cat/delete/:id', isLoggedInAdmin, function(req, res) {
         .catch(error => errorPage(req,res,error));
 });
 
+router.get('/imap/config', isLoggedIn, function(req, res) {
+    Promise.all(req.user.imapAccounts.map(account => imap.listFolders(account.account)))
+        .then(folders => {
+            req.user.imapAccounts.forEach((account, index) => {
+                account.folders = folders[index];
+            })
+            return render(req, res, 'imap/config', 'E-Mail Ordner abbonieren', {accounts: req.user.imapAccounts});
+        })
+        .catch(error => errorPage(req, res, error));
+});
+
+router.get('/imap/config/:secret', function(req, res) {
+    if (config.emailnotification && config.emailnotification.secret && config.emailnotification.secret == req.params.secret) {
+        imap.getConfig()
+            .then(config => {
+                res.send(config);
+            })
+            .catch(error => {
+                res.status(500).send({error: error});
+            })
+    } else {
+        res.status(401).send({error: "not allowed"});
+    }
+});
+
+router.post('/imap/config', isLoggedIn, function(req, res) {
+
+    var folders = JSON.parse(req.body.folders);    
+    //console.log('folders: ' + JSON.stringify(folders));
+    var currentUser = req.user;
+    var text = "";
+
+    Promise.each(Object.keys(folders), account => {
+        var old = currentUser.imapAccounts.find(a => {return a.account == account});
+        if (!old) {
+            return Promise.reject("Für den Account " + account + " hast du keine Rechte, Cheater!");
+        }
+        var subscribe = [], unsubscribe = [];
+        old.subscriptions.forEach(oldFolder => {
+            if (!folders[account].includes(oldFolder)) {
+                unsubscribe.push(oldFolder);
+            }
+        })
+        folders[account].forEach(newFolder => {
+            if (!old.subscriptions.includes(newFolder)) {
+                subscribe.push(newFolder);
+            }
+        })
+        //console.log('unsubscribe: ' + JSON.stringify(unsubscribe));
+        //console.log('subscribe: ' + JSON.stringify(subscribe));
+        return Promise.each(subscribe, folder => imap.subscribe(account, folder, currentUser.uid))
+            .then(() => Promise.each(unsubscribe, folder => imap.unsubscribe(account, folder, currentUser.uid)))
+            .then(() => {
+                if (subscribe.length > 0) {
+                    if (text != "") text += ", ";
+                    text += account + ": Ordner " + subscribe.join(', ') + " abonniert";
+                } 
+                if (unsubscribe.length > 0) {
+                    if (text != "") text += ", ";
+                    text += account + ": Ordner " + unsubscribe.join(', ') + " abbestellt";                    
+                }
+                return text;
+            });
+    })
+    .then(() => {
+        return imap.getAccounts(currentUser)
+            .then(accounts => {
+                currentUser.imapAccounts = accounts;
+                return text;
+            });                                
+    })
+    .then(text => successRedirect(req, res, 'E-Mail Benachrichtigungen upgedated: ' + JSON.stringify(text), '/imap/config'))
+    .catch(error => errorRedirect(req, res, 'Fehler beim Update der E-Mail Benachrichtigungen: ' + error.stack, '/imap/config'));
+});
+
 module.exports = router;
+

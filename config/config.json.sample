@@ -83,5 +83,8 @@
   },
   "mailtrain": {
     "subdomain": "$HABIDAT_USER_MAILTRAIN_SUBDOMAIN"
+  },
+  "emailnotification": {
+    "secret": "$HABIDAT_USER_IMAP_SECRET"
   }
 }
