@@ -10,4 +10,10 @@
           span.habidat-icon(style='mask-image: url(' + baseUrl + '/public/img/appmenu/' + entry.icon + '); -webkit-mask-image: url(' + baseUrl + '/public/img/appmenu/' + entry.icon + '); -webkit-mask-size: 16px 16px;')
           span.habidat-spacer &nbsp;
           span=entry.name
+      else
+        - var url = entry.redirect?entry.url:'https://'+config.nextcloud.subdomain+'.'+config.settings.general.domain + entry.url;
+        a.active(href=url) 
+          span.habidat-icon(style='mask-image: url(' + baseUrl + '/public/img/appmenu/' + entry.icon + '); -webkit-mask-image: url(' + baseUrl + '/public/img/appmenu/' + entry.icon + '); -webkit-mask-size: 16px 16px;')
+          span.habidat-spacer &nbsp;
+          span=entry.name        
 

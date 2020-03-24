@@ -87,50 +87,50 @@ var enabledAppsTime;
 const nextcloudApps = {
   files: {
     id: 'files',
-    url: '/index.php/apps/files/',
+    url: '/apps/files/',
     icon: 'files.svg',
     name: 'Dateien'
   },
   calendar: {
     id: 'calendar',
-    url: '/index.php/apps/calendar/',
+    url: '/apps/calendar/',
     icon: 'calendar.svg',
     name: 'Kalender'
   },
   contacts: {
     id: 'contacts',
-    url: '/index.php/apps/contacts/',
+    url: '/apps/contacts/',
     icon: 'contacts.svg',
     name: 'Kontakte' 
   },
 
   mail: {
     id: 'mail',
-    url: '/index.php/apps/mail/',
+    url: '/apps/mail/',
     icon: 'mail.svg',
     name: 'E-Mail'
   },
   gallery: {
     id: 'gallery',
-    url: '/index.php/apps/gallery/',
+    url: '/apps/gallery/',
     icon: 'gallery.svg',
     name: 'Galerie'
   },
   tasks: {
     id: 'tasks',
-    url: '/index.php/apps/tasks/',
+    url: '/apps/tasks/',
     icon: 'tasks.svg',
     name: 'Aufgaben'
   },
   audioplayer: {
     id: 'audioplayer',
-    url: '/index.php/apps/audioplayer/',
+    url: '/apps/audioplayer/',
     icon: 'audioplayer.svg',
     name: 'Audio-Player'
   },
   spreed: {
     id: 'spreed',
-    url: '/index.php/apps/spreed/',
+    url: '/apps/spreed/',
     icon: 'spreed.svg',
     name: 'Talk'
   }

@@ -43,6 +43,8 @@
 /* Change color of dropdown links on hover */
 .habidat-dropdown-content a:hover {background-color: #ddd;}
 
+.habidat-dropdown-content a.active {color: #888 !important;}
+
 /* Show the dropdown menu on hover */
 .habidat-dropdown:hover .dropdown-content {display: block;}
 
