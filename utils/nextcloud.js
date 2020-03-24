@@ -44,7 +44,7 @@ const getExternalAppsByUser = function(externalApps, currentUser) {
       })
       return externalAppsByUser.map(app => {
         return { 
-          url:  app.redirect?app.url:'/index.php/apps/external/' + app.id,
+          url:  app.redirect?app.url:'/apps/external/' + app.id,
           redirect: app.redirect,
           icon: app.icon,
           name: app.name,
@@ -169,7 +169,7 @@ var appOrder;
 var appOrderTime;
 
 exports.getAppOrder = function() {
-  if (appOrder && Date.now() - appOrder < 1000*60*60*24) {
+  if (appOrderTime && appOrder && Date.now() - appOrderTime < 1000*60*60*24) {
     return Promise.resolve(appOrder);
   } else {
     return  query('select configvalue from ' +  config.nextcloud.db.prefix + "_appconfig where appid='apporder' and configkey='order'")      
@@ -190,9 +190,34 @@ exports.getAppOrder = function() {
   }
 };
 
+var appHidden;
+var appHiddenTime;
+
+exports.getAppOrderHidden = function() {
+  if (appHiddenTime && appHidden && Date.now() - appHiddenTime < 1000*60*60*24) {
+    return Promise.resolve(appHidden);
+  } else {
+    return  query('select configvalue from ' +  config.nextcloud.db.prefix + "_appconfig where appid='apporder' and configkey='hidden'")      
+      .then((result) => {
+        if (result.length > 0 && result[0].configvalue) {
+          appHidden = JSON.parse(result[0].configvalue);
+          appHiddenTime = Date.now();
+        } else {
+          appHidden = [];
+          appHiddenTime = Date.now();
+        }        
+        return appHidden;
+      })
+      .catch(error => {
+        console.log('Nextcloud: Error getting app order: ' + error);
+        return {};
+      })
+  }
+};
+
 exports.getMenuEntriesSorted = function (currentUser) {
-  return Promise.join(exports.getExternalApps(currentUser), exports.getEnabledApps(), exports.getAppOrder(),
-    (externalApps, enabledApps, appOrder) => {
+  return Promise.join(exports.getExternalApps(currentUser), exports.getEnabledApps(), exports.getAppOrder(), exports.getAppOrderHidden(),
+    (externalApps, enabledApps, appOrder, appHidden) => {
       var combined = enabledApps.concat(externalApps);
       var findIndexOf = function(appOrder, url) {
         var index = appOrder.indexOf(url);
@@ -208,6 +233,8 @@ exports.getMenuEntriesSorted = function (currentUser) {
       var combined = combined.sort((a, b) => {
         return findIndexOf(appOrder, a.url) > findIndexOf(appOrder, b.url)?1:-1;
       });
-      return combined;
+      return combined.filter(app => {
+        return findIndexOf(appHidden, app.url) == -1;
+      });
     })
 }
