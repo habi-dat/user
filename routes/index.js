@@ -526,6 +526,7 @@ router.post('/user/edit', isLoggedInGroupAdmin, function(req, res) {
     }
     user.description = user.description || config.nextcloud.defaultQuota || '1 GB';
 
+
     actions.user.modify(user, req.user)
         .then(response => checkResponseAndRedirect(req, res, response, 'Benutzer*in ' + req.body.cn + ' geändert', 'Fehler beim Ändern der*des Benutzer*in', '/show', '/user/edit/' + user.dn, user))
         .catch(error => errorPage(req,res,error));
@@ -546,8 +547,8 @@ router.post('/user/editgroups', isLoggedInGroupAdmin, function(req, res) {
         language: false,
         owner: false
     };  
-    if (user.member) {
-        user.member = JSON.parse(user.member);
+    if (req.body.member) {
+        user.member = JSON.parse(req.body.member);
     } else {
         user.member = [];
     }

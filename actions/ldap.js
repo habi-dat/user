@@ -56,7 +56,6 @@ var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
                   var updatedMember = ldapAttributeToArray(group.member),
                       updated = false,
                       updatedAdmin = ldapAttributeToArray(group.owner);
-
                   if (member !== false) {
                     // check if member list needs to be updated
                     if (assignedGroups.includes(group.dn)) {
