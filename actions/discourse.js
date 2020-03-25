@@ -86,6 +86,8 @@ var createGroup = function(group, currentUser) {
         'group[automatic]': false,
         'group[automatic_membership_email_domains]': "",
         'group[automatic_membership_retroactive]': false,
+        'group[mentionable_level]': 3,
+        'group[messageable_level]': 3,
         'group[grant_trust_level]': 0,
         'group[name]': group.cn,
         'group[full_name]': group.o,
