@@ -6,9 +6,11 @@ var Promise = require("bluebird");
 var buildOptions = function(method, url, parameters = undefined) {
   var options = {
     method: method,
-    uri: config.discourse.APIURL + '/' + url + '?api_key=' + config.discourse.APIKEY + '&api_username=' + config.discourse.USERNAME,    
+    uri: config.discourse.APIURL + '/' + url,
     headers: {
-        'User-Agent': 'habiDAT-User-Module'
+        'User-Agent': 'habiDAT-User-Module',
+        'Api-Key': config.discourse.APIKEY,
+        'Api-Username': config.discourse.USERNAME
     },
     json: true
   }
@@ -53,7 +55,7 @@ exports.getCategory = function(id) {
             })
             if (categoryObject.category.uploaded_logo) {
                 categoryObject.category.image = config.discourse.APIURL + '/' + categoryObject.category.uploaded_logo.url;
-            }            
+            }
             return categoryObject.category;
         })
 };
@@ -73,7 +75,7 @@ exports.getCategories = function() {
 
     return exports.get('categories_and_latest')
         .then(categoriesObject => {
-            
+
             var categoryIDs =[];
             categoriesObject.category_list.categories.forEach(topCategory => {
               categoryIDs.push({parent: null, id: topCategory.id});
@@ -81,7 +83,7 @@ exports.getCategories = function() {
                     topCategory.subcategory_ids.forEach(function(subcategory) {
                         categoryIDs.push({parent: topCategory.id, id: subcategory});
                     });
-                }                
+                }
             })
             return Promise.all(categoryIDs.map(categoryId => {
                 return exports.getCategory(categoryId.id)
