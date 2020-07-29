@@ -1,10 +1,41 @@
+  function german() {
+  return {
+          "sEmptyTable":      "Keine Daten in der Tabelle vorhanden",
+          "sInfo":            "_START_ bis _END_ von _TOTAL_ Einträgen",
+          "sInfoEmpty":       "0 bis 0 von 0 Einträgen",
+          "sInfoFiltered":    "(gefiltert von _MAX_ Einträgen)",
+          "sInfoPostFix":     "",
+          "sInfoThousands":   ".",
+          "sLengthMenu":      "_MENU_ Einträge anzeigen",
+          "sLoadingRecords":  "Wird geladen...",
+          "sProcessing":      "Bitte warten...",
+          "sSearch":          "Suchen",
+          "sZeroRecords":     "Keine Einträge vorhanden.",
+          "oPaginate": {
+              "sFirst":       "Erste",
+              "sPrevious":    "Zurück",
+              "sNext":        "Nächste",
+              "sLast":        "Letzte"
+          },
+          "oAria": {
+              "sSortAscending":  ": aktivieren, um Spalte aufsteigend zu sortieren",
+              "sSortDescending": ": aktivieren, um Spalte absteigend zu sortieren"
+          },
+          select: {
+                  rows: {
+                  _: '%d Zeilen ausgewählt',
+                  0: 'Zum Auswählen auf eine Zeile klicken',
+                  1: '1 Zeile ausgewählt'
+                  }
+          }
+      };
+}
+
   $(document).ready(function(){
     var table = $('.datatable').dataTable( {
         "info":           false,
-        "paging":         false,
-        "oLanguage": {
-          "sSearch": "Suche: "
-        }
+        "paginate":     false,
+        language: german()
     } );
 
     $('.user-form #cn').keyup((event) => {
@@ -27,7 +58,7 @@
               .replace(' ', '_')
               .replace(/[\W]+/g,"")
               .substr(0,20));
-    })    
+    })
 
     $('[data-toggle="tooltip"]').tooltip();
 
@@ -46,22 +77,22 @@
         $('#grouptable tbody tr td .admindn').each(function() {
           if ($(this).text() == dn) {
             $(this).parent().parent().removeClass('hidden');
-            $(this).parent().parent().children().first().prepend('<span class="priv-icon glyphicon glyphicon-edit" style="color:green;"></span>');            
+            $(this).parent().parent().children().first().prepend('<span class="priv-icon glyphicon glyphicon-edit" style="color:green;"></span>');
           }
         });
         $('#grouptable tbody tr td .memberdn').each(function() {
           if ($(this).parent().parent().hasClass('hidden') && $(this).text() == dn) {
             $(this).parent().parent().removeClass('hidden');
-            $(this).parent().parent().children().first().prepend('<span class="priv-icon glyphicon glyphicon-check" style="color:blue;"></span>');            
+            $(this).parent().parent().children().first().prepend('<span class="priv-icon glyphicon glyphicon-check" style="color:blue;"></span>');
           }
-        });        
+        });
     }
     } );
     $('#grouptable tbody').on( 'click', 'tr', function () {
     if ( $(this).hasClass('selected') ) {
         $(this).removeClass('selected');
         $('#usertable tbody tr').removeClass('hidden');
-        $('#usertable tbody tr td:first-child .priv-icon').remove();        
+        $('#usertable tbody tr td:first-child .priv-icon').remove();
     }
     else {
         $('#grouptable tbody tr.selected').removeClass('selected');
@@ -85,7 +116,7 @@
               $(this).parent().children().first().prepend('<span class="priv-icon glyphicon glyphicon-check" style="color:blue;"></span>');
             }
           });
-        });        
+        });
     }
     } );
 
@@ -167,7 +198,7 @@
     $('#cn').change((event) => {
         if ($('#cn').attr('previous-value') == $('#cn').val()) {
             $("#helpUidAvailable").remove();
-            $("#helpCNAvailable").remove();            
+            $("#helpCNAvailable").remove();
         } else if ($('#cn').val() != "") {
             var url = '/user/available/cn/' + $('#cn').val()
             var token = $('#cn').attr('token');
@@ -198,7 +229,7 @@
                         $('#changedUid').attr('available', true);
                         $("#helpUidAvailable").remove();
                     }
-                })        
+                })
             } else {
                 $("#helpUidAvailable").remove();
             }
@@ -223,22 +254,22 @@
                     $('#changedUid').attr('available', true);
                     $("#helpUidAvailable").remove();
                 }
-            })            
+            })
         } else {
             $("#helpUidAvailable").remove();
         }
-        
+
     })
 
 
     var checkPasswordMatch = function() {
         $('.password-error').remove();
         if ($('#password').val() != $('#passwordRepeat').val() && $('#passwordRepeat').val() != "") {
-            $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-error" id="helpPasswordError" style="color:red;"><b>Passwörter müssen übereinstimmen</b>'); 
-        } 
-    }    
+            $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-error" id="helpPasswordError" style="color:red;"><b>Passwörter müssen übereinstimmen</b>');
+        }
+    }
 
-    var checkPassword = function(password)  {     
+    var checkPassword = function(password)  {
         $('.password-help').remove();
         if (password.length > 0 ) {
 
@@ -253,18 +284,18 @@
             } else if (result.score == 3) {
                 $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-help" id="helpPasswordSuggestion" style="color:green;"><b>Sicherheitsstufe (3/4)</b> Dieses Passwort ist sicher</span>');
             } else if (result.score == 4) {
-                $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-help" id="helpPasswordSuggestion" style="color:green;"><b>Sicherheitsstufe (4/4)</b> Dieses Passwort ist sehr sicher</span>');                
+                $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-help" id="helpPasswordSuggestion" style="color:green;"><b>Sicherheitsstufe (4/4)</b> Dieses Passwort ist sehr sicher</span>');
             }
             if (result.feedback && result.feedback.warning && result.feedback.warning != "") {
                 $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-help" id="helpPasswordWarning" style="color:orange;"><b>Warnung</b> ' + result.feedback.warning + '</span>');
             }
             if (result.feedback && result.feedback.suggestions && result.feedback.suggestions != "") {
-                $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-help" id="helpPasswordSuggestion" style="color:grey;"><b>Vorschlag</b> ' + result.feedback.suggestions + '</span>');                    
-            }                 
+                $('#passwordRepeat').parent('.input-group').parent().append('<span class="help-block password-help" id="helpPasswordSuggestion" style="color:grey;"><b>Vorschlag</b> ' + result.feedback.suggestions + '</span>');
+            }
 
         }
         checkPasswordMatch();
-        
+
     }
 
 
@@ -272,23 +303,23 @@
 
     var checkPasswordQueue;
     $('#password').keyup((event) => {
-        checkPasswordQueue = $('#password').val();        
+        checkPasswordQueue = $('#password').val();
     });
 
     function passwordCheckTimer() {
         if (checkPasswordQueue) {
             console.log('check');
             var password =checkPasswordQueue;
-            checkPasswordQueue = undefined;    
+            checkPasswordQueue = undefined;
             checkPassword(password);
-        }   
+        }
     }
 
     setInterval(passwordCheckTimer, 200);
 
     $('#password').change((event) => {
         var password = $('#password').val();
-        checkPassword(password);  
+        checkPassword(password);
     });
 
     $('.redirect').each(function() {
@@ -335,11 +366,11 @@
             //$checkbox.triggerHandler('change');
             if ($state == "on") {
                 if (isAdmin) {
-                    $widget.data('state', 'admin');    
+                    $widget.data('state', 'admin');
                 } else {
-                    $widget.data('state', 'off');                        
+                    $widget.data('state', 'off');
                 }
-                
+
             } else if ($state == "admin") {
                 $widget.data('state', 'off');
             } else {
@@ -366,13 +397,13 @@
                 $(".ou-option[ref-group-dn='" + dn + "']").removeClass('hidden');
                 if($(".ou-option[ref-group-dn='" + dn + "']").parent().val() == null) {
                     var newSelection = $(".ou-option[ref-group-dn='" + dn + "']").parent().children("option:not(:selected):not(.hidden)").val();
-                    $(".ou-option[ref-group-dn='" + dn + "']").parent().val(newSelection).change();                    
+                    $(".ou-option[ref-group-dn='" + dn + "']").parent().val(newSelection).change();
                 }
 
             } else {
                 var dn = $widget.attr('id');
                 $widget.removeClass(style + 'success ' + style + 'primary active admin');
-                $(".ou-option[ref-group-dn='" + dn + "']").addClass('hidden');      
+                $(".ou-option[ref-group-dn='" + dn + "']").addClass('hidden');
                 if($(".ou-option[ref-group-dn='" + dn + "']").is(':selected')) {
                     var newSelection = $(".ou-option[ref-group-dn='" + dn + "']").parent().children("option:not(:selected):not(.hidden)").val();
                     $(".ou-option[ref-group-dn='" + dn + "']").parent().val(newSelection).change();
@@ -541,7 +572,7 @@
             }
         }
         init();
-    });    
+    });
 
 
     //colorpicker
@@ -589,7 +620,7 @@
         if (isAdmin) {
             $("#check-list-box li.active.admin").each(function(idx, li) {
                 adminItems.push($(li).prop('id'));
-            });            
+            });
         }
         $hiddenAdmin.val(JSON.stringify(adminItems));
         $(this).find('.hidden-groups').remove();
@@ -610,7 +641,7 @@
         if ($('#password').length && $('#password').val() != $('#passwordRepeat').val()) {
             $('#passwordRepeat').focus();
             event.preventDefault();
-        }        
+        }
         //return true;
     });
 

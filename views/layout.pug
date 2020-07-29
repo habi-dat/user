@@ -6,6 +6,7 @@ html
     title= title
     meta(name='viewport', content='width=device-width, initial-scale=1.0')
     link(rel="stylesheet" href="/public/bootstrap/css/bootstrap.min.css")
+    link(rel="stylesheet" href="/public/jodit/jodit.min.css")
     link(rel="stylesheet" href="/public/colorpicker/css/bootstrap-colorpicker.min.css")
     link(rel="stylesheet" href="/public/stylesheets/dataTables.bootstrap.min.css")
     link(rel="stylesheet" href="/public/stylesheets/jquery.dataTables.min.css")
@@ -34,6 +35,8 @@ html
         +nav_item( "/show" ) Benutzer*innen / Gruppen   
       if (currentUser && currentUser.isAdmin)
         +nav_item( "/show_cat" ) Gruppen / Kategorien  
+      if (currentUser && currentUser.isAdmin)
+        +nav_item( "/email/templates" ) E-Mail Vorlagen
       if (currentUser.loggedIn)
         +nav_item( "/logout" ) Abmelden
     .container.col-md-8.col-md-offset-2.col-sm-offset-0.col-xs-offset-0.col-xs-12.col-sm-12

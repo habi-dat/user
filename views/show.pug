@@ -24,7 +24,7 @@ block content
                   th.col-md-3 Name
                   th.col-md-2 Zugehörigkeit
                   th.col-md-2 Ort
-                  th.col-md-2.text-right Aktionen
+                  th.col-md-2.text-right(data-orderable="false") Aktionen
                   th.hidden DN
               tbody
                 each user in users
@@ -58,7 +58,7 @@ block content
                   th.col-md-3 Anzeigename
                   th.col-md-4 Beschreibung
                   if currentUser.isAdmin
-                    th.col-md-2.text-right Aktionen
+                    th.col-md-2.text-right(data-orderable="false") Aktionen
                   th.hidden Members
                   th.hidden Admins
               tbody

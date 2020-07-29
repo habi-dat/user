@@ -1,0 +1,40 @@
+extends ../layout
+include ../various
+
+mixin template_editor(id, subject, html, activated)
+  form.form-horizontal(action='/email/templates' method="post" role="form")
+    input(type="hidden" name="template" value=id)
+    .form-group
+      input.toggle-template(id='switch_'+id name="activated" type="checkbox" data-ref=id checked=activated)
+      span  
+      label.control-label(for='switch_'+id) Diese Vorlage statt der Standardvorlage verwenden
+    .form-group
+      label.control-label Betreff
+      input.form-control.col-md-12(name="subject" value=subject)
+    .form-group
+      label.control-label E-Mail
+      textarea.html-editor(id=id+'_body' name='body')!= html
+    .form-group      
+      button(type="submit") Speichern
+
+block content
+  +notification(notification, message, responses)
+  each key in Object.keys(emails)
+    .row
+      h2=emails[key].label
+      hr
+    +template_editor(key, emails[key].subject, emails[key].body, emails[key].activated) 
+  script(type='text/javascript' src='/public/jodit/jodit.min.js')  
+  script.
+    $(document).ready(function(){
+      var editors = {};
+      $('.html-editor').each(function() {
+        var id = $(this).attr('id');
+        editors[id] = new Jodit(this, {
+          uploader: {
+            insertImageAsBase64URI: true
+          }
+        });
+      })
+    })
+      

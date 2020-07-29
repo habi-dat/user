@@ -1,4 +1,4 @@
-/*jshint esversion: 6 */ 
+/*jshint esversion: 6 */
 
 var express = require('express');
 var passport = require('passport');
@@ -63,13 +63,13 @@ if (config.saml.enabled) {
                 //redirect to the IdP Logout URL
                 res.redirect(request);
             }
-        });        
+        });
     });
 
     router.post('/saml/consume',
         bodyParser.urlencoded({ extended: false }),
         passport.authenticate('saml', {session: true, failureRedirect: '/login', failureFlash:true, successReturnToOrRedirect: '/'})
-    );    
+    );
 
     router.get('/saml/consume',
         //bodyParser.urlencoded({ extended: false }),
@@ -78,7 +78,7 @@ if (config.saml.enabled) {
           res.redirect('/');
         }
 
-    );      
+    );
 
     router.get('/logindirect', function(req, res) {
 
@@ -162,7 +162,7 @@ router.get('/edit_me', isLoggedIn, function(req, res) {
 
 var updateCurrentUser = function(req, dn) {
     return ldaphelper.fetchObject(dn)
-       .then((changedUser) => {            
+       .then((changedUser) => {
             changedUser.isAdmin = req.user.isAdmin;
             changedUser.isGroupAdmin = req.user.isGroupAdmin;
             changedUser.ownedGroups = req.user.ownedGroups;
@@ -173,9 +173,9 @@ var updateCurrentUser = function(req, dn) {
                     } else {
                         resolve(changedUser);
                     }
-                });                
-            });          
-        });  
+                });
+            });
+        });
 };
 
 var setSessionData = function(req, data) {
@@ -189,21 +189,21 @@ var retrieveSessionData = function(req) {
         return data;
     } else {
         return;
-    }    
+    }
 }
 
 var checkResponseAndRedirect = function(req, res, response, successMsg, errorMsg, target, errorTarget = undefined, data = undefined) {
     return new Promise((resolve, reject) => {
-        req.flash('responses', response.responses);                        
+        req.flash('responses', response.responses);
         if (response.status) {
             req.flash('notification', successMsg);
-            res.redirect(target);        
+            res.redirect(target);
         } else {
             req.flash('error', errorMsg);
             if (data) {
                 setSessionData(req, data);
             }
-            res.redirect(errorTarget?errorTarget:target);        
+            res.redirect(errorTarget?errorTarget:target);
         }
         resolve();
     });
@@ -211,8 +211,8 @@ var checkResponseAndRedirect = function(req, res, response, successMsg, errorMsg
 
 var errorRedirect = function(req, res, errorMsg, target) {
     return new Promise((resolve, reject) => {
-        req.flash('error', errorMsg);                        
-        res.redirect(target);        
+        req.flash('error', errorMsg);
+        res.redirect(target);
         resolve();
     });
 };
@@ -220,8 +220,8 @@ var errorRedirect = function(req, res, errorMsg, target) {
 
 var successRedirect = function(req, res, successMsg, target) {
     return new Promise((resolve, reject) => {
-        req.flash('notification', successMsg);                        
-        res.redirect(target);        
+        req.flash('notification', successMsg);
+        res.redirect(target);
         resolve();
     });
 };
@@ -313,16 +313,16 @@ router.get('/ping', function(req, res){
 router.get('/appmenu/:from', function(req, res){
     if (config.settings.general.modules.includes('discourse')) {
         res.setHeader('Access-Control-Allow-Origin', 'https://' + config.discourse.subdomain + '.' + config.settings.general.domain);
-    }                
+    }
     nextcloud.getMenuEntriesSorted(req.user)
         .then(menuEntries => render(req, res, 'appmenu/menu', '', {menuEntries: menuEntries, fromUrl: req.params.from}))
-        .catch(error => errorPage(req, res, error));    
-    
+        .catch(error => errorPage(req, res, error));
+
 });
 
 
 router.get('/show', isLoggedInGroupAdmin, function(req,res){
-    Promise.join(ldaphelper.fetchUsers(), ldaphelper.fetchGroups('all'), 
+    Promise.join(ldaphelper.fetchUsers(), ldaphelper.fetchGroups('all'),
         (users, groups) => render(req, res, 'show', 'Benutzer*innen / Gruppen', {users: users, groups: groups}))
         .catch(error => errorPage(req, res, error));
 });
@@ -334,7 +334,7 @@ router.get('/show_cat', isLoggedInAdmin, function(req,res){
 });
 
 router.get('/invites', isLoggedInGroupAdmin, function(req,res){
-    Promise.join(activation.getInvites(), ldaphelper.fetchGroups(req.user.ownedGroups), 
+    Promise.join(activation.getInvites(), ldaphelper.fetchGroups(req.user.ownedGroups),
         (invites, groups) => render(req, res, 'invites', 'Offene Einladungen', {invites: invites, groups: groups}))
         .catch(error => errorPage(req, res, error));
 });
@@ -355,7 +355,7 @@ router.get('/user/invite/delete/:token', isLoggedInGroupAdmin, function(req, res
 router.get('/user/invite/repeat/:token', isLoggedInGroupAdmin, function(req, res) {
     activation.getToken(req.params.token)
         .then(() =>  activation.refreshToken(req.user, req.params.token, 7*24))
-        .then(token => mail.sendMail(req, res, token.data.mail, 'Einladung zu ' + config.settings.general.title, 'email/invite', token))
+        .then(token => mail.sendMail(req, res, token.data.mail,'invite', { inviteLink: config.settings.activation.base_url+ '/user/invite/accept/' + token.token}))
         .then(() => successRedirect(req, res, 'Einladung erneut versendet', '/invites'))
         .catch(error => errorRedirect(req, res, 'Fehler beim Senden der Einladung: ' + error, '/invites'));
 });
@@ -384,7 +384,7 @@ router.post('/user/invite/accept',  function(req, res) {
                 language: req.body.language,
                 member: false,
                 owner: false
-            };            
+            };
             var user = req.body;
             user.member = token.data.member;
             user.owner = token.data.owner;
@@ -479,7 +479,7 @@ router.get('/user/available/uid/:uid', isLoggedInGroupAdmin, function(req, res) 
 
 router.post('/user/add', isLoggedInGroupAdmin, function(req, res) {
     var user = req.body;
-    
+
     if (user.member) {
         user.member = JSON.parse(user.member);
     } else {
@@ -491,7 +491,7 @@ router.post('/user/add', isLoggedInGroupAdmin, function(req, res) {
     } else {
         user.owner = [];
     }
-    
+
     user.description = user.description || config.nextcloud.defaultQuota || '1 GB';
 
     actions.user.create(user, req.user)
@@ -546,7 +546,7 @@ router.post('/user/editgroups', isLoggedInGroupAdmin, function(req, res) {
         passwordRepeat: false,
         language: false,
         owner: false
-    };  
+    };
     if (req.body.member) {
         user.member = JSON.parse(req.body.member);
     } else {
@@ -573,7 +573,7 @@ router.get('/group/edit/:id', isLoggedInAdmin, function(req, res) {
 
 router.get('/group/add', isLoggedInAdmin, function(req, res) {
     render(req, res, 'group/add', 'Gruppe erstellen', {group: retrieveSessionData(req)})
-        .catch(error => errorPage(req, res, error));    
+        .catch(error => errorPage(req, res, error));
 });
 
 router.post('/group/add', isLoggedInAdmin, function(req, res) {
@@ -585,13 +585,13 @@ router.post('/group/add', isLoggedInAdmin, function(req, res) {
 router.post('/group/edit', isLoggedInAdmin, function(req, res) {
     actions.group.modify(req.body, req.user)
         .then(response => checkResponseAndRedirect(req, res, response, 'Gruppe ' + req.body.cn + ' geändert', 'Fehler beim Ändern der Gruppe ' + req.body.cn, '/show', '/group/edit/'+req.body.dn, req.body))
-        .catch(error => errorPage(req,res,error));    
+        .catch(error => errorPage(req,res,error));
 });
 
 router.get('/group/delete/:id', isLoggedInAdmin, function(req, res) {
     actions.group.remove({ dn: req.params.id }, req.user)
         .then(response => checkResponseAndRedirect(req, res, response, 'Gruppe ' + req.params.id  + ' gelöscht', 'Fehler beim Löschen der Gruppe ' + req.params.id, '/show'))
-        .catch(error => errorPage(req,res,error));    
+        .catch(error => errorPage(req,res,error));
 });
 
 
@@ -602,7 +602,7 @@ router.get('/cat/edit/:id', isLoggedInAdmin, function(req, res) {
 });
 
 router.get('/cat/add', isLoggedInAdmin, function(req, res) {
-    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups, true), discourse.getParentCategories(), 
+    Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups, true), discourse.getParentCategories(),
         (groups, parents) => render(req, res, 'cat/add', 'Kategorie erstellen', {category: retrieveSessionData(req), groups: groups, parents: parents}))
         .catch(error => errorPage(req, res, error));
 });
@@ -613,7 +613,7 @@ router.post('/cat/add', isLoggedInAdmin, function(req, res) {
 
     actions.category.create(category, req.user)
         .then(response => checkResponseAndRedirect(req, res, response, 'Kategorie ' + req.body.name + ' erstellt', 'Fehler beim Erstellen der Kategorie ' + req.body.name, '/show_cat', '/cat/add', category))
-        .catch(error => errorPage(req,res,error)); 
+        .catch(error => errorPage(req,res,error));
 });
 
 router.post('/cat/edit', isLoggedInAdmin, function(req, res) {
@@ -623,7 +623,7 @@ router.post('/cat/edit', isLoggedInAdmin, function(req, res) {
 
     actions.category.modify(category)
         .then(response => checkResponseAndRedirect(req, res, response, 'Kategorie ' + req.body.name + ' geändert', 'Fehler beim Ändern der Kategorie ' + req.body.name, '/show_cat', '/cat/edit/'+category.id, category))
-        .catch(error => errorPage(req,res,error)); 
+        .catch(error => errorPage(req,res,error));
 });
 
 router.get('/cat/delete/:id', isLoggedInAdmin, function(req, res) {
@@ -632,80 +632,18 @@ router.get('/cat/delete/:id', isLoggedInAdmin, function(req, res) {
         .catch(error => errorPage(req,res,error));
 });
 
-router.get('/imap/config', isLoggedIn, function(req, res) {
-    Promise.all(req.user.imapAccounts.map(account => imap.listFolders(account.account)))
-        .then(folders => {
-            req.user.imapAccounts.forEach((account, index) => {
-                account.folders = folders[index];
-            })
-            return render(req, res, 'imap/config', 'E-Mail Ordner abbonieren', {accounts: req.user.imapAccounts});
-        })
+router.get('/email/templates', isLoggedInAdmin, function(req, res) {
+	Promise.join(mail.renderEmail(res, 'invite', {inviteLink: '{{inviteLink}}'}, true), mail.renderEmail(res, 'passwd', {passwdLink: '{{passwdLink}}'}, true),
+		(inviteEmail, passwdEmail) =>  render(req, res, 'email/templates', 'E-Mailvorlagen bearbeiten', {emails: {invite: inviteEmail, passwd: passwdEmail}}))
         .catch(error => errorPage(req, res, error));
 });
 
-router.get('/imap/config/:secret', function(req, res) {
-    if (config.emailnotification && config.emailnotification.secret && config.emailnotification.secret == req.params.secret) {
-        imap.getConfig()
-            .then(config => {
-                res.send(config);
-            })
-            .catch(error => {
-                res.status(500).send({error: error});
-            })
-    } else {
-        res.status(401).send({error: "not allowed"});
-    }
+router.post('/email/templates', isLoggedInAdmin, function(req, res) {
+	mail.saveCustomTemplate(req.body.template, {activated: req.body.activated, subject: req.body.subject, body: req.body.body})
+		.then(() => successRedirect(req, res, 'Vorlageneinstellungen gespeichert', '/email/templates'))
+        .catch(error => errorRedirect(req, res, 'Fehler beim Speichern der Vorlageneinstellungen: ' + error, '/email/templates'));
 });
 
-router.post('/imap/config', isLoggedIn, function(req, res) {
-
-    var folders = JSON.parse(req.body.folders);    
-    //console.log('folders: ' + JSON.stringify(folders));
-    var currentUser = req.user;
-    var text = "";
-
-    Promise.each(Object.keys(folders), account => {
-        var old = currentUser.imapAccounts.find(a => {return a.account == account});
-        if (!old) {
-            return Promise.reject("Für den Account " + account + " hast du keine Rechte, Cheater!");
-        }
-        var subscribe = [], unsubscribe = [];
-        old.subscriptions.forEach(oldFolder => {
-            if (!folders[account].includes(oldFolder)) {
-                unsubscribe.push(oldFolder);
-            }
-        })
-        folders[account].forEach(newFolder => {
-            if (!old.subscriptions.includes(newFolder)) {
-                subscribe.push(newFolder);
-            }
-        })
-        //console.log('unsubscribe: ' + JSON.stringify(unsubscribe));
-        //console.log('subscribe: ' + JSON.stringify(subscribe));
-        return Promise.each(subscribe, folder => imap.subscribe(account, folder, currentUser.uid))
-            .then(() => Promise.each(unsubscribe, folder => imap.unsubscribe(account, folder, currentUser.uid)))
-            .then(() => {
-                if (subscribe.length > 0) {
-                    if (text != "") text += ", ";
-                    text += account + ": Ordner " + subscribe.join(', ') + " abonniert";
-                } 
-                if (unsubscribe.length > 0) {
-                    if (text != "") text += ", ";
-                    text += account + ": Ordner " + unsubscribe.join(', ') + " abbestellt";                    
-                }
-                return text;
-            });
-    })
-    .then(() => {
-        return imap.getAccounts(currentUser)
-            .then(accounts => {
-                currentUser.imapAccounts = accounts;
-                return text;
-            });                                
-    })
-    .then(text => successRedirect(req, res, 'E-Mail Benachrichtigungen upgedated: ' + JSON.stringify(text), '/imap/config'))
-    .catch(error => errorRedirect(req, res, 'Fehler beim Update der E-Mail Benachrichtigungen: ' + error.stack, '/imap/config'));
-});
 
 module.exports = router;
 

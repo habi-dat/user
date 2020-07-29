@@ -50,7 +50,7 @@ app.use('/public/img', express.static(path.join(__dirname, '/public/img'),  { ma
         setHeaders: (res) => {
             if (config.settings.general.modules.includes('discourse')) {
                 res.setHeader('Access-Control-Allow-Origin', 'https://' + config.discourse.subdomain + '.' + config.settings.general.domain);
-            }            
+            }
         } }));
 
 app.use('/public/javascripts', express.static(path.join(__dirname, '/public/javascripts'),  { maxAge: oneDay }));
@@ -61,11 +61,12 @@ app.use('/public/jquery', express.static(path.join(__dirname, 'node_modules/jque
 app.use('/public/colorpicker', express.static(path.join(__dirname, 'node_modules/bootstrap-colorpicker/dist'),  { maxAge: oneDay }));
 app.use('/public/validation', express.static(path.join(__dirname, 'node_modules/jquery-validation/dist'),  { maxAge: oneDay }));
 app.use('/public/bootbox', express.static(path.join(__dirname, 'node_modules/bootbox/dist'),  { maxAge: oneDay }));
+app.use('/public/jodit', express.static(path.join(__dirname, 'node_modules/jodit/build'),  { maxAge: oneDay }));
 
 app.use(function(req,res,next){
     res.locals.session = req.session;
     if (req.user) {
-        res.locals.currentUser = req.user;    
+        res.locals.currentUser = req.user;
         res.locals.currentUser.loggedIn = true;
     } else {
         res.locals.currentUser = { loggedIn: false};
@@ -82,7 +83,7 @@ app.use('/', routes);
 passport.use(new LdapStrategy(config.ldap));
 
 if (config.saml.enabled) {
-    global.samlStrategy = new SamlStrategy(config.saml.parameters, 
+    global.samlStrategy = new SamlStrategy(config.saml.parameters,
         function(profile, done) {
             if (config.debug) {
                 console.log("DEBUG: SAML profile: " + JSON.stringify(profile));
@@ -97,7 +98,7 @@ if (config.saml.enabled) {
                     done(error)
                 });
         });
-    passport.use(global.samlStrategy);    
+    passport.use(global.samlStrategy);
 }
 
 passport.serializeUser(function(user, done) {
@@ -112,7 +113,7 @@ passport.deserializeUser(function(user, done) {
                 ldaphelper.fetchOwnedGroups(user)
                     .then((groups) => {
                         user.ownedGroups = groups.owner.map((group) => { return group.dn;});
-                        user.memberGroups = groups.member.map((group) => { return group.cn;});  
+                        user.memberGroups = groups.member.map((group) => { return group.cn;});
                         if (user.isAdmin  || groups.owner.length > 0) {
                             user.isGroupAdmin = true;
                         } else {
@@ -121,8 +122,8 @@ passport.deserializeUser(function(user, done) {
                         return imap.getAccounts(user)
                             .then(accounts => {
                                 user.imapAccounts = accounts;
-                                done(null, user);                                
-                            });                        
+                                done(null, user);
+                            });
                     })
             })
             .catch((error) => {
