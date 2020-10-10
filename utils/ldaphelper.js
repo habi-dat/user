@@ -21,15 +21,15 @@ var passwordValid = function(password) {
     // console.log("Passwort: " + password + " match: " +password.match('^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*_=+-]).{8,30}$'));
     var result = zxcvbn(password);
     if (result.score <=2 ) {
-      return false;  
+      return false;
     } else {
       return true;
-    }    
+    }
 }
 
 exports.dnToCn = function(dn) {
     if (dn && dn.includes(',') && dn.includes('=')) {
-        return dn.split(',')[0].split('=')[1];    
+        return dn.split(',')[0].split('=')[1];
     } else {
         return;
     }
@@ -77,7 +77,7 @@ exports.fetchGroups = function(ownedGroups, noAdminGroups = false) {
             res.on('searchEntry', function(entry) {
                 if ((!noAdminGroups || entry.object.cn !== 'admin') && ownedGroups && (ownedGroups == 'all' || ownedGroups.includes(entry.object.dn))) {
                     entries.push(entry.object);
-                }                
+                }
             });
             res.on('error', function(err) {
                 reject('Error fetching groups: ' + err.message);
@@ -184,6 +184,15 @@ exports.fetchUsers = function() {
                 reject('Error fetching users: ' + err.message);
             });
             res.on('end', function(result) {
+            	entries.filterByDns = function(userDns, inverse = false)  {
+            		return this.filter(user => {
+            			if (inverse) {
+            				return !userDns.includes(user.dn)
+            			} else {
+	           				return userDns.includes(user.dn)
+            			}
+            		})
+            	}
                 resolve(entries);
             });
         });
@@ -310,7 +319,7 @@ exports.getByCN = function(cn) {
         });
     });
 };
- 
+
 exports.findUniqueUID = function(uid, number) {
     var uniqueUID = uid;
     uniqueUID = uid + '_' + number;
@@ -318,13 +327,13 @@ exports.findUniqueUID = function(uid, number) {
     return exports.getByUID(uniqueUID)
         .then((user) => {
             if (user) {
-                return exports.findUniqueUID(uid, number+1);                
-            } else { 
+                return exports.findUniqueUID(uid, number+1);
+            } else {
                 return uniqueUID;
             }
-            
+
         });
-}; 
+};
 
 exports.encryptAndAddUser = function(entry) {
 
@@ -429,8 +438,8 @@ exports.updatePassword = function(uid, userPassword, userPassword2) {
                                     } else {
                                         resolve();
                                     }
-                                })                            
-                            })                        
+                                })
+                            })
                         });
             });
         })

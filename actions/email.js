@@ -24,7 +24,7 @@ var sendInvite = function(user, currentUser, req, res) {
   return activation.getTokenByData(user.mail.toLowerCase(), 'mail', 'invite')
     .then(token => activation.refreshToken(currentUser, token.token, 7*24))
     .catch(() => activation.createAndSaveToken(currentUser, {mail: user.mail.toLowerCase(), owner: user.owner, member: user.member}, 7*24, 'invite'))
-    .then(token => mailhelper.sendMail(req, res, user.mail, 'invite', {inviteLink: config.settings.activation.base_url+ '/user/invite/accept/' + token.token}))
+    .then(token => mailhelper.sendMail(req, res, user.mail, 'invite', { inviteLink: config.settings.activation.base_url+ '/user/invite/accept/' + token.token }))
     .then(() => {
       return { status: true, message: 'E-Mail an ' + user.mail + ' versandt'};
     })

@@ -14,7 +14,7 @@ var changeGroup = function(group, field, users) {
     } else {
       ldaphelper.change(group.dn, group[field] === undefined || group[field] === "" ?'add':'replace', parameters)
         .then(() => resolve('Gruppe ' + group.cn + ' (' + (field=='owner'?'Admin':'Mitglied') + ')'))
-        .catch(error => reject('LDAP: Fehler beim Updaten der LDAP Gruppe ' + group.cn + ' (' + field + '): ' + error));          
+        .catch(error => reject('LDAP: Fehler beim Updaten der LDAP Gruppe ' + group.cn + ' (' + field + '): ' + error));
     }
   });
 }
@@ -62,7 +62,7 @@ var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
                       if (updatedMember.includes(oldDn)) {
                         if (changedDn) {
                           updated = true;
-                          updatedMember[updatedMember.indexOf(oldDn)] = dn;                        
+                          updatedMember[updatedMember.indexOf(oldDn)] = dn;
                         }
                       } else if (!updatedMember.includes(dn)) {
                         updatedMember.push(dn);
@@ -85,7 +85,7 @@ var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
                     }
                     if (updated) {
                       actions.push(changeGroup(group, "member", updatedMember));
-                    }                    
+                    }
                   }
 
                   // check if owner list needs to be updated (only for admins)
@@ -114,7 +114,7 @@ var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
                     if (updated) {
                       actions.push(changeGroup(group, "owner", updatedAdmin));
                     }
-                  }                  
+                  }
                 }
 
               });
@@ -160,7 +160,7 @@ var createUser = function(user, currentUser) {
         entry.title = group.o;
         return;
       })
-      .then(() => ldaphelper.getByUID(uid))      
+      .then(() => ldaphelper.getByUID(uid))
       .then((LDAPuser) => {
         if (LDAPuser != null) {
             if (user.changedUid) {
@@ -170,7 +170,7 @@ var createUser = function(user, currentUser) {
                 then((uniqueUID) => {
                   uid = uniqueUID;
                   entry.uid = uniqueUID;
-                  user.uid = uniqueUID;                  
+                  user.uid = uniqueUID;
                   return ldaphelper.encryptAndAddUser(entry);
                 })
             }
@@ -190,7 +190,7 @@ var createUser = function(user, currentUser) {
         resolve({status: true, message: "LDAP: Benutzer*in " + entry.cn + " im LDAP erstellt"});
       })
       .catch((error) => {
-        resolve({status: false, message: "LDAP: Fehler beim Erstellen der*des Benutzer*in: " + error});  
+        resolve({status: false, message: "LDAP: Fehler beim Erstellen der*des Benutzer*in: " + error});
       });
   });
 };
@@ -210,12 +210,12 @@ var modifyUser = function(user, currentUser) {
 
       var actions = [];
 
-      var cn = user.cn, dn;      
+      var cn = user.cn, dn;
       if (cn != false) {
         dn = 'cn=' + cn + ',ou=users,'+ config.ldap.server.base;
       } else {
         dn = user.dn;;
-      }    
+      }
 
       var changedDn = user.cn != false && dn != oldDn;
 
@@ -249,7 +249,7 @@ var modifyUser = function(user, currentUser) {
       if(user.l != false && user.l != oldUser.l) {
         fieldActions.push(ldaphelper.change(dn, 'replace', {l : user.l}));
         updatedFields.push('Ort');
-      }      
+      }
 
       if(user.language != false && user.language != oldUser.preferredLanguage) {
         fieldActions.push(ldaphelper.change(dn, 'replace', {preferredLanguage : user.language}));
@@ -264,7 +264,7 @@ var modifyUser = function(user, currentUser) {
       user.changedDn = dn;
       var doUpdate = updateGroups(currentUser, dn, oldDn, oldUser, user.member, user.owner)
           .then((updatedGroups) => {
-            updatedFields = updatedFields.concat(updatedGroups);            
+            updatedFields = updatedFields.concat(updatedGroups);
             if (changedDn) {
               return changedDnAction;
             } else {
@@ -281,9 +281,9 @@ var modifyUser = function(user, currentUser) {
         return ldaphelper.hashPassword(user.password)
           .then((hash) => {
             fieldActions.push(ldaphelper.change(dn, 'replace', {userPassword : hash}));
-            updatedFields.push('Passwort');    
+            updatedFields.push('Passwort');
             return doUpdate;
-          });        
+          });
       } else {
         return doUpdate;
       }
@@ -293,7 +293,7 @@ var modifyUser = function(user, currentUser) {
       resolve({status: true, message: 'LDAP: Benutzer*in upgedated (' + updatedFields.join(', ') + ')'});
     })
     .catch((error) => {
-      resolve({status: false, message: "LDAP: Fehler beim Update der*des Benutzer*in: " + error + error.stack});  
+      resolve({status: false, message: "LDAP: Fehler beim Update der*des Benutzer*in: " + error + error.stack});
     })
   })
 };
@@ -329,13 +329,13 @@ var createGroup = function(group, currentUser) {
       o: group.o,
       description: group.description,
       objectClass: ['groupOfNames','top'],
-      member: "",
+      member: JSON.parse(group.member),
       owner: ""
     };
     ldaphelper.add('cn=' + group.cn + ',ou=groups,' + config.ldap.server.base, entry)
       .then(() => {
         currentUser.ownedGroups.push('cn=' + group.cn + ',ou=groups,' + config.ldap.server.base);
-        resolve({status: true, message: 'LDAP: Gruppe angelegt: ' + group.cn});  
+        resolve({status: true, message: 'LDAP: Gruppe angelegt: ' + group.cn});
       })
       .catch((error) => {
         resolve({status: false, message: 'LDAP: Fehler beim Erstellen der Gruppe ' + group.cn + ': ' + error});
@@ -360,8 +360,8 @@ var modifyGroup = function(group, currentUser) {
         var nextStep;
         if (changedDn) {
           updatedFields.push('DN');
-          nextStep = ldaphelper.updateDN(oldDn, dn); 
-          currentUser.ownedGroups.push(dn);             
+          nextStep = ldaphelper.updateDN(oldDn, dn);
+          currentUser.ownedGroups.push(dn);
         } else {
           nextStep = Promise.resolve();
         }
@@ -377,12 +377,27 @@ var modifyGroup = function(group, currentUser) {
               updatedFields.push('Anzeigename');
             }
 
-
             if(group.description != false && group.description != oldGroup.description) {
               actions.push(ldaphelper.change(dn, 'replace', {description : group.description}));
               updatedFields.push('Beschreibung');
             }
-            return Promise.all(actions);            
+
+            if(group.member != false) {
+              var diff = false;
+              var member = JSON.parse(group.member);
+              oldGroup.member.forEach(u => {
+              	diff = diff || !member.includes(u);
+              })
+              member.forEach(u => {
+              	diff = diff || !oldGroup.member.includes(u);
+              })
+              if (diff) {
+              	actions.push(ldaphelper.change(dn, 'replace', {member : member}));
+              	updatedFields.push('Mitglieder');
+              }
+
+            }
+            return Promise.all(actions);
           })
       })
       .then(() => {
@@ -402,10 +417,10 @@ var removeGroup = function(group) {
     }
     ldaphelper.remove(group.dn)
       .then(() => {
-        resolve({status: true, message: 'LDAP: Gruppe gelöscht: ' + group.dn});  
+        resolve({status: true, message: 'LDAP: Gruppe gelöscht: ' + group.dn});
       })
       .catch((error) => {
-        resolve({status: false, message: 'LDAP: Fehler beim Löschen der Gruppe ' + group.dn + ': ' + error});  
+        resolve({status: false, message: 'LDAP: Fehler beim Löschen der Gruppe ' + group.dn + ': ' + error});
       });
   });
 };

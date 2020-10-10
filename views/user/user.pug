@@ -1,3 +1,36 @@
+mixin user_table(users)
+  table.table.datatable(id=attributes.id || 'usertable')
+    thead
+      tr
+        th.col-md-3 ID
+        th.col-md-3 Name
+        th.col-md-2 Zugehörigkeit
+        th.col-md-2 Ort
+        if (attributes.editActions || attributes.addMemberAction || attributes.removeMemberAction)
+          th.col-md-2.text-right(data-orderable="false") Aktionen
+        th.hidden DN
+    tbody
+      each user in users
+        if (user.uid)
+          tr
+            td= user.uid
+            td= user.cn
+            td= user.title
+            td= user.l
+            if (attributes.editActions || attributes.addMemberAction || attributes.removeMemberAction)
+              td.text-right
+                if attributes.editActions
+                  if currentUser.isAdmin
+                    a.btn.btn-default.btn-sm(href='/user/edit/'+user.dn) #[span.glyphicon.glyphicon-pencil]
+                  else if currentUser.isGroupAdmin
+                    a.btn.btn-default.btn-sm(href='/user/editgroups/'+user.dn) #[span.glyphicon.glyphicon-pencil]
+                  a.btn.btn-default.btn-sm.confirm(data-link='/user/delete/'+user.dn, data-confirmtext='Willst du Benutzer*in ' + user.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+                if attributes.addMemberAction
+                  a.btn.btn-default.btn-sm.add-member(data-dn=user.dn) #[span.glyphicon.glyphicon-plus]
+                if attributes.removeMemberAction
+                  a.btn.btn-default.btn-sm.remove-member(data-dn=user.dn) #[span.glyphicon.glyphicon-minus]                  
+            td.hidden.dn= user.dn
+
 mixin user_form_textinput(type, label, icon, id, value, required, placeholder, helpText, pattern, maxlength, token)
   .form-group(class=(required?"required":""))
     label.control-label.col-md-4(for=id)=label

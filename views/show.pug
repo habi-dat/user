@@ -1,5 +1,6 @@
 extends layout
 include various
+include user/user
 
 block content
     +notification(notification, message, responses)
@@ -17,30 +18,7 @@ block content
                   span.glyphicon.glyphicon-envelope
 
           .panel-body
-            table.table.datatable(id='usertable')
-              thead
-                tr
-                  th.col-md-3 ID
-                  th.col-md-3 Name
-                  th.col-md-2 Zugehörigkeit
-                  th.col-md-2 Ort
-                  th.col-md-2.text-right(data-orderable="false") Aktionen
-                  th.hidden DN
-              tbody
-                each user in users
-                  if (user.uid)
-                    tr
-                      td= user.uid
-                      td= user.cn
-                      td= user.title
-                      td= user.l
-                      td.text-right
-                        if currentUser.isAdmin
-                          a.btn.btn-default.btn-sm(href='/user/edit/'+user.dn) #[span.glyphicon.glyphicon-pencil]
-                        else if currentUser.isGroupAdmin
-                          a.btn.btn-default.btn-sm(href='/user/editgroups/'+user.dn) #[span.glyphicon.glyphicon-pencil]
-                        a.btn.btn-default.btn-sm.confirm(data-link='/user/delete/'+user.dn, data-confirmtext='Willst du Benutzer*in ' + user.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
-                      td.hidden.dn= user.dn
+            +user_table(users)(editActions=true)
       .col-md-5
         .panel.panel-default
           .panel-heading

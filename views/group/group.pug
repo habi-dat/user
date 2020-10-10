@@ -1,7 +1,10 @@
+include ../user/user
+
 mixin group_form(action, group)
-  form.group-from.form-horizontal.checkbox-form.validation-form(action=action method="post" role="form")
+  form.group-from.form-horizontal.validation-form(action=action method="post" role="form")
         if group && group.dn
           input.hidden(name="dn", value=group.dn)
+        input.hidden(id="group_member" name="member", value=group?group.member:"[]")
         legend Gruppe #{(group && action=="/group/edit"? "Bearbeiten": "Anlegen")}
         .col-md-6
           .form-group.required
@@ -27,6 +30,19 @@ mixin group_form(action, group)
                 span.input-group-addon
                   i.glyphicon.glyphicon-tag
                 textarea.form-control(type="text" id="description" name="description" rows="5" required data-msg="Darf nicht leer sein")=group?group.description:undefined
+        .col-md-6
+          .panel.panel-default
+            .panel-heading
+              h2.panel-title Bestehende Mitglieder
+            .panel-body
+              +user_table(users)(id="member_table" removeMemberAction=true)
+        .col-md-6
+          .panel.panel-default
+            .panel-heading
+              h2.panel-title Mitglieder hinzufügen
+            .panel-body
+              +user_table(users)(id="user_table" addMemberAction=true)
+
         .form-group
           .col-md-12.text-right
             button(type='submit' class='btn btn-primary') Speichern

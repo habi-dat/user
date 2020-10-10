@@ -566,13 +566,14 @@ router.get('/user/delete/:id', isLoggedInGroupAdmin, function(req, res) {
 });
 
 router.get('/group/edit/:id', isLoggedInAdmin, function(req, res) {
-    ldaphelper.fetchObject(req.params.id)
-        .then(group => render(req, res, 'group/edit', 'Gruppe bearbeiten', {group: retrieveSessionData(req) || group}))
+    Promise.join(ldaphelper.fetchUsers(), ldaphelper.fetchObject(req.params.id),
+        (users, group) => render(req, res, 'group/edit', 'Gruppe bearbeiten', {users: users, group: retrieveSessionData(req) || group}))
         .catch(error => errorPage(req, res, error));
 });
 
 router.get('/group/add', isLoggedInAdmin, function(req, res) {
-    render(req, res, 'group/add', 'Gruppe erstellen', {group: retrieveSessionData(req)})
+	ldaphelper.fetchUsers()
+		.then(users => render(req, res, 'group/add', 'Gruppe erstellen', {users: users, group: retrieveSessionData(req)}))
         .catch(error => errorPage(req, res, error));
 });
 
