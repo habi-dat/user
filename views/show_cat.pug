@@ -7,7 +7,7 @@ block content
       .col-md-6
         .panel.panel-default
           .panel-heading
-            h2.panel-title Gruppen #[a.btn.btn-default.btn-sm(href='/group/add') #[span.glyphicon.glyphicon-plus]]
+            h2.panel-title Gruppen #[a.btn.btn-default.btn-sm(href='/group/add' title="Gruppe erstellen") #[span.glyphicon.glyphicon-plus]]
           .panel-body
             table.table.datatable(id='grouptable_cat')
               thead
@@ -24,14 +24,14 @@ block content
                       td= group.o                      
                       td= group.description                      
                       td.text-right
-                          a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn) #[span.glyphicon.glyphicon-pencil]
-                          a.btn.btn-default.btn-sm.confirm(data-link='/group/delete/'+group.dn, data-confirmtext='Willst du die Gruppe ' + group.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+                          a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn title='Gruppe bearbeiten') #[span.glyphicon.glyphicon-pencil]
+                          a.btn.btn-default.btn-sm.confirm(data-link='/group/delete/'+group.dn title='Gruppe löschen' data-confirmtext='Willst du die Gruppe ' + group.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
       .col-md-6
         .panel.panel-default
           .panel-heading
-            h2.panel-title Discourse Kategorien #[a.btn.btn-default.btn-sm(href='/cat/add') #[span.glyphicon.glyphicon-plus]]
+            h2.panel-title Discourse Kategorien #[a.btn.btn-default.btn-sm(href='/cat/add' title="Kategorie erstellen") #[span.glyphicon.glyphicon-plus]]
           .panel-body
-            table.table(id='cattable')
+            table.table.datatable(id='cattable')
               thead
                 tr
                   th.col-md-9 Name
@@ -48,19 +48,13 @@ block content
                           span.glyphicon.glyphicon-plus.glyphicon-hide                                             
                         raw &nbsp; #{category.name}
                       td.text-right
-                          a.btn.btn-default.btn-sm(href='/cat/edit/'+category.id) #[span.glyphicon.glyphicon-pencil]
-                          a.btn.btn-default.btn-sm.confirm(data-link='/cat/delete/'+category.id, data-confirmtext='Willst du die Kategorie ' + category.name + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
-                      td.hidden.groups 
-                        if (category.groups && category.groups instanceof Array)
-                          each group in category.groups
-                            .groupname= group 
+                          a.btn.btn-default.btn-sm(href='/cat/edit/'+category.id title='Kategorie bearbeiten') #[span.glyphicon.glyphicon-pencil]
+                          a.btn.btn-default.btn-sm.confirm(data-link='/cat/delete/'+category.id  title='Kategorie löschen' data-confirmtext='Willst du die Kategorie ' + category.name + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+                      td.hidden.groups=category.groups
                     each subCategory in category.subCategories  
                       tr.hidden.sub-category
                         td(style="padding-left:50px;")= subCategory.name
                         td.text-right
-                            a.btn.btn-default.btn-sm(href='/cat/edit/'+subCategory.id) #[span.glyphicon.glyphicon-pencil]
-                            a.btn.btn-default.btn-sm.confirm(data-link='/cat/delete/'+subCategory.id, data-confirmtext='Willst du die Kategorie ' + subCategory.name + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
-                        td.hidden.groups 
-                          if (subCategory.groups && subCategory.groups instanceof Array)
-                            each group in subCategory.groups
-                              .groupname= group
+                            a.btn.btn-default.btn-sm(href='/cat/edit/'+subCategory.id title='Kategorie bearbeiten') #[span.glyphicon.glyphicon-pencil]
+                            a.btn.btn-default.btn-sm.confirm(data-link='/cat/delete/'+subCategory.id title='Kategorie löschen' data-confirmtext='Willst du die Kategorie ' + subCategory.name + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+                        td.hidden.groups=subCategory.groups

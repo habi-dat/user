@@ -4,7 +4,7 @@ mixin group_form(action, group)
   form.group-from.form-horizontal.validation-form(action=action method="post" role="form")
         if group && group.dn
           input.hidden(name="dn", value=group.dn)
-        input.hidden(id="group_member" name="member", value=group?group.member:"[]")
+        input.hidden(id="group_member" name="member", value=group&&group.member?group.member:"[]")
         legend Gruppe #{(group && action=="/group/edit"? "Bearbeiten": "Anlegen")}
         .col-md-6
           .form-group.required

@@ -39,6 +39,6 @@ html
         +nav_item( "/email/templates" ) E-Mail Vorlagen
       if (currentUser.loggedIn)
         +nav_item( "/logout" ) Abmelden
-    .container.col-md-8.col-md-offset-2.col-sm-offset-0.col-xs-offset-0.col-xs-12.col-sm-12
+    .container.col-md-8.col-md-offset-2.col-sm-offset-0.col-xs-offset-0.col-xs-12.col-sm-12.hidden(id='topcontainer')
       block content
 

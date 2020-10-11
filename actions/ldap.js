@@ -385,13 +385,20 @@ var modifyGroup = function(group, currentUser) {
             if(group.member != false) {
               var diff = false;
               var member = JSON.parse(group.member);
-              oldGroup.member.forEach(u => {
-              	diff = diff || !member.includes(u);
-              })
+              console.log(member);
+              console.log('old', oldGroup.member);
+              if (oldGroup.member) {
+		          oldGroup.member.forEach(u => {
+		          	diff = diff || !member.includes(u);
+		          })
+              }
               member.forEach(u => {
               	diff = diff || !oldGroup.member.includes(u);
               })
               if (diff) {
+              	if (member.length == 0) {
+              		member = "";
+              	}
               	actions.push(ldaphelper.change(dn, 'replace', {member : member}));
               	updatedFields.push('Mitglieder');
               }

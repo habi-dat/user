@@ -31,6 +31,7 @@
       };
   }
 
+  // custom filters
   $.fn.dataTable.ext.search.push(
     function( settings, data, dataIndex ) {
     	if (settings.sInstance === 'member_table') {
@@ -39,6 +40,46 @@
     	} else if (settings.sInstance === 'user_table') {
     		var member = $('#group_member').val();
     		return !member.includes(data[5])
+    	} else if (settings.sInstance === 'grouptable_cat') {
+    		if ($('#cattable tbody tr.selected').length === 1) {
+    			if ($('#cattable tbody tr.selected td.groups').text().split(',').includes(data[0])) {
+    				return true;
+    			} else {
+    				return false;
+    			}
+  			} else {
+  				return true;
+  			}
+    	} else if (settings.sInstance === 'grouptable') {
+    		if ($('#usertable tbody tr.selected').length === 1) {
+    			if (data[4].includes($('#usertable tbody tr.selected td.dn').text())) {
+    				return true;
+    			} else {
+    				return false;
+    			}
+  			} else {
+  				return true;
+  			}
+    	} else if (settings.sInstance === 'usertable') {
+    		if ($('#grouptable tbody tr.selected').length === 1) {
+    			if ($('#grouptable tbody tr.selected td.member').text().includes(data[5])) {
+    				return true;
+    			} else {
+    				return false;
+    			}
+  			} else {
+  				return true;
+  			}
+    	} else if (settings.sInstance === 'cattable') {
+    		if ($('#grouptable_cat tbody tr.selected').length === 1) {
+    			if (data[2].split(',').includes($('#grouptable_cat tbody tr.selected td.groupcn').text())) {
+    				return true;
+    			} else {
+    				return false;
+    			}
+  			} else {
+  				return true;
+  			}
     	} else {
     		return true;
     	}
@@ -49,15 +90,18 @@
 
   $(document).ready(function(){
     $('.datatable').each(function() {
-    	if (['user_table','member_table'].includes($(this).attr('id'))) {
+    	if (['cattable'].includes($(this).attr('id'))) {
 	    	tables[$(this).attr('id')] = $(this).DataTable( {
-		        language: german()
+		        language: german(),
+		        "info":           false,
+		        "paging":         false,
+		        "order": []
 		    } );
     	} else {
 	    	tables[$(this).attr('id')] = $(this).DataTable( {
-		        "info":           false,
-		        "paginate":     false,
-		        language: german()
+		        pageLength:     20,
+		        language: german(),
+		        lengthMenu: [ 10, 20, 50, 75, 100 ]
 		    } );
 
     	}
@@ -90,88 +134,71 @@
     $('#usertable tbody').on( 'click', 'tr', function () {
     if ( $(this).hasClass('selected') ) {
         $(this).removeClass('selected');
-        $('#grouptable tbody tr').removeClass('hidden');
+        if (tables.grouptable) {
+        	tables.grouptable.draw();
+        }
         $('#grouptable tbody tr td:first-child .priv-icon').remove();
     }
     else {
         $('#usertable tbody tr.selected').removeClass('selected');
         $(this).addClass('selected');
-        var dn = $(this).find('.dn').text();
-        $('#grouptable tbody tr').addClass('hidden');
+        if (tables.grouptable) {
+        	tables.grouptable.draw();
+        }
         $('#grouptable tbody tr td:first-child .priv-icon').remove();
-        $('#grouptable tbody tr td .admindn').each(function() {
-          if ($(this).text() == dn) {
-            $(this).parent().parent().removeClass('hidden');
-            $(this).parent().parent().children().first().prepend('<span class="priv-icon glyphicon glyphicon-edit" style="color:green;"></span>');
-          }
-        });
-        $('#grouptable tbody tr td .memberdn').each(function() {
-          if ($(this).parent().parent().hasClass('hidden') && $(this).text() == dn) {
-            $(this).parent().parent().removeClass('hidden');
-            $(this).parent().parent().children().first().prepend('<span class="priv-icon glyphicon glyphicon-check" style="color:blue;"></span>');
+        var dn = $(this).find('.dn').text();
+		$('#grouptable tbody tr').each(function() {
+          if ($(this).find('.owner').text().includes(dn)) {
+            $(this).children().first().prepend('<span class="priv-icon glyphicon glyphicon-edit" style="color:green;"></span>');
+          } else {
+          	$(this).children().first().prepend('<span class="priv-icon glyphicon glyphicon-check" style="color:blue;"></span>');
           }
         });
     }
     } );
     $('#grouptable tbody').on( 'click', 'tr', function () {
-    if ( $(this).hasClass('selected') ) {
-        $(this).removeClass('selected');
-        $('#usertable tbody tr').removeClass('hidden');
-        $('#usertable tbody tr td:first-child .priv-icon').remove();
-    }
-    else {
-        $('#grouptable tbody tr.selected').removeClass('selected');
-        $(this).addClass('selected');
-        $('#usertable tbody tr').addClass('hidden');
-        $('#usertable tbody tr td:first-child .priv-icon').remove();
-        $(this).find('.admindn').each(function() {
-          var dn = $(this).text();
-          $('#usertable tbody tr .dn').each(function() {
-            if($(this).text() == dn) {
-              $(this).parent().removeClass('hidden');
-              $(this).parent().children().first().prepend('<span class="priv-icon glyphicon glyphicon-edit" style="color:green;"></span>');
-            }
-          });
-        });
-        $(this).find('.memberdn').each(function() {
-          var dn = $(this).text();
-          $('#usertable tbody tr .dn').each(function() {
-            if($(this).parent().hasClass('hidden') && $(this).text() == dn) {
-              $(this).parent().removeClass('hidden');
-              $(this).parent().children().first().prepend('<span class="priv-icon glyphicon glyphicon-check" style="color:blue;"></span>');
-            }
-          });
-        });
-    }
+	    if ( $(this).hasClass('selected') ) {
+	        $(this).removeClass('selected');
+	        if (tables.usertable) {
+	        	tables.usertable.draw();
+	        }
+	        $('#usertable tbody tr td:first-child .priv-icon').remove();
+	    }
+	    else {
+	        $('#grouptable tbody tr.selected').removeClass('selected');
+	        $(this).addClass('selected');
+	        if (tables.usertable) {
+	        	tables.usertable.draw();
+	        }
+	        $('#usertable tbody tr td:first-child .priv-icon').remove();
+	        var owner = $(this).find('.owner').text();
+	        var member = $(this).find('.member').text();
+			$('#usertable tbody tr').each(function() {
+	          if (owner.includes($(this).find('.dn').text())) {
+	            $(this).children().first().prepend('<span class="priv-icon glyphicon glyphicon-edit" style="color:green;"></span>');
+	          } else {
+	          	$(this).children().first().prepend('<span class="priv-icon glyphicon glyphicon-check" style="color:blue;"></span>');
+	          }
+	        });
+	    }
     } );
 
     $('#grouptable_cat tbody').on( 'click', 'tr', function () {
-    if ( $(this).hasClass('selected') ) {
-        $(this).removeClass('selected');
-        $('#catable tbody tr').removeClass('hidden');
-    }
-    else {
-        $('#grouptable_cat tbody tr.selected').removeClass('selected');
-        $(this).addClass('selected');
-        var cn = $(this).find('.groupcn').text();
-        $('#cattable tbody tr').addClass('hidden');
-        $('#cattable tbody tr td .groupname').each(function() {
-          if ($(this).text() == cn) {
-            $(this).parent().parent().removeClass('hidden');
-          }
-        });
-    }
+	    if ( $(this).hasClass('selected') ) {
+	        $(this).removeClass('selected');
+	        if (tables.cattable) {
+	        	tables.cattable.draw();
+	        }
+	    }
+	    else {
+	        $('#grouptable_cat tbody tr.selected').removeClass('selected');
+	        $(this).addClass('selected');
+	        if (tables.cattable) {
+	        	tables.cattable.draw();
+	        }
+	    }
     } );
 
-
-    var cat_table = $('#cattable').dataTable( {
-        "info":           false,
-        "paging":         false,
-        "order": [],
-        "oLanguage": {
-          "sSearch": "Suche: "
-        }
-    });
 
     $('#cattable tbody').on('click', 'span.subcategories-button', function () {
         var tr = $(this).closest('tr').next('tr');
@@ -195,30 +222,34 @@
         };
 
         switchRow(tr);
+        return false;
     } );
 
     $('#cattable tbody').on( 'click', 'tr', function () {
-    if ( $(this).hasClass('selected') ) {
-        $(this).removeClass('selected');
-        $('#grouptable_cat tbody tr').removeClass('hidden');
-    }
-    else {
-        $('#cattable tbody tr.selected').removeClass('selected');
-        $(this).addClass('selected');
-        $('#grouptable_cat tbody tr').addClass('hidden');
-        $(this).find('.groupname').each(function() {
-          var cn = $(this).text();
-          $('#grouptable_cat tbody tr .groupcn').each(function() {
-            if($(this).text() == cn) {
-              $(this).parent().removeClass('hidden');
-            }
-          });
-        });
-    }
+	    if ( $(this).hasClass('selected') ) {
+	        $(this).removeClass('selected');
+	        //$('#grouptable_cat tbody tr').removeClass('hidden');
+	        if (tables.grouptable_cat) {
+	        	tables.grouptable_cat.draw();
+	        }
+	    }
+	    else {
+	        $('#cattable tbody tr.selected').removeClass('selected');
+	        $(this).addClass('selected');
+	        if (tables.grouptable_cat) {
+	        	tables.grouptable_cat.draw();
+	        }
+	        /*$('#grouptable_cat tbody tr').addClass('hidden');
+	        $(this).find('.groupname').each(function() {
+	          var cn = $(this).text();
+	          $('#grouptable_cat tbody tr .groupcn').each(function() {
+	            if($(this).text() == cn) {
+	              $(this).parent().removeClass('hidden');
+	            }
+	          });
+	        });*/
+	    }
     } );
-  });
-
-  $(document).ready(function () {
 
     $('#cn').change((event) => {
         if ($('#cn').attr('previous-value') == $('#cn').val()) {
@@ -742,6 +773,7 @@
     	tables.user_table.draw()
     });
 
+    $('#topcontainer').removeClass('hidden');
 
 });
 

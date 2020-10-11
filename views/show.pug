@@ -26,7 +26,7 @@ block content
               span Gruppen 
               if (currentUser.isAdmin)
                 span
-                  a.btn.btn-default.btn-sm(href='/group/add') 
+                  a.btn.btn-default.btn-sm(href='/group/add' title="Gruppe erstellen") 
                     span.glyphicon.glyphicon-plus
           .panel-body
             table.table.datatable(id='grouptable')
@@ -37,8 +37,8 @@ block content
                   th.col-md-4 Beschreibung
                   if currentUser.isAdmin
                     th.col-md-2.text-right(data-orderable="false") Aktionen
-                  th.hidden Members
-                  th.hidden Admins
+                  th.hidden(data-name="member") Members
+                  th.hidden(data-name="owner") Admins
               tbody
                 each group in groups
                   if (group.cn)
@@ -48,17 +48,7 @@ block content
                       td= group.description
                       if currentUser.isAdmin
                         td.text-right
-                          a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn) #[span.glyphicon.glyphicon-pencil]
-                          a.btn.btn-default.btn-sm.confirm(data-link='/group/delete/'+group.dn, data-confirmtext='Willst du die Gruppe ' + group.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
-                      td.hidden.dn 
-                        if (group.member && group.member instanceof Array)
-                          each member in group.member
-                            .memberdn= member
-                        else if (group.member)
-                            .memberdn= group.member
-                      td.hidden.dn 
-                        if (group.owner && group.owner instanceof Array)
-                          each admin in group.owner
-                            .admindn= admin
-                        else if (group.owner)
-                            .admindn= group.owner
+                          a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn title='Gruppe bearbeiten') #[span.glyphicon.glyphicon-pencil]
+                          a.btn.btn-default.btn-sm.confirm(data-link='/group/delete/'+group.dn title="Gruppe löschen" data-confirmtext='Willst du die Gruppe ' + group.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+                      td.hidden.member=group.member 
+                      td.hidden.owner=group.owner

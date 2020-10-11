@@ -259,3 +259,6 @@ body{margin-top:0px;}
   background: #da4932 !important;
 }
 
+.subcategories-button:hover {
+  cursor: pointer;
+}
