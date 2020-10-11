@@ -199,6 +199,22 @@ exports.fetchUsers = function() {
     });
 };
 
+exports.dnToUid = function(dns) {
+	return exports.fetchUsers()
+		.then(users => {
+			uids = [];
+			dns.forEach(dn => {
+				var user = users.find(user => {
+					return user.dn.toLowerCase() === dn.toLowerCase();
+				})
+				if (user) {
+					uids.push(user.uid);
+				}
+			});
+			return uids;
+		})
+}
+
 exports.fetchObject = function(dn) {
     return new Promise((resolve, reject) => {
 

@@ -388,9 +388,13 @@ var modifyGroup = function(group, currentUser) {
               console.log(member);
               console.log('old', oldGroup.member);
               if (oldGroup.member) {
-		          oldGroup.member.forEach(u => {
-		          	diff = diff || !member.includes(u);
-		          })
+                 	if (oldGroup.member instanceof Array) {
+						oldGroup.member.forEach(u => {
+				          	diff = diff || !member.includes(u);
+				        })
+                 	} else {
+                 		diff = diff || !member.includes(oldGroup.member);
+                 	}
               }
               member.forEach(u => {
               	diff = diff || !oldGroup.member.includes(u);

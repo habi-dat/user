@@ -104,6 +104,37 @@ exports.getCategories = function() {
         });
 };
 
+exports.getGroupMembers = function(groupName) {
+	return exports.get('groups/' + groupName + '/members.json?limit=1000')
+		.then(result => {
+			console.log('result', result);
+			return result.members.map(member => {
+				return member.username;
+			});
+		})
+}
+
+exports.addGroupMembers = function(groupId, newMembers) {
+	return Promise.resolve()
+		.then(() => {
+			if (newMembers.length > 0) {
+				return exports.put('groups/' + groupId + '/members.json', {usernames: newMembers.join(',')});
+			} else {
+				return;
+			}
+		});
+}
+
+exports.removeGroupMembers = function(groupId, members) {
+	return Promise.resolve()
+		.then(() => {
+			if (members.length > 0) {
+				return exports.del('groups/' + groupId + '/members.json', {usernames: members.join(',')});
+			} else {
+				return;
+			}
+		});
+}
 
 exports.getParentCategories = function(done) {
     return exports.get('categories_and_latest')

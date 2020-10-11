@@ -1,6 +1,7 @@
-/*jshint esversion: 6 */ 
+/*jshint esversion: 6 */
 var config    = require('../config/config.json');
 var discourse = require('../utils/discoursehelper');
+var ldaphelper = require('../utils/ldaphelper');
 var Promise = require("bluebird");
 
 var fs = require('fs');
@@ -15,11 +16,11 @@ var getUser = function(uid, fetchEmail = true) {
         return discourse.get('users/'+ user.username + '/emails.json', {context: 'admin/users/'+user.id+'/'+user.username})
           .then((emailObject) => {
             response.user.email = emailObject.email;
-            return response.user;                
+            return response.user;
           });
       } else {
         return response.user;
-      }          
+      }
     });
 };
 
@@ -62,7 +63,7 @@ var removeUser = function(user, currentUser) {
         .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' gelöscht'}; })
         .catch(error => discourse.put('admin/users/' + discourseUser.id + '/suspend', {suspend_until: '3018-01-01', reason: 'Gelöscht durch User Tool'})
           .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht gelöscht werden und wurde deshalb deaktiviert'};})
-          .catch(error => {return {status: false, message: 'DISCOURSE: Fehler beim Löschen oder Deaktivieren der*des Benutzer*in ' + user.uid + ': ' +  error}; })        
+          .catch(error => {return {status: false, message: 'DISCOURSE: Fehler beim Löschen oder Deaktivieren der*des Benutzer*in ' + user.uid + ': ' +  error}; })
         )
       )
       .catch(error => {return {status: true, message: 'DISCOURSE: Überspringe Schritt, Benutzer*in ' + user.uid + ' nicht gefunden' }; });
@@ -81,34 +82,52 @@ var removeGroup = function(group, currentUser) {
 };
 
 var createGroup = function(group, currentUser) {
-  return discourse.post('admin/groups', {
-        'group[alias_level]': 3,
-        'group[automatic]': false,
-        'group[automatic_membership_email_domains]': "",
-        'group[automatic_membership_retroactive]': false,
-        'group[mentionable_level]': 3,
-        'group[messageable_level]': 3,
-        'group[grant_trust_level]': 0,
-        'group[name]': group.cn,
-        'group[full_name]': group.o,
-        'group[primary_group]': false,
-        'group[title]': "",
-        'group[visible]': true,
-        'group[bio_raw]': group.description
-    })
-    .then(() => { return {status : true, message: 'DISCOURSE: Gruppe ' + group.cn + ' erstellt'}; })
-    .catch(error => { return {status : false, message: 'DISCOURSE: Fehler beim Erstellen der Gruppe ' + group.cn + ': ' + error}; });
+	return ldaphelper.dnToUid(JSON.parse(group.member))
+		.then(uids => discourse.post('admin/groups', {
+	        'group[alias_level]': 3,
+	        'group[automatic]': false,
+	        'group[automatic_membership_email_domains]': "",
+	        'group[automatic_membership_retroactive]': false,
+	        'group[mentionable_level]': 3,
+	        'group[messageable_level]': 3,
+	        'group[grant_trust_level]': 0,
+	        'group[name]': group.cn,
+	        'group[full_name]': group.o,
+	        'group[primary_group]': false,
+	        'group[title]': "",
+	        'group[visible]': true,
+	        'group[bio_raw]': group.description,
+	        'group[usernames]': uids.join(',')
+	    }))
+	    .then(() => { return {status : true, message: 'DISCOURSE: Gruppe ' + group.cn + ' erstellt'}; })
+	    .catch(error => { return {status : false, message: 'DISCOURSE: Fehler beim Erstellen der Gruppe ' + group.cn + ': ' + error}; });
 };
 
 var modifyGroup = function(group, currentUser) {
-  return getNameFromDN(group.dn)
-    .then(name => getGroupId(name)
-      .then(id => discourse.put('groups/' + id + '.json', {
-        'group[name]': group.cn,
-        'group[full_name]': group.o,
-        'group[bio_raw]': group.description}))
-      .then(() => { return {status: true, message: 'DISCOURSE: Gruppe upgedated'}; })
-      .catch(error => { return {status: false, message: 'DISCOURSE: Fehler beim Update der Gruppe: ' + error}; })
+  	return getNameFromDN(group.dn)
+    	.then(name => getGroupId(name)
+		      	.then(id => {
+		      		return discourse.put('groups/' + id + '.json', {
+				        	'group[name]': group.cn,
+				        	'group[full_name]': group.o,
+				        	'group[bio_raw]': group.description
+			      		})
+			      		.then(() => Promise.join(ldaphelper.dnToUid(JSON.parse(group.member)), discourse.getGroupMembers(name),
+			      			(newMembers, oldMembers) => {
+			      				addMembers = newMembers.filter(member => {
+			      					return !oldMembers.includes(member);
+			      				})
+			      				console.log('oldMembers: ', oldMembers);
+			      				removeMembers = oldMembers.filter(member => {
+			      					return !newMembers.includes(member);
+			      				})
+			      				return discourse.addGroupMembers(id, addMembers)
+			      					.then(discourse.removeGroupMembers(id, removeMembers));
+			      			})
+			      		);
+			    })
+		      	.then(() => { return {status: true, message: 'DISCOURSE: Gruppe upgedated'}; })
+		      	.catch(error => { return {status: false, message: 'DISCOURSE: Fehler beim Update der Gruppe: ' + error}; })
     )
     .catch(error => { return {status: true, message: 'DISCOURSE: Gruppe nicht gefunden, überspringe Schritt'}; });
 };
@@ -237,7 +256,7 @@ exports.register = function(hooks) {
 
     hooks.category.create.on.push(createCategory);
     hooks.category.modify.on.push(modifyCategory);
-    hooks.category.remove.on.push(removeCategory);    
+    hooks.category.remove.on.push(removeCategory);
   }
 
 };
