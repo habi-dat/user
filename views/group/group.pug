@@ -33,13 +33,21 @@ mixin group_form(action, group)
         .col-md-6
           .panel.panel-default
             .panel-heading
-              h2.panel-title Bestehende Mitglieder
+              h2.panel-title 
+                span Bestehende Mitglieder 
+                span
+                  a.btn.btn-default.btn-sm.remove-all-members(href='#' title='Alle Mitglieder entfernen') 
+                    span.glyphicon.glyphicon-minus
             .panel-body
               +user_table(users)(id="member_table" removeMemberAction=true)
         .col-md-6
           .panel.panel-default
             .panel-heading
-              h2.panel-title Mitglieder hinzufügen
+              h2.panel-title
+                span Mitglieder hinzufügen 
+                span
+                  a.btn.btn-default.btn-sm.add-all-members(href='#' title='Alle Benutzer*innen hinzufügen') 
+                    span.glyphicon.glyphicon-plus
             .panel-body
               +user_table(users)(id="user_table" addMemberAction=true)
 
