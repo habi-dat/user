@@ -736,8 +736,7 @@
         $('[data-toggle="tooltip"]').tooltip();
     });
 
-    $('a.confirm').click(function() {
-
+    $(document).on("click", "a.confirm", function (e) {
         var link = $(this).data('link');
 
         bootbox.confirm({

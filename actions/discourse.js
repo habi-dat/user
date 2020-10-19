@@ -9,12 +9,12 @@ var fs = require('fs');
 // parameter uid (LDAP uid)
 // resolves with discourse user
 // rejects with error message if user is not found
-var getUser = function(uid, fetchEmail = true) {
+var getUser = function(uid, fetchEmail = false) {
   return discourse.get('u/by-external/'+ uid + '.json')
     .then(response => {
       if (fetchEmail) {
-        return discourse.get('users/'+ user.username + '/emails.json', {context: 'admin/users/'+user.id+'/'+user.username})
-          .then((emailObject) => {
+        return discourse.get('users/'+ response.user.username + '/emails.json', {context: 'admin/users/'+response.user.id+'/'+response.user.username})
+          .then(emailObject => {
             response.user.email = emailObject.email;
             return response.user;
           });
@@ -49,8 +49,44 @@ var getNameFromDNSync = function(dn) {
 var modifyUser = function(user, currentUser) {
   return getUser(user.uid, false)
     .then(discourseUser => discourse.post('admin/users/' + discourseUser.id + '/log_out', {})
-      .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' ausgeloggt'}; })
-      .catch(error => { return {status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht ausgeloggt werden: ' + error};})
+    	.then(() => {
+    		if (user.member != false) {
+	    		return ldaphelper.fetchUser(user.dn)
+	    			.then(ldapUser => {
+	    			    // map to group cn
+	    				var newGroups = ldapUser.member.map(group => { return ldaphelper.dnToCn(group);});
+	    				// filter discourse internal groups
+	    				var oldGroupsFiltered = discourseUser.groups.filter(group => {return !group.automatic;});
+	    				// map to group name
+						var oldGroups = oldGroupsFiltered.map(group => { return group.name });
+						console.log('oldmembers: ', oldGroups)
+						console.log('newmembers: ', newGroups)
+
+
+	      				addGroups = newGroups.filter(member => {
+	      					return !oldGroups.includes(member);
+	      				})
+	      				removeGroups = oldGroups.filter(member => {
+	      					return !newGroups.includes(member);
+	      				})
+	      				return Promise.all(addGroups.map(addGroup => {
+		      					return getGroupId(addGroup)
+		      						.then(addGroupId => discourse.addGroupMembers(addGroupId, [user.uid]))
+		      						.catch(error => { return;});
+	      					}))
+	      					.then(() => Promise.add(removeGroups.map(removeGroup => {
+								return getGroupId(removeGroup)
+		      						.then(removeGroupId => discourse.removeGroupMembers(removeGroupId, [user.uid]))
+		      						.catch(error => { return;});
+	      					})))
+
+	    			})
+   					.then(() => { return {status: true, message: 'DISCOURSE: Gruppen für Benutzer*in ' + user.uid + ' upgedated und Benutzer*in ausgeloggt'};})
+	    	} else {
+				return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' ausgeloggt'};
+	    	}
+    	})
+      	.catch(error => { return {status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht ausgeloggt werden: ' + error};})
     )
     .catch(error => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' nicht gefunden, Schritt wird übersprungen'};});
 
@@ -58,7 +94,7 @@ var modifyUser = function(user, currentUser) {
 
 
 var removeUser = function(user, currentUser) {
-  return getUser(user.uid)
+  return getUser(user.uid, false)
       .then(discourseUser => discourse.del('admin/users/' + discourseUser.id + '.json', {context: '/admin/users/' + discourseUser.username})
         .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' gelöscht'}; })
         .catch(error => discourse.put('admin/users/' + discourseUser.id + '/suspend', {suspend_until: '3018-01-01', reason: 'Gelöscht durch User Tool'})
@@ -66,7 +102,7 @@ var removeUser = function(user, currentUser) {
           .catch(error => {return {status: false, message: 'DISCOURSE: Fehler beim Löschen oder Deaktivieren der*des Benutzer*in ' + user.uid + ': ' +  error}; })
         )
       )
-      .catch(error => {return {status: true, message: 'DISCOURSE: Überspringe Schritt, Benutzer*in ' + user.uid + ' nicht gefunden' }; });
+      .catch(error => {console.log(error); return {status: true, message: 'DISCOURSE: Überspringe Schritt, Benutzer*in ' + user.uid + ' nicht gefunden' }; });
 };
 
 
@@ -117,7 +153,6 @@ var modifyGroup = function(group, currentUser) {
 			      				addMembers = newMembers.filter(member => {
 			      					return !oldMembers.includes(member);
 			      				})
-			      				console.log('oldMembers: ', oldMembers);
 			      				removeMembers = oldMembers.filter(member => {
 			      					return !newMembers.includes(member);
 			      				})
