@@ -74,7 +74,7 @@ var modifyUser = function(user, currentUser) {
 		      						.then(addGroupId => discourse.addGroupMembers(addGroupId, [user.uid]))
 		      						.catch(error => { return;});
 	      					}))
-	      					.then(() => Promise.add(removeGroups.map(removeGroup => {
+	      					.then(() => Promise.all(removeGroups.map(removeGroup => {
 								return getGroupId(removeGroup)
 		      						.then(removeGroupId => discourse.removeGroupMembers(removeGroupId, [user.uid]))
 		      						.catch(error => { return;});
