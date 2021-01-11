@@ -10,7 +10,10 @@ var fs = require('fs');
 // resolves with discourse user
 // rejects with error message if user is not found
 var getUser = function(uid, fetchEmail = false) {
-  return discourse.get('u/by-external/'+ uid + '.json')
+  return discourse.get('users/'+ uid + '.json')
+    .catch(error => {
+      return discourse.get('u/by-external/'+ uid + '.json')
+    })
     .then(response => {
       if (fetchEmail) {
         return discourse.get('users/'+ response.user.username + '/emails.json', {context: 'admin/users/'+response.user.id+'/'+response.user.username})
@@ -21,7 +24,7 @@ var getUser = function(uid, fetchEmail = false) {
       } else {
         return response.user;
       }
-    });
+    })
 };
 
 var getGroupId = function(name) {
@@ -45,6 +48,21 @@ var getNameFromDN = function(dn) {
 var getNameFromDNSync = function(dn) {
   return dn.split(',')[0].replace('cn=', '');
 };
+
+
+var createUser = function(user, currentUser) {
+  return discourse.createUser(user.cn, user.mail, user.password, user.uid, user.ou)
+    .then(discourseUser => {
+      var groups = user.member.map(group => { return ldaphelper.dnToCn(group);});
+      return Promise.all(groups.map(group => {
+          return getGroupId(group)
+            .then(addGroupId => discourse.addGroupMembers(addGroupId, [user.uid]))
+            .catch(error => { return;});
+        }))      
+    })
+    .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' erstellt und zu Gruppen ' + user.member.join(',') + ' hinzugefügt'};})
+    .catch(error =>  { return {status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht erstellt werden: ' + error};})
+}
 
 var modifyUser = function(user, currentUser) {
   return getUser(user.uid, false)
@@ -95,7 +113,7 @@ var modifyUser = function(user, currentUser) {
 
 var removeUser = function(user, currentUser) {
   return getUser(user.uid, false)
-      .then(discourseUser => discourse.del('admin/users/' + discourseUser.id + '.json', {context: '/admin/users/' + discourseUser.username})
+      .then(discourseUser => discourse.del('admin/users/' + discourseUser.id + '.json', {context: '/admin/users/' + discourseUser.id + '/' + discourseUser.username})
         .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' gelöscht'}; })
         .catch(error => discourse.put('admin/users/' + discourseUser.id + '/suspend', {suspend_until: '3018-01-01', reason: 'Gelöscht durch User Tool'})
           .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht gelöscht werden und wurde deshalb deaktiviert'};})
@@ -282,6 +300,7 @@ exports.register = function(hooks) {
   // disable user creation since it is now done automatically on first login
   //hooks.user.create.discourse.post.push(createUser);
   if (config.settings.general.modules.includes('discourse') && config.discourse.APIURL && config.discourse.APIKEY && config.discourse.USERNAME) {
+    hooks.user.create.post.push(createUser);
     hooks.user.modify.post.push(modifyUser);
     hooks.user.remove.post.push(removeUser);
 

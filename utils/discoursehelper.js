@@ -45,6 +45,22 @@ Array.prototype.insensitiveIndexOf = function (searchElement, fromIndex) {
     }).indexOf(searchElement.toLowerCase(), fromIndex);
 };
 
+exports.createUser = function(name, email, password, username, title) {
+    return exports.post('users', {name: name, email: email, password: password, username: username, active: true, approved: true})
+        .then(response => {
+            if (!response.active || !response.success) {
+                throw "Benutzer*in erstellt, konnte aber nicht aktiviert werden: " + response.message;
+            } else {
+                return exports.put('u/'+ username + '.json', {title: title})
+                    .then(response => {
+                        return response.user;
+                    })
+            }
+
+        });
+};
+
+
 exports.getCategory = function(id) {
     return exports.get('c/' + id + "/show.json")
         .then(categoryObject => {
