@@ -60,6 +60,14 @@ exports.createUser = function(name, email, password, username, title) {
         });
 };
 
+exports.modifyUser = function(name, username, title) {
+    return  exports.put('u/'+ username + '.json', {name: name, username: username, title: title})
+        .then(response => {
+            return response.user;
+        });
+};
+
+
 
 exports.getCategory = function(id) {
     return exports.get('c/' + id + "/show.json")

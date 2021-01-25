@@ -237,6 +237,12 @@ exports.fetchObject = function(dn) {
     });
 };
 
+exports.groupDnToO = function(dn) {
+    return exports.fetchObject(dn)
+        .then(group => { return group.o; })
+        .catch(error => { return; })
+}
+
 exports.fetchUser = function(dn) {
     return exports.fetchObject(dn)
         .then((user) => {
