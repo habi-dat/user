@@ -25,6 +25,22 @@ var validateGroups = function (groups, ownedGroups) {
     return responses;
 }
 
+var checkEmail = function(mail, uid) {
+  if (!mail) {
+    return Promise.reject('Keine E-Mailadresse angegeben')    
+  } else {
+    return ldaphelper.getByEmail(mail)
+      .then(users => {
+        users = users.filter(user => {return user.uid !== uid});
+        if (users.length > 0) {          
+          throw 'Benutzer*in mit E-Mailadresse existiert bereits: ' + users.map(user => {return user.cn}).join(', ');
+        } else {
+          return;
+        }        
+      })
+  }
+}
+
 var validateUser = async function(user, currentUser) {
 
   var errorTexts = [];
@@ -51,6 +67,14 @@ var validateUser = async function(user, currentUser) {
 
   if (!user.uid && (!user.password || user.password == "")) {
     errorTexts.push("Passwort fehlt ");
+  }
+
+  if (user.mail != false) {
+    try {
+      await checkEmail(user.mail, user.uid);
+    } catch (error) {
+      errorTexts.push(error);
+    }
   }
 
   if ( user.password && user.password != user.passwordRepeat) {
@@ -136,22 +160,10 @@ var checkErrorTexts = function (successText, errorText, errorTexts) {
 var validateInvite = function(invite, currentUser) {
 
   var errorTexts = [];
-
-  return Promise.resolve()
-    .then(() => {
-      if (!invite.mail) {
-        errorTexts.push('Keine E-Mailadresse angegeben');
-        return;
-      } else {          
-        return ldaphelper.getByEmail(invite.mail)
-          .then((user) => {
-            errorTexts.push('Benutzer*in mit E-Mailadresse existiert bereits: ' + user.cn);
-            return;
-          })
-          .catch(error => {
-            return;
-          });
-      }
+  return checkEmail(invite.mail.toLowerCase())
+    .catch(error => {
+      errorTexts.push(error);
+      return;
     })
     .then(() => checkErrorTexts('Validierung: Einladung gültig', 'Validierung: Fehler bei Einladung: ', errorTexts));
   

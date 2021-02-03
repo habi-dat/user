@@ -2,6 +2,7 @@
 var config    = require('../config/config.json');
 var discourse = require('../utils/discoursehelper');
 var ldaphelper = require('../utils/ldaphelper');
+var crypto = require('crypto');
 var Promise = require("bluebird");
 
 var fs = require('fs');
@@ -15,6 +16,7 @@ var getUser = function(uid, fetchEmail = false) {
       return discourse.get('u/by-external/'+ uid + '.json')
     })
     .then(response => {
+      console.log(response.user);
       if (fetchEmail) {
         return discourse.get('users/'+ response.user.username + '/emails.json', {context: 'admin/users/'+response.user.id+'/'+response.user.username})
           .then(emailObject => {
@@ -52,7 +54,7 @@ var getNameFromDNSync = function(dn) {
 
 var createUser = function(user, currentUser) {
   return ldaphelper.groupDnToO(user.ou)
-    .then(title => discourse.createUser(user.cn, user.mail, user.password, user.uid, title || '-'))
+    .then(title => discourse.createUser(user.cn, user.mail, user.password?user.password:crypto.randomBytes(20).toString('hex'), user.uid, title || '-'))
     .then(discourseUser => {
       var groups = user.member.map(group => { return ldaphelper.dnToCn(group);});
       return Promise.all(groups.map(group => {
@@ -67,45 +69,60 @@ var createUser = function(user, currentUser) {
 
 var modifyUser = function(user, currentUser) {
   return getUser(user.uid, false)
-    .then(discourseUser => discourse.post('admin/users/' + discourseUser.id + '/log_out', {})
-      .then(() => ldaphelper.groupDnToO(user.ou))
-      .then(title => discourse.modifyUser(user.cn, user.uid, title || '-'))
-      .then(() => {
-    		if (user.member != false) {
-      		return ldaphelper.fetchUser(user.dn)
-      			.then(ldapUser => {
-      			  // map to group cn
-      				var newGroups = ldapUser.member.map(group => { return ldaphelper.dnToCn(group);});
-      				// filter discourse internal groups
-      				var oldGroupsFiltered = discourseUser.groups.filter(group => {return !group.automatic;});
-      				// map to group name
-  					  var oldGroups = oldGroupsFiltered.map(group => { return group.name });
+    .then(discourseUser => {
+      if (discourseUser.last_seen_at === null) {
+          // if user has not logged in recreate user to also update email and prevent account highjacking or mismatching on first login
+          return discourse.del('admin/users/' + discourseUser.id + '.json', {context: '/admin/users/' + discourseUser.id + '/' + discourseUser.username})            
+            .then(() => createUser(user, currentUser))
+            .then(result => {
+               if (result.status) {
+                  return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' neu erstellt'};
+               } else {
+                  return result;
+               }
+            })
+      }
+      else {
+        return discourse.post('admin/users/' + discourseUser.id + '/log_out', {})
+          .then(() => ldaphelper.groupDnToO(user.ou))
+          .then(title => discourse.modifyUser(user.cn, user.uid, title || '-'))
+          .then(() => {
+            if (user.member != false) {
+              return ldaphelper.fetchUser(user.dn)
+                .then(ldapUser => {
+                  // map to group cn
+                  var newGroups = ldapUser.member.map(group => { return ldaphelper.dnToCn(group);});
+                  // filter discourse internal groups
+                  var oldGroupsFiltered = discourseUser.groups.filter(group => {return !group.automatic;});
+                  // map to group name
+                  var oldGroups = oldGroupsFiltered.map(group => { return group.name });
 
-      				addGroups = newGroups.filter(member => {
-      					return !oldGroups.includes(member);
-      				})
-      				removeGroups = oldGroups.filter(member => {
-      					return !newGroups.includes(member);
-      				})
-      				return Promise.all(addGroups.map(addGroup => {
-        					return getGroupId(addGroup)
-        						.then(addGroupId => discourse.addGroupMembers(addGroupId, [user.uid]))
-        						.catch(error => { return;});
-      					}))
-      					.then(() => Promise.all(removeGroups.map(removeGroup => {
-  								return getGroupId(removeGroup)
-  		      						.then(removeGroupId => discourse.removeGroupMembers(removeGroupId, [user.uid]))
-  		      						.catch(error => { return;});
-  	      			})))
+                  addGroups = newGroups.filter(member => {
+                    return !oldGroups.includes(member);
+                  })
+                  removeGroups = oldGroups.filter(member => {
+                    return !newGroups.includes(member);
+                  })
+                  return Promise.all(addGroups.map(addGroup => {
+                      return getGroupId(addGroup)
+                        .then(addGroupId => discourse.addGroupMembers(addGroupId, [user.uid]))
+                        .catch(error => { return;});
+                    }))
+                    .then(() => Promise.all(removeGroups.map(removeGroup => {
+                      return getGroupId(removeGroup)
+                            .then(removeGroupId => discourse.removeGroupMembers(removeGroupId, [user.uid]))
+                            .catch(error => { return;});
+                    })))
 
-      			})
-   					.then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' upgedated und ausgeloggt'};})
-      	} else {
-  			  return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' upgedated und ausgeloggt'};
-      	}
-      })
-      .catch(error => { return {status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht upgedated oder ausgeloggt werden: ' + error};})
-     )
+                })
+                .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' upgedated und ausgeloggt'};})
+            } else {
+              return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' upgedated und ausgeloggt'};
+            }
+          })
+          .catch(error => { return {status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht upgedated oder ausgeloggt werden: ' + error};})         
+      }
+    })    
     .catch(error => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' nicht gefunden, Schritt wird übersprungen'};});
 };
 

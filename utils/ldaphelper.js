@@ -263,20 +263,17 @@ exports.getByEmail = function(mail) {
 
         client.search('ou=users,'+config.server.base, opts, function(err, res) {
             res.on('searchEntry', function(entry) {
+                console.log(entry);
                 if (entry.object.cn && entry.object.mail && entry.object.mail.toLowerCase() === mail.toLowerCase())
                     entries.push(entry.object)
+                console.log(entries.length);
+
             });
             res.on('error', function(err) {
                 reject('Error fetching by e-mail: ' + err.message);
             });
             res.on('end', function(result) {
-                if (entries.length == 0) {
-                    reject("Kein*e Benutzer*in mit dieser E-Mail Adresse gefunden");
-                } else if (entries.length > 1) {+
-                    reject("Mehrere Benutzer*innen mit dieser E-Mail Adresse gefunden");
-                } else {
-                    resolve(entries[0]);
-                }
+                resolve(entries);
             });
         });
     });

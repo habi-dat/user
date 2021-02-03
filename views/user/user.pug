@@ -3,7 +3,8 @@ mixin user_table(users)
     thead
       tr
         th.col-md-3 ID
-        th.col-md-3 Name
+        th.col-md-3 Name        
+        th.hidden E-mail
         th.col-md-2 Zugehörigkeit
         th.col-md-2 Ort
         if (attributes.editActions || attributes.addMemberAction || attributes.removeMemberAction)
@@ -15,6 +16,7 @@ mixin user_table(users)
           tr
             td= user.uid
             td= user.cn
+            td.hidden= user.mail
             td= user.title
             td= user.l
             if (attributes.editActions || attributes.addMemberAction || attributes.removeMemberAction)

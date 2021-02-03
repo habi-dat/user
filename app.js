@@ -14,7 +14,6 @@ var SamlStrategy = require('passport-saml').Strategy;
 var Promise = require("bluebird");
 var routes = require('./routes/index');
 var moment = require('moment');
-var imap = require('./utils/imap');
 
 
 var config    = require('./config/config.json');
@@ -119,11 +118,7 @@ passport.deserializeUser(function(user, done) {
                         } else {
                             user.isGroupAdmin = false;
                         }
-                        return imap.getAccounts(user)
-                            .then(accounts => {
-                                user.imapAccounts = accounts;
-                                done(null, user);
-                            });
+                        done (null, user);
                     })
             })
             .catch((error) => {

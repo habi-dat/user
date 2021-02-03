@@ -9,7 +9,6 @@ var config    = require('../config/config.json');
 var activation = require('../utils/activation');
 var nextcloud = require('../utils/nextcloud');
 var mail = require('../utils/mailhelper');
-var imap = require('../utils/imap');
 var actions = require('../actions');
 var bodyParser = require('body-parser');
 var Promise = require("bluebird");
@@ -297,8 +296,13 @@ router.get('/lostpasswd', function(req, res) {
 
 router.post('/user/lostpasswd', function(req, res) {
     ldaphelper.getByEmail(req.body.mail)
-        .then((user) => {
-            mail.sendPasswordResetEmail(req, res, user)
+        .then(users => {
+            if (users.length == 0) {
+                throw "Kein*e Benutzer*in mit dieser E-Mail Adresse gefunden";
+            } else if (users.length > 1) {
+                throw "Mehrere Benutzer*innen mit dieser E-Mail Adresse gefunden";
+            }
+            return mail.sendPasswordResetEmail(req, res, users[0])
                 .then(info =>  successRedirect(req, res, 'Link zum Ändern des Passworts wurde per E-Mail verschickt', '/lostpasswd'))
                 .catch(error => errorRedirect(req, res, 'Link zum Ändern des Passworts konnte nicht verschickt werden: ' + error, '/lostpasswd'));
         })

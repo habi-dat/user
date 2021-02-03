@@ -324,12 +324,16 @@ var removeUser = function(user, currentUser) {
 
 var createGroup = function(group, currentUser) {
   return new Promise((resolve, reject) => {
+    var member =  JSON.parse(group.member);
+    if (member.length === 0) {
+      member = '';
+    }
     var entry = {
       cn: group.cn,
       o: group.o,
       description: group.description,
       objectClass: ['groupOfNames','top'],
-      member: JSON.parse(group.member),
+      member: member,
       owner: ""
     };
     ldaphelper.add('cn=' + group.cn + ',ou=groups,' + config.ldap.server.base, entry)
@@ -350,7 +354,6 @@ var modifyGroup = function(group, currentUser) {
     var cn = group.cn;
     var dn = 'cn=' + cn + ',ou=groups,'+ config.ldap.server.base;
     var changedDn = (group.cn != false) && dn != oldDn;
-
 
     ldaphelper.fetchObject(oldDn)
       .then((oldGroup) => {
