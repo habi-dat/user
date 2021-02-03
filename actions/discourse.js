@@ -3,6 +3,8 @@ var config    = require('../config/config.json');
 var discourse = require('../utils/discoursehelper');
 var ldaphelper = require('../utils/ldaphelper');
 var crypto = require('crypto');
+var request = require('request-promise');
+var querystring = require("querystring");
 var Promise = require("bluebird");
 
 var fs = require('fs');
@@ -51,81 +53,30 @@ var getNameFromDNSync = function(dn) {
   return dn.split(',')[0].replace('cn=', '');
 };
 
-
-var createUser = function(user, currentUser) {
+var syncSso = function(user, currentUser) {
   return ldaphelper.groupDnToO(user.ou)
-    .then(title => discourse.createUser(user.cn, user.mail, user.password?user.password:crypto.randomBytes(20).toString('hex'), user.uid, title || '-'))
-    .then(discourseUser => {
+    .then(title => {
       var groups = user.member.map(group => { return ldaphelper.dnToCn(group);});
-      return Promise.all(groups.map(group => {
-          return getGroupId(group)
-            .then(addGroupId => discourse.addGroupMembers(addGroupId, [user.uid]))
-            .catch(error => { return;});
-        }))      
-    })
-    .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' erstellt und zu Gruppen ' + user.member.join(',') + ' hinzugefügt'};})
-    .catch(error =>  { return {status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht erstellt werden: ' + error};})
+      var hmac = crypto.createHmac("sha256", config.discourse.SSOSECRET);
+      var params = {
+        external_id: user.uid,
+        email: user.mail,
+        username: user.uid,
+        name: user.cn,
+        title: title,
+        groups: groups.join(',')
+      }
+      var payload = new Buffer(querystring.stringify(params) , 'utf8').toString("base64");
+      hmac.update(payload);  
+      var postParams = {
+          'sso': payload,
+          'sig': hmac.digest('hex')
+        }  
+      return discourse.post('admin/users/sync_sso', postParams)
+        .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' synchronisiert'};})
+        .catch(error =>  { return {status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht synchronisiert werden: ' + error};});
+    }) 
 }
-
-var modifyUser = function(user, currentUser) {
-  return getUser(user.uid, false)
-    .then(discourseUser => {
-      if (discourseUser.last_seen_at === null) {
-          // if user has not logged in recreate user to also update email and prevent account highjacking or mismatching on first login
-          return discourse.del('admin/users/' + discourseUser.id + '.json', {context: '/admin/users/' + discourseUser.id + '/' + discourseUser.username})            
-            .then(() => createUser(user, currentUser))
-            .then(result => {
-               if (result.status) {
-                  return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' neu erstellt'};
-               } else {
-                  return result;
-               }
-            })
-      }
-      else {
-        return discourse.post('admin/users/' + discourseUser.id + '/log_out', {})
-          .then(() => ldaphelper.groupDnToO(user.ou))
-          .then(title => discourse.modifyUser(user.cn, user.uid, title || '-'))
-          .then(() => {
-            if (user.member != false) {
-              return ldaphelper.fetchUser(user.dn)
-                .then(ldapUser => {
-                  // map to group cn
-                  var newGroups = ldapUser.member.map(group => { return ldaphelper.dnToCn(group);});
-                  // filter discourse internal groups
-                  var oldGroupsFiltered = discourseUser.groups.filter(group => {return !group.automatic;});
-                  // map to group name
-                  var oldGroups = oldGroupsFiltered.map(group => { return group.name });
-
-                  addGroups = newGroups.filter(member => {
-                    return !oldGroups.includes(member);
-                  })
-                  removeGroups = oldGroups.filter(member => {
-                    return !newGroups.includes(member);
-                  })
-                  return Promise.all(addGroups.map(addGroup => {
-                      return getGroupId(addGroup)
-                        .then(addGroupId => discourse.addGroupMembers(addGroupId, [user.uid]))
-                        .catch(error => { return;});
-                    }))
-                    .then(() => Promise.all(removeGroups.map(removeGroup => {
-                      return getGroupId(removeGroup)
-                            .then(removeGroupId => discourse.removeGroupMembers(removeGroupId, [user.uid]))
-                            .catch(error => { return;});
-                    })))
-
-                })
-                .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' upgedated und ausgeloggt'};})
-            } else {
-              return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' upgedated und ausgeloggt'};
-            }
-          })
-          .catch(error => { return {status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht upgedated oder ausgeloggt werden: ' + error};})         
-      }
-    })    
-    .catch(error => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' nicht gefunden, Schritt wird übersprungen'};});
-};
-
 
 var removeUser = function(user, currentUser) {
   return getUser(user.uid, false)
@@ -316,8 +267,8 @@ exports.register = function(hooks) {
   // disable user creation since it is now done automatically on first login
   //hooks.user.create.discourse.post.push(createUser);
   if (config.settings.general.modules.includes('discourse') && config.discourse.APIURL && config.discourse.APIKEY && config.discourse.USERNAME) {
-    hooks.user.create.post.push(createUser);
-    hooks.user.modify.post.push(modifyUser);
+    hooks.user.create.post.push(syncSso);
+    hooks.user.modify.post.push(syncSso);
     hooks.user.remove.post.push(removeUser);
 
     hooks.group.create.post.push(createGroup);
