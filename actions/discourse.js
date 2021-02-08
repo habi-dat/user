@@ -18,7 +18,6 @@ var getUser = function(uid, fetchEmail = false) {
       return discourse.get('u/by-external/'+ uid + '.json')
     })
     .then(response => {
-      console.log(response.user);
       if (fetchEmail) {
         return discourse.get('users/'+ response.user.username + '/emails.json', {context: 'admin/users/'+response.user.id+'/'+response.user.username})
           .then(emailObject => {
@@ -138,7 +137,7 @@ var modifyGroup = function(group, currentUser) {
 				        	'group[full_name]': group.o,
 				        	'group[bio_raw]': group.description
 			      		})
-			      		.then(() => Promise.join(ldaphelper.dnToUid(JSON.parse(group.member)), discourse.getGroupMembers(name),
+			      		.then(() => Promise.join(ldaphelper.dnToUid(JSON.parse(group.member)), discourse.getGroupMembers(group.cn),
 			      			(newMembers, oldMembers) => {
 			      				addMembers = newMembers.filter(member => {
 			      					return !oldMembers.includes(member);

@@ -131,7 +131,6 @@ exports.getCategories = function() {
 exports.getGroupMembers = function(groupName) {
 	return exports.get('groups/' + groupName + '/members.json?limit=1000')
 		.then(result => {
-			console.log('result', result);
 			return result.members.map(member => {
 				return member.username;
 			});

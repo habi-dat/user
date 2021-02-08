@@ -263,10 +263,8 @@ exports.getByEmail = function(mail) {
 
         client.search('ou=users,'+config.server.base, opts, function(err, res) {
             res.on('searchEntry', function(entry) {
-                console.log(entry);
                 if (entry.object.cn && entry.object.mail && entry.object.mail.toLowerCase() === mail.toLowerCase())
                     entries.push(entry.object)
-                console.log(entries.length);
 
             });
             res.on('error', function(err) {
@@ -369,7 +367,6 @@ exports.encryptAndAddUser = function(entry) {
             }
 
             entry.userPassword = hash;
-            console.log(JSON.stringify(entry));
             client.add('cn=' + entry.cn + ',ou=users,'+config.server.base, entry, function(err) {
                 if (err) {
                     reject(err);

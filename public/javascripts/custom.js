@@ -426,12 +426,7 @@
             //$checkbox.prop('checked', !$checkbox.is(':checked'));
             //$checkbox.triggerHandler('change');
             if ($state == "on") {
-                if (isAdmin) {
-                    $widget.data('state', 'admin');
-                } else {
-                    $widget.data('state', 'off');
-                }
-
+                $widget.data('state', 'admin');
             } else if ($state == "admin") {
                 $widget.data('state', 'off');
             } else {
@@ -669,7 +664,6 @@
     $('.checkbox-form').submit(function(event) {
         var $hidden = $("<input type='hidden' class='hidden-groups' name='member'/>");
         var $hiddenAdmin = $("<input type='hidden' class='hidden-groups' name='owner'/>");
-        var isAdmin = $(this).attr('is-admin');
         //event.preventDefault();
         var checkedItems = [], counter = 0;
         $("#check-list-box li.active").each(function(idx, li) {
@@ -678,11 +672,9 @@
         });
         $hidden.val(JSON.stringify(checkedItems));
         var adminItems = [];
-        if (isAdmin) {
-            $("#check-list-box li.active.admin").each(function(idx, li) {
-                adminItems.push($(li).prop('id'));
-            });
-        }
+        $("#check-list-box li.active.admin").each(function(idx, li) {
+          adminItems.push($(li).prop('id'));
+        });
         $hiddenAdmin.val(JSON.stringify(adminItems));
         $(this).find('.hidden-groups').remove();
         $(this).append($hidden);

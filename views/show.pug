@@ -35,8 +35,7 @@ block content
                   th.col-md-3 Interner Name
                   th.col-md-3 Anzeigename
                   th.col-md-4 Beschreibung
-                  if currentUser.isAdmin
-                    th.col-md-2.text-right(data-orderable="false") Aktionen
+                  th.col-md-2.text-right(data-orderable="false") Aktionen
                   th.hidden(data-name="member") Members
                   th.hidden(data-name="owner") Admins
               tbody
@@ -46,9 +45,10 @@ block content
                       td= group.cn
                       td= group.o
                       td= group.description
-                      if currentUser.isAdmin
-                        td.text-right
+                      td.text-right
+                        if currentUser.isAdmin || currentUser.isGroupAdmin && currentUser.ownedGroups.includes(group.dn)
                           a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn title='Gruppe bearbeiten') #[span.glyphicon.glyphicon-pencil]
+                        if currentUser.isAdmin
                           a.btn.btn-default.btn-sm.confirm(data-link='/group/delete/'+group.dn title="Gruppe löschen" data-confirmtext='Willst du die Gruppe ' + group.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
                       td.hidden.member=group.member 
                       td.hidden.owner=group.owner

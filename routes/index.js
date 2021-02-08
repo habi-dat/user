@@ -31,7 +31,11 @@ var isLoggedInAdmin = function(req, res, next) {
     } else {
         //  if they aren't redirect them to the home page
         req.session.returnTo = req.url;
-        return res.redirect('/login');
+        if (!req.isAuthenticated()) {
+            return res.redirect('/login');
+        } else {
+            return next({status: 403, message: "Das ist nicht erlaubt :("});
+        }        
     }
 };
 
@@ -42,8 +46,30 @@ var isLoggedInGroupAdmin = function(req, res, next) {
     } else {
         //  if they aren't redirect them to the home page
         req.session.returnTo = req.url;
-        return res.redirect('/login');
+        if (!req.isAuthenticated()) {
+            return res.redirect('/login');
+        } else {
+            return next({status: 403, message: "Das ist nicht erlaubt :("});
+        }        
     }
+};
+
+var isLoggedInGroupAdminForGroup = function(container, field) {
+
+  return function(req, res, next) {
+    // if user is authenticated in the session, carry on
+    if (req.isAuthenticated() && (req.user.isAdmin || req.user.isGroupAdmin && req.user.ownedGroups.includes(req[container][field]))) {
+        next();
+    } else {
+        //  if they aren't redirect them to the home page
+        req.session.returnTo = req.url;
+        if (!req.isAuthenticated()) {
+            return res.redirect('/login');
+        } else {
+            return next({status: 403, message: "Das ist nicht erlaubt :("});
+        }        
+    }
+  }
 };
 
 var getTitle = function(page) {
@@ -339,7 +365,17 @@ router.get('/show_cat', isLoggedInAdmin, function(req,res){
 
 router.get('/invites', isLoggedInGroupAdmin, function(req,res){
     Promise.join(activation.getInvites(), ldaphelper.fetchGroups(req.user.ownedGroups),
-        (invites, groups) => render(req, res, 'invites', 'Offene Einladungen', {invites: invites, groups: groups}))
+        (invites, groups) => {
+            if (req.user.isGroupAdmin && !req.user.isAdmin) {
+                invites = invites.filter(invite => {
+                    return invite.currentUser && invite.currentUser.dn === req.user.dn
+                        || invite.data.owner.some(ownr => req.user.ownedGroups.includes(ownr))
+                        || invite.data.member.some(membr => req.user.memberGroups.includes(ldaphelper.dnToCn(membr)));
+                    ;
+                })
+            }            
+            return render(req, res, 'invites', 'Offene Einladungen', {invites: invites, groups: groups})
+        })
         .catch(error => errorPage(req, res, error));
 });
 
@@ -549,7 +585,6 @@ router.post('/user/editgroups', isLoggedInGroupAdmin, function(req, res) {
         password: false,
         passwordRepeat: false,
         language: false,
-        owner: false
     };
     if (req.body.member) {
         user.member = JSON.parse(req.body.member);
@@ -557,8 +592,14 @@ router.post('/user/editgroups', isLoggedInGroupAdmin, function(req, res) {
         user.member = [];
     }
 
+    if (req.body.owner) {
+        user.owner = JSON.parse(req.body.owner);
+    } else {
+        user.owner = [];
+    }    
+
     actions.user.modify(user, req.user)
-        .then(response => checkResponseAndRedirect(req, res, response, 'Benutzer*inengruppen ' + req.body.cn + ' geändert', 'Fehler beim Ändern der*des Benutzer*innengruppen', '/show', '/user/editgroups/' + user.dn, user))
+        .then(response => checkResponseAndRedirect(req, res, response, 'Gruppen für ' + req.body.uid + ' geändert', 'Fehler beim Ändern der Gruppen von ' + req.body.uid, '/show', '/user/editgroups/' + user.dn, user))
         .catch(error => errorPage(req,res,error));
 });
 
@@ -569,7 +610,7 @@ router.get('/user/delete/:id', isLoggedInGroupAdmin, function(req, res) {
         .catch(error => errorPage(req,res,error));
 });
 
-router.get('/group/edit/:id', isLoggedInAdmin, function(req, res) {
+router.get('/group/edit/:id', isLoggedInGroupAdminForGroup('params','id'), function(req, res) {
     Promise.join(ldaphelper.fetchUsers(), ldaphelper.fetchObject(req.params.id),
         (users, group) => render(req, res, 'group/edit', 'Gruppe bearbeiten', {users: users, group: retrieveSessionData(req) || group}))
         .catch(error => errorPage(req, res, error));
@@ -587,7 +628,7 @@ router.post('/group/add', isLoggedInAdmin, function(req, res) {
         .catch(error => errorPage(req,res,error));
 });
 
-router.post('/group/edit', isLoggedInAdmin, function(req, res) {
+router.post('/group/edit', isLoggedInGroupAdminForGroup('body','dn'), function(req, res) {
     actions.group.modify(req.body, req.user)
         .then(response => checkResponseAndRedirect(req, res, response, 'Gruppe ' + req.body.cn + ' geändert', 'Fehler beim Ändern der Gruppe ' + req.body.cn, '/show', '/group/edit/'+req.body.dn, req.body))
         .catch(error => errorPage(req,res,error));

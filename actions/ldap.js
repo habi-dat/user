@@ -88,25 +88,31 @@ var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
                     }
                   }
 
-                  // check if owner list needs to be updated (only for admins)
-                  if (currentUser.isAdmin && owner !== false) {
-                    updated = false;
-                    if (assignedAdminGroups.indexOf(group.dn) > -1) {
-                      if (updatedAdmin.indexOf(oldDn) > -1 ) {
+                  // check if owner list needs to be updated (only for group admins)
+                  if (owner !== false) {
+                    updated = false;  
+                    // check if owner list needs to be updated
+                    if (assignedAdminGroups.includes(group.dn)) {
+                      if (updatedAdmin.includes(oldDn)) {
                         if (changedDn) {
                           updated = true;
                           updatedAdmin[updatedAdmin.indexOf(oldDn)] = dn;
                         }
-                      } else if (updatedAdmin.indexOf(dn) < 0) {
+                      } else if (!updatedAdmin.includes(dn)) {
                         updatedAdmin.push(dn);
                         updated = true;
                       }
+                    // no changes except user dn updates if user has no privileges for group
+                    } else if (!currentUser.ownedGroups=='all' && !currentUser.ownedGroups.includes(group.dn) && updatedAdmin.includes(oldDn)) {
+                      if (changedDn) {
+                        updated = true;
+                        updatedAdmin[updatedAdmin.indexOf(oldDn)] = dn;
+                      }
                     } else {
-                      if (updatedAdmin.indexOf(oldDn) > -1 ) {
+                      if (updatedAdmin.includes(oldDn)) {
                         updatedAdmin.splice(updatedAdmin.indexOf(oldDn), 1);
                         updated = true;
-                      }
-                      else if (updatedAdmin.indexOf(dn) > -1) {
+                      } else if (updatedAdmin.includes(dn)) {
                         updatedAdmin.splice(updatedAdmin.indexOf(dn), 1);
                         updated = true;
                       }
@@ -388,8 +394,6 @@ var modifyGroup = function(group, currentUser) {
             if(group.member != false) {
               var diff = false;
               var member = JSON.parse(group.member);
-              console.log(member);
-              console.log('old', oldGroup.member);
               if (oldGroup.member) {
                  	if (oldGroup.member instanceof Array) {
 						oldGroup.member.forEach(u => {

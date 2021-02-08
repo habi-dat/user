@@ -9,7 +9,8 @@ mixin user_table(users)
         if (attributes.editActions || attributes.addMemberAction || attributes.removeMemberAction)
           th.col-md-2.text-right(data-orderable="false") Aktionen
         th.hidden DN
-        th.hidden E-mail
+        if currentUser.isAdmin
+          th.hidden E-mail
     tbody
       each user in users
         if (user.uid)
@@ -31,7 +32,8 @@ mixin user_table(users)
                 if attributes.removeMemberAction
                   a.btn.btn-default.btn-sm.remove-member(data-dn=user.dn title="Mitglied entfernen") #[span.glyphicon.glyphicon-minus]                  
             td.hidden.dn(data-name="dn")= user.dn
-            td.hidden= user.mail
+            if currentUser.isAdmin
+              td.hidden= user.mail
 
 mixin user_form_textinput(type, label, icon, id, value, required, placeholder, helpText, pattern, maxlength, token)
   .form-group(class=(required?"required":""))
@@ -45,11 +47,11 @@ mixin user_form_textinput(type, label, icon, id, value, required, placeholder, h
         span.help-block(id="help"+id)=helpText
           
 
-mixin user_form_static(label, value)
+mixin user_form_static(label, value, addClass)
   .form-group
     label.control-label.col-md-4=label
     .col-md-8
-      p.form-control-static= value  
+      p.form-control-static(class=addClass)= value  
 
 
 mixin user_form_password(required=false)      
@@ -125,8 +127,10 @@ mixin user_form(action, user, groups, admin, token)
             +user_form_static('Ort', user.l)
           if (token)
             +user_form_static('E-Mail', token.data.mail)
-          else if  action == "/edit_me" || action =="/user/editgroups"
+          else if  action == "/edit_me"
             +user_form_static('E-Mail', user.mail)
+          else if action =="/user/editgroups"
+            +user_form_static('E-Mail', 'ausgeblendet', 'text-muted')
           else
             +user_form_textinput('email', 'E-Mail', 'glyphicon-envelope', 'mail', (user?user.mail:undefined), true, 'z.B. resi.stanz@beispiel.org')
           if currentUser.isAdmin && action !== '/user/invite/accept' && action !== '/edit_me' && action !== '/user/editgroups'

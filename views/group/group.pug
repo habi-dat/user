@@ -1,5 +1,11 @@
 include ../user/user
 
+mixin group_form_static(label, value, addClass)
+  .form-group
+    label.control-label.col-md-4=label
+    .col-md-8
+      p.form-control-static(class=addClass)= value  
+
 mixin group_form(action, group)
   form.group-from.form-horizontal.validation-form(action=action method="post" role="form")
         if group && group.dn
@@ -15,13 +21,17 @@ mixin group_form(action, group)
                 span.input-group-addon
                   i.glyphicon.glyphicon-th-list
                 input.form-control(type="text" id="o" name="o" previous-value=(group?group.o:undefined) value=(group?group.o:undefined) required data-msg="Darf nicht leer sein")
-          .form-group.required
-            label.control-label.col-md-4(for="cn") Interner Name
-            .col-md-8
-              .input-group
-                span.input-group-addon
-                  i.glyphicon.glyphicon-th-list
-                input.form-control(type="text" id="cn" name="cn" previous-value=(group?group.cn:undefined) value=(group?group.cn:undefined) maxlength="20" required data-msg="Darf nicht leer sein" title="max 20 Zeichen, keine Umlaute, Sonder- oder Leerzeichen")
+          if group && group.cn
+            input.hidden(name="cn" value=group.cn)
+            +group_form_static('Interner Name', group.cn)
+          else
+            .form-group.required
+              label.control-label.col-md-4(for="cn") Interner Name
+              .col-md-8
+                .input-group
+                  span.input-group-addon
+                    i.glyphicon.glyphicon-th-list
+                  input.form-control(type="text" id="cn" name="cn" previous-value=(group?group.cn:undefined) value=(group?group.cn:undefined) maxlength="20" required data-msg="Darf nicht leer sein" title="max 20 Zeichen, keine Umlaute, Sonder- oder Leerzeichen")
 
         .col-md-6
           .form-group
