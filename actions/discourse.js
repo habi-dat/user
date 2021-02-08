@@ -54,28 +54,33 @@ var getNameFromDNSync = function(dn) {
 };
 
 var syncSso = function(user, currentUser) {
-  return ldaphelper.groupDnToO(user.ou)
-    .then(title => {
-      var groups = user.member.map(group => { return ldaphelper.dnToCn(group);});
-      var hmac = crypto.createHmac("sha256", config.discourse.SSOSECRET);
-      var params = {
-        external_id: user.uid,
-        email: user.mail,
-        username: user.uid,
-        name: user.cn,
-        title: title,
-        groups: groups.join(',')
-      }
-      var payload = new Buffer(querystring.stringify(params) , 'utf8').toString("base64");
-      hmac.update(payload);  
-      var postParams = {
-          'sso': payload,
-          'sig': hmac.digest('hex')
-        }  
-      return discourse.post('admin/users/sync_sso', postParams)
-        .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' synchronisiert'};})
-        .catch(error =>  { return {status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht synchronisiert werden: ' + error};});
-    }) 
+  return ldaphelper.fetchUser(user.dn)
+    .then(user => {
+      return ldaphelper.groupDnToO(user.ou)
+          .then(title => {
+            var groups = user.member.map(group => { return ldaphelper.dnToCn(group);});
+            var hmac = crypto.createHmac("sha256", config.discourse.SSOSECRET);
+            var params = {
+              external_id: user.uid,
+              email: user.mail,
+              username: user.uid,
+              name: user.cn,
+              title: title,
+              groups: groups.join(',')
+            }
+            var payload = new Buffer(querystring.stringify(params) , 'utf8').toString("base64");
+            hmac.update(payload);  
+            var postParams = {
+                'sso': payload,
+                'sig': hmac.digest('hex')
+              }  
+            return discourse.post('admin/users/sync_sso', postParams)
+              .then(() => { return {status: true, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' synchronisiert'};})
+              .catch(error =>  { return {status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' konnte nicht synchronisiert werden: ' + error};});
+          })
+    })
+    .catch(error =>  { return {status: false, message: 'DISCOURSE: Benutzer*in ' + user.uid + ' in LDAP nicht gefunden: ' + error};});
+   
 }
 
 var removeUser = function(user, currentUser) {
