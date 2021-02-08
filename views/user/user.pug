@@ -4,19 +4,18 @@ mixin user_table(users)
       tr
         th.col-md-3 ID
         th.col-md-3 Name        
-        th.hidden E-mail
         th.col-md-2 Zugehörigkeit
         th.col-md-2 Ort
         if (attributes.editActions || attributes.addMemberAction || attributes.removeMemberAction)
           th.col-md-2.text-right(data-orderable="false") Aktionen
         th.hidden DN
+        th.hidden E-mail
     tbody
       each user in users
         if (user.uid)
           tr
             td= user.uid
             td= user.cn
-            td.hidden= user.mail
             td= user.title
             td= user.l
             if (attributes.editActions || attributes.addMemberAction || attributes.removeMemberAction)
@@ -32,6 +31,7 @@ mixin user_table(users)
                 if attributes.removeMemberAction
                   a.btn.btn-default.btn-sm.remove-member(data-dn=user.dn title="Mitglied entfernen") #[span.glyphicon.glyphicon-minus]                  
             td.hidden.dn(data-name="dn")= user.dn
+            td.hidden= user.mail
 
 mixin user_form_textinput(type, label, icon, id, value, required, placeholder, helpText, pattern, maxlength, token)
   .form-group(class=(required?"required":""))
