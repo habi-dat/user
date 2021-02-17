@@ -100,7 +100,7 @@ mixin user_form(action, user, groups, admin, token)
         legend=titleShort
         .col-md-6
           if action !== '/user/editgroups'
-            +user_form_textinput("text", 'Anzeigename', 'glyphicon-user', 'cn', (user?user.cn:undefined), true, 'z.B. Theresa Stanz', "mindestens 3 Zeichen, keine Sonderzeichen", "[^*().&-_[\\]`~|@$%^?:{}!']{3,}", undefined, token?token.token:undefined)
+            +user_form_textinput("text", 'Anzeigename', 'glyphicon-user', 'cn', (user?user.cn:undefined), true, 'z.B. Theresa Stanz', "mindestens 3 Zeichen, keine Sonderzeichen", "[^*().&\\-_[\\]`~|@$%^?:{}!']{3,}", undefined, token?token.token:undefined)
           else 
             +user_form_static('Anzeigename', user.cn)
           if action == "/user/add" || action == '/user/invite/accept'
