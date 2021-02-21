@@ -49,10 +49,6 @@ var validateUser = async function(user, currentUser) {
     errorTexts = errorTexts.concat(validateGroups(user.member, currentUser.ownedGroups));
   }
 
-  if (!currentUser.isGroupAdmin && user.owner && user.owner.length > 0) {
-    errorTexts.push('Nur Admin*as können Administrator*innenrechte vergeben');
-  }  
-
   if (user.cn != false) {
     if (user.cn == null || user.cn == "") {
       errorTexts.push("Anzeigename fehlt");
