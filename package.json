@@ -31,7 +31,7 @@
     "morgan": "^1.9.1",
     "multer": "^1.4.2",
     "mysql": "^2.18.1",
-    "nodemailer": "^6.4.2",
+    "nodemailer": "^6.4.16",
     "nodemon": "^1.19.4",
     "openldap_ssha": "^0.0.11",
     "passport": "^0.4.1",
