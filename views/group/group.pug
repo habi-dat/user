@@ -6,61 +6,122 @@ mixin group_form_static(label, value, addClass)
     .col-md-8
       p.form-control-static(class=addClass)= value  
 
+mixin group_table(groups)
+  table.table.datatable(id=attributes.id || 'grouptable')
+    thead
+      tr
+        th.hidden DN
+        th.hidden(data-name="member") Members
+        th.hidden(data-name="owner") Admins        
+        th.col-md-1 Interner Name        
+        th.col-md-2 Anzeigename
+        th.col-md-2 Beschreibung
+        if (attributes.editActions || attributes.addMemberAction || attributes.removeMemberAction)
+          th.col-md-1.text-right(data-orderable="false") Aktionen
+    tbody
+      each group in groups 
+        if (group.cn)
+          tr
+            td.hidden.dn(data-name="dn")= group.dn
+            td.hidden.member=group.member 
+            td.hidden.owner=group.owner
+            td= group.cn
+            td= group.o
+            td= group.description
+            if (attributes.editActions || attributes.addMemberAction || attributes.removeMemberAction)
+              td.text-right
+                if attributes.addMemberAction
+                  a.btn.btn-default.btn-sm.add-member-group(data-dn=group.dn title="Untergruppe hinzufügen") #[span.glyphicon.glyphicon-plus]
+                if attributes.removeMemberAction
+                  a.btn.btn-default.btn-sm.remove-member-group(data-dn=group.dn title="Untergruppe entfernen") #[span.glyphicon.glyphicon-minus]
+                if attributes.editActions
+                  if currentUser.isAdmin || currentUser.isGroupAdmin && currentUser.ownedGroups.includes(group.dn)
+                    a.btn.btn-default.btn-sm(href='/group/edit/'+group.dn title='Gruppe bearbeiten') #[span.glyphicon.glyphicon-pencil]
+                  if currentUser.isAdmin
+                    a.btn.btn-default.btn-sm.confirm(data-link='/group/delete/'+group.dn title="Gruppe löschen" data-confirmtext='Willst du die Gruppe ' + group.cn + ' wirklich löschen?') #[span.glyphicon.glyphicon-trash]
+
 mixin group_form(action, group)
   form.group-from.form-horizontal.validation-form(action=action method="post" role="form")
         if group && group.dn
-          input.hidden(name="dn", value=group.dn)
+          input.hidden(id="group_dn" name="dn", value=group.dn)
         - var member = group&&group.member?(group.member instanceof Array?group.member:[group.member]):"[]"
         input.hidden(id="group_member" name="member", value=member)
         legend Gruppe #{(group && action=="/group/edit"? "Bearbeiten": "Anlegen")}
-        .col-md-6
-          .form-group.required
-            label.control-label.col-md-4(for="cn") Anzeigename
-            .col-md-8
-              .input-group
-                span.input-group-addon
-                  i.glyphicon.glyphicon-th-list
-                input.form-control(type="text" id="o" name="o" previous-value=(group?group.o:undefined) value=(group?group.o:undefined) required data-msg="Darf nicht leer sein")
-          if group && group.cn
-            input.hidden(name="cn" value=group.cn)
-            +group_form_static('Interner Name', group.cn)
-          else
+        .row
+          .col-md-6
             .form-group.required
-              label.control-label.col-md-4(for="cn") Interner Name
+              label.control-label.col-md-4(for="cn") Anzeigename
               .col-md-8
                 .input-group
                   span.input-group-addon
                     i.glyphicon.glyphicon-th-list
-                  input.form-control(type="text" id="cn" name="cn" previous-value=(group?group.cn:undefined) value=(group?group.cn:undefined) maxlength="20" required data-msg="Darf nicht leer sein" title="max 20 Zeichen, keine Umlaute, Sonder- oder Leerzeichen")
+                  input.form-control(type="text" id="o" name="o" previous-value=(group?group.o:undefined) value=(group?group.o:undefined) required data-msg="Darf nicht leer sein")
+            if group && group.cn
+              input.hidden(name="cn" value=group.cn)
+              +group_form_static('Interner Name', group.cn)
+            else
+              .form-group.required
+                label.control-label.col-md-4(for="cn") Interner Name
+                .col-md-8
+                  .input-group
+                    span.input-group-addon
+                      i.glyphicon.glyphicon-th-list
+                    input.form-control(type="text" id="cn" name="cn" previous-value=(group?group.cn:undefined) value=(group?group.cn:undefined) maxlength="20" required data-msg="Darf nicht leer sein" title="max 20 Zeichen, keine Umlaute, Sonder- oder Leerzeichen")
+            if group && group.parentGroups.length > 0
+              +group_form_static('Übergruppen', group.parentGroups.join(','))
 
-        .col-md-6
-          .form-group
-            label.control-label.col-md-2(for="description") Beschreibung
-            .col-md-10
-              .input-group
-                span.input-group-addon
-                  i.glyphicon.glyphicon-tag
-                textarea.form-control(type="text" id="description" name="description" rows="5" required data-msg="Darf nicht leer sein")=group?group.description:undefined
-        .col-md-6
-          .panel.panel-default
-            .panel-heading
-              h2.panel-title 
-                span Bestehende Mitglieder 
-                span
-                  a.btn.btn-default.btn-sm.remove-all-members(href='#' title='Alle Mitglieder entfernen') 
-                    span.glyphicon.glyphicon-minus
-            .panel-body
-              +user_table(users)(id="member_table" removeMemberAction=true)
-        .col-md-6
-          .panel.panel-default
-            .panel-heading
-              h2.panel-title
-                span Mitglieder hinzufügen 
-                span
-                  a.btn.btn-default.btn-sm.add-all-members(href='#' title='Alle Benutzer*innen hinzufügen') 
-                    span.glyphicon.glyphicon-plus
-            .panel-body
-              +user_table(users)(id="user_table" addMemberAction=true)
+          .col-md-6
+            .form-group
+              label.control-label.col-md-2(for="description") Beschreibung
+              .col-md-10
+                .input-group
+                  span.input-group-addon
+                    i.glyphicon.glyphicon-tag
+                  textarea.form-control(type="text" id="description" name="description" rows="5" required data-msg="Darf nicht leer sein")=group?group.description:undefined
+        .row
+          .col-md-6
+            .panel.panel-default
+              .panel-heading
+                h2.panel-title 
+                  span Bestehende Mitglieder 
+                  span
+                    a.btn.btn-default.btn-sm.remove-all-members(href='#' title='Alle Mitglieder entfernen') 
+                      span.glyphicon.glyphicon-minus
+              .panel-body
+                +user_table(users)(id="member_table" removeMemberAction=true)
+          .col-md-6
+            .panel.panel-default
+              .panel-heading
+                h2.panel-title
+                  span Mitglieder hinzufügen 
+                  span
+                    a.btn.btn-default.btn-sm.add-all-members(href='#' title='Alle Benutzer*innen hinzufügen') 
+                      span.glyphicon.glyphicon-plus
+              .panel-body
+                +user_table(users)(id="user_table" addMemberAction=true)
+        if currentUser.isAdmin 
+          .row
+            .col-md-6
+              .panel.panel-default
+                .panel-heading
+                  h2.panel-title 
+                    span Bestehende Untergruppen 
+                    span
+                      a.btn.btn-default.btn-sm.remove-all-member-groups(href='#' title='Alle Untergruppen entfernen') 
+                        span.glyphicon.glyphicon-minus
+                .panel-body
+                  +group_table(groups)(id="member_groups_table" removeMemberAction=true)
+            .col-md-6
+              .panel.panel-default
+                .panel-heading
+                  h2.panel-title
+                    span Untergruppen hinzufügen 
+                    span
+                      a.btn.btn-default.btn-sm.add-all-member-groups(href='#' title='Alle Untergruppen hinzufügen') 
+                        span.glyphicon.glyphicon-plus
+                .panel-body
+                  +group_table(groups)(id="available_groups_table" addMemberAction=true)
+
 
         .form-group
           .col-md-12.text-right

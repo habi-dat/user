@@ -37,9 +37,16 @@
     	if (settings.sInstance === 'member_table') {
     		var member = $('#group_member').val();
     		return member.includes(data[5])
-    	} else if (settings.sInstance === 'user_table') {
+        } else if (settings.sInstance === 'user_table') {
     		var member = $('#group_member').val();
     		return !member.includes(data[5])
+        } else if (settings.sInstance === 'member_groups_table') {
+            var member = $('#group_member').val();
+            return member.includes(data[0])
+        } else if (settings.sInstance === 'available_groups_table') {
+            var member = $('#group_member').val();
+            var groupDN = $('#group_dn').val();
+            return !member.includes(data[0]) && data[0] !== groupDN;
     	} else if (settings.sInstance === 'grouptable_cat') {
     		if ($('#cattable tbody tr.selected').length === 1) {
     			if ($('#cattable tbody tr.selected td.groups').text().split(',').includes(data[0])) {
@@ -52,7 +59,7 @@
   			}
     	} else if (settings.sInstance === 'grouptable') {
     		if ($('#usertable tbody tr.selected').length === 1) {
-    			if (data[4].includes($('#usertable tbody tr.selected td.dn').text())) {
+    			if (data[1].includes($('#usertable tbody tr.selected td.dn').text())) {
     				return true;
     			} else {
     				return false;
@@ -131,10 +138,10 @@
 		        		targets: 0,
 		        		render: function(data, type, row) {
 		        			if ($('#usertable tbody tr.selected').length === 1) {
-		        				var dn = $('#usertable tbody tr.selected td.dn').text();
-		        				if (row[5].includes(dn)) {
+		        				var dn = $('#usertable tbody tr.selected td.dn').text();  
+		        				if (row[1].includes(dn)) {
 		        					return '<span class="priv-icon glyphicon glyphicon-edit" style="color:green;"></span>' + data;
-		        				} else if (row[4].includes(dn)) {
+		        				} else if (row[2].includes(dn)) {
 		        					return '<span class="priv-icon glyphicon glyphicon-check" style="color:blue;"></span>' + data;
 		        				}
 		        			}
@@ -780,11 +787,52 @@
     });
 
     $(document).on("click", "a.remove-all-members", function (e) {
-    	$('#group_member').val(JSON.stringify([]));
+        var member = JSON.parse($('#group_member').val());
+        tables.member_table.column(5, { search:'applied' } ).data().each(function(value, index) {
+            member.splice(member.indexOf(value), 1);
+        });
+        $('#group_member').val(JSON.stringify(member));
     	tables.member_table.draw()
     	tables.user_table.draw()
     });
 
+    $(document).on("click", "a.add-member-group", function (e) {
+        var dn = $(this).data("dn");
+        var member = JSON.parse($('#group_member').val());
+        member.push(dn);
+        $('#group_member').val(JSON.stringify(member));
+        tables.member_groups_table.draw()
+        tables.available_groups_table.draw()
+    });
+
+    $(document).on("click", "a.add-all-member-groups", function (e) {
+        var member = JSON.parse($('#group_member').val());
+        tables.available_groups_table.column(4, { search:'applied' } ).data().each(function(value, index) {
+            member.push(value);
+        });
+        $('#group_member').val(JSON.stringify(member));
+        tables.member_groups_table.draw()
+        tables.available_groups_table.draw()
+    });
+
+    $(document).on("click", "a.remove-member-group", function (e) {
+        var dn = $(this).data("dn");
+        var member = JSON.parse($('#group_member').val());
+        member.splice(member.indexOf(dn), 1);
+        $('#group_member').val(JSON.stringify(member));
+        tables.member_groups_table.draw()
+        tables.available_groups_table.draw()
+    });
+
+    $(document).on("click", "a.remove-all-member-groups", function (e) {
+        var member = JSON.parse($('#group_member').val());
+        tables.member_groups_table.column(4, { search:'applied' } ).data().each(function(value, index) {
+            member.splice(member.indexOf(value), 1);
+        });
+        $('#group_member').val(JSON.stringify(member));
+        tables.member_groups_table.draw()
+        tables.available_groups_table.draw()
+    });
 
     $('#topcontainer').removeClass('hidden');
 

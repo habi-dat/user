@@ -253,8 +253,8 @@ var successRedirect = function(req, res, successMsg, target) {
 
 router.post('/edit_me', isLoggedIn, function(req, res) {
     var user = {
-        uid: req.body.uid,
-        dn: req.body.dn,
+        uid: req.user.uid,
+        dn: req.user.dn,
         cn: req.body.cn,
         ou: req.body.ou,
         l: req.body.l,
@@ -286,8 +286,8 @@ router.get('/passwd/:uid/:token', function(req, res) {
 
 router.post('/user/passwd', function(req, res) {
     var user = {
-                    dn: req.body.dn,
-                    uid: req.body.uid,
+                    //dn: req.body.dn,
+                    //uid: req.body.uid,
                     cn: false,
                     l: false,
                     ou: false,
@@ -302,6 +302,8 @@ router.post('/user/passwd', function(req, res) {
                 };
     activation.isTokenValid(req.body.token)
         .then((token) => {
+            user.dn = token.data.dn;
+            user.uid = token.data.uid;
             return actions.user.modify(user, { ownedGroups : []})
                 .then(response => {
                     if (response.status) {
@@ -611,14 +613,22 @@ router.get('/user/delete/:id', isLoggedInGroupAdmin, function(req, res) {
 });
 
 router.get('/group/edit/:id', isLoggedInGroupAdminForGroup('params','id'), function(req, res) {
-    Promise.join(ldaphelper.fetchUsers(), ldaphelper.fetchObject(req.params.id),
-        (users, group) => render(req, res, 'group/edit', 'Gruppe bearbeiten', {users: users, group: retrieveSessionData(req) || group}))
+    Promise.join(ldaphelper.fetchUsers(), ldaphelper.fetchObject(req.params.id), ldaphelper.fetchGroups(req.user.ownedGroups),
+        (users, group, groups) => {
+            group.parentGroups = groups.filter(g => {
+                return g.member.includes(group.dn);
+            })
+            group.parentGroups = group.parentGroups.map(g => {
+                return g.cn;
+            })
+            return render(req, res, 'group/edit', 'Gruppe bearbeiten', {users: users, groups: groups, group: retrieveSessionData(req) || group});
+        })
         .catch(error => errorPage(req, res, error));
 });
 
 router.get('/group/add', isLoggedInAdmin, function(req, res) {
-	ldaphelper.fetchUsers()
-		.then(users => render(req, res, 'group/add', 'Gruppe erstellen', {users: users, group: retrieveSessionData(req)}))
+	Promise.join(ldaphelper.fetchGroups(req.user.ownedGroups, true), ldaphelper.fetchUsers(),
+		(groups,users) => render(req, res, 'group/add', 'Gruppe erstellen', {groups: groups, users: users, group: retrieveSessionData(req)}))
         .catch(error => errorPage(req, res, error));
 });
 

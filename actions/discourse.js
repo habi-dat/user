@@ -94,12 +94,70 @@ var removeUser = function(user, currentUser) {
       .catch(error => {console.log(error); return {status: true, message: 'DISCOURSE: Überspringe Schritt, Benutzer*in ' + user.uid + ' nicht gefunden' }; });
 };
 
+var getGroupMembers = function(groups, users, group, members, resolvedGroups) {
+
+  if (!resolvedGroups.includes(group.dn)) {
+    group.member.forEach(dn => {
+      if (!ldaphelper.isGroup(dn) && !members.includes(dn)) {
+        members.push(dn);
+      }
+    });
+    resolvedGroups.push(group.dn);
+    group.member.forEach(dn => {
+      if (ldaphelper.isGroup(dn)) {
+        var subGroup = groups.find(group => {return group.dn === dn; });
+        getGroupMembers(groups, users, subGroup, members, resolvedGroups);
+      }
+    });
+  }
+}
+
+var syncGroups = function() {
+  return Promise.join(ldaphelper.fetchGroups('all'), ldaphelper.fetchUsers(),
+    (groups, users) => {
+      return Promise.all(groups.map(group => {
+        if (group.cn && group.cn !== 'admin') {
+
+          return discourse.getGroupMembers(group.cn)
+            .then(oldMembers => {
+              var newMembers = [], resolvedGroups = [];
+              getGroupMembers(groups, users, group, newMembers, resolvedGroups);
+              return ldaphelper.dnToUid(newMembers)
+                .then(newMembers => {
+                  var addMembers = newMembers.filter(member => {
+                    return !oldMembers.includes(member);
+                  })
+                  var removeMembers = oldMembers.filter(member => {
+                    return !newMembers.includes(member);
+                  })
+                  console.log('sync group', group.dn, 'add', addMembers, 'remove', removeMembers);
+                  if (addMembers.length > 0 || removeMembers.length > 0){
+                    return getGroupId(group.cn)
+                      .then(id => {
+                        return discourse.addGroupMembers(id, addMembers)  
+                          .then(discourse.removeGroupMembers(id, removeMembers));            
+                      })
+
+                  } else {
+                    return;
+                  }
+                })
+            })
+            .catch(error => {console.log(error)});
+
+        } else {
+          return;
+        }
+      }))
+    });    
+}
 
 
 var removeGroup = function(group, currentUser) {
   return getNameFromDN(group.dn)
       .then(name => getGroupId(name)
         .then(id => discourse.del('admin/groups/' + id + '.json', {}))
+        .then(syncGroups)
         .then(() => {  return {status: true, message: 'DISCOURSE: Gruppe gelöscht'}; })
         .catch(error => { return {status: false, message: 'DISCOURSE: Fehler beim Löschen der Gruppe: ' + error}; })
       )
@@ -124,6 +182,7 @@ var createGroup = function(group, currentUser) {
 	        'group[bio_raw]': group.description,
 	        'group[usernames]': uids.join(',')
 	    }))
+      .then(syncGroups)
 	    .then(() => { return {status : true, message: 'DISCOURSE: Gruppe ' + group.cn + ' erstellt'}; })
 	    .catch(error => { return {status : false, message: 'DISCOURSE: Fehler beim Erstellen der Gruppe ' + group.cn + ': ' + error}; });
 };
@@ -137,18 +196,7 @@ var modifyGroup = function(group, currentUser) {
 				        	'group[full_name]': group.o,
 				        	'group[bio_raw]': group.description
 			      		})
-			      		.then(() => Promise.join(ldaphelper.dnToUid(JSON.parse(group.member)), discourse.getGroupMembers(group.cn),
-			      			(newMembers, oldMembers) => {
-			      				addMembers = newMembers.filter(member => {
-			      					return !oldMembers.includes(member);
-			      				})
-			      				removeMembers = oldMembers.filter(member => {
-			      					return !newMembers.includes(member);
-			      				})
-			      				return discourse.addGroupMembers(id, addMembers)
-			      					.then(discourse.removeGroupMembers(id, removeMembers));
-			      			})
-			      		);
+			      		.then(() => {return syncGroups()});
 			    })
 		      	.then(() => { return {status: true, message: 'DISCOURSE: Gruppe upgedated'}; })
 		      	.catch(error => { return {status: false, message: 'DISCOURSE: Fehler beim Update der Gruppe: ' + error}; })

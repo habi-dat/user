@@ -19,23 +19,26 @@ var buildOptions = function(method, url, parameters = undefined) {
   } else if (parameters) {
     options.form = parameters;
   }
-
   return options;
 }
 
 exports.put = function(url, parameters) {
+    console.log('put', url, parameters);
   return request(buildOptions('PUT', url, parameters));
 }
 
 exports.get = function(url, parameters) {
+    console.log('get', url, parameters);
   return request(buildOptions('GET', url, parameters));
 };
 
 exports.del = function(url, parameters) {
+    console.log('del', url, parameters);
   return request(buildOptions('DELETE', url, parameters));
 };
 
 exports.post = function(url, parameters) {
+    console.log('post', url, parameters);
   return request(buildOptions('POST', url, parameters));
 };
 

@@ -178,7 +178,7 @@ exports.sendMail = function(req, res, to, template, data) {
 };
 
 exports.sendPasswordResetEmail = function(req, res, user) {
-    return activation.createAndSaveToken(req.user, {uid: user.uid})
+    return activation.createAndSaveToken(req.user, {uid: user.uid, dn: user.dn})
       .then(token => {
           var link = config.settings.activation.base_url + '/passwd/' + user.uid + '/'+token.token;
           return exports.sendMail(req, res, user.mail, 'passwd', { passwdLink: link })

@@ -27,6 +27,16 @@ var passwordValid = function(password) {
     }
 }
 
+exports.ldapAttributeToArray = function(ldapAttribute) {
+  if (ldapAttribute && ldapAttribute instanceof Array) {
+    return ldapAttribute.slice();
+  } else if (ldapAttribute != null && ldapAttribute != "") {
+    return [ldapAttribute];
+  } else {
+    return [];
+  }
+}
+
 exports.dnToCn = function(dn) {
     if (dn && dn.includes(',') && dn.includes('=')) {
         return dn.split(',')[0].split('=')[1];
@@ -89,13 +99,67 @@ exports.fetchGroups = function(ownedGroups, noAdminGroups = false) {
                     }
                     return 0;
                 });
-                resolve(entries);
+                resolve(entries.map(group => {
+                    group.member = exports.ldapAttributeToArray(group.member);
+                    group.owner = exports.ldapAttributeToArray(group.owner);
+                    group.parentGroups = [];
+                    return group;
+                }));
             });
         });
 
     });
-
 };
+
+exports.isGroup = function(dn) {
+    return dn.endsWith('ou=groups,' + config.server.base);
+}
+
+exports.filterSubgroups = function(member) {
+    return member.filter(dn => {
+        return exports.isGroup(dn);
+    })
+}
+
+exports.populateParentGroups = function(user, groups) {
+    return new Promise((resolve, reject) => {
+        var filter = '(|';
+        groups.forEach(group => {
+            filter += '(member=' + group + ')';
+        })
+        filter += ')';
+        var opts = {
+            scope: 'sub',
+            filter: filter
+        };
+
+
+        var entries = [], newParentGroups = [];
+
+        client.search('ou=groups,'+config.server.base, opts, function(err, res) {
+            res.on('searchEntry', function(entry) {
+                entries.push(entry.object);
+            });
+            res.on('error', function(err) {
+                reject('Error populating parent groups: ' + err.message);
+            });
+            res.on('end', function(result) {
+                entries.forEach((group) => { 
+                    if (!user.member.includes(group.dn)) {
+                        user.member.push(group.dn);
+                        newParentGroups.push(group.dn);
+                    }
+                });
+                if (newParentGroups.length > 0) {
+                    resolve(exports.populateParentGroups(user, newParentGroups));
+                } else {
+                    console.log('user: ', user);
+                    resolve(user);
+                }
+            });
+        });        
+    })
+}
 
 exports.populateUserGroups = function(user) {
 
@@ -103,7 +167,8 @@ exports.populateUserGroups = function(user) {
 
 
         var opts = {
-            scope: 'sub'
+            scope: 'sub',
+            filter: '(|(owner=' + user.dn + ')(member=' + user.dn + '))' 
         };
 
         var entries = [];
@@ -120,7 +185,7 @@ exports.populateUserGroups = function(user) {
             res.on('end', function(result) {
                 user.member = [];
                 user.owner = [];
-                entries.forEach((group) => {
+                entries.forEach((group) => {            
                     if (group.owner && group.owner.includes(user.dn)) {
                         user.owner.push(group.dn);
                     }
@@ -128,7 +193,7 @@ exports.populateUserGroups = function(user) {
                         user.member.push(group.dn);
                     }
                 });
-                resolve(user);
+                resolve(exports.populateParentGroups(user, user.member));
             });
         });
     });

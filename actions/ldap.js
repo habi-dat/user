@@ -8,7 +8,6 @@ var changeGroup = function(group, field, users) {
     var parameters = {};
     parameters[field] = users;
     var addReplace = group[field] === undefined || group[field] === "" ?'add':'replace';
-    //console.log(group.cn + ': ' + field + ': ' + group[field] + ': ' + parameters[field] + ': ' + addReplace);
     if (addReplace == 'add' && users.length == 0) {
       resolve('');
     } else {
@@ -17,16 +16,6 @@ var changeGroup = function(group, field, users) {
         .catch(error => reject('LDAP: Fehler beim Updaten der LDAP Gruppe ' + group.cn + ' (' + field + '): ' + error));
     }
   });
-}
-
-function ldapAttributeToArray(ldapAttribute) {
-  if (ldapAttribute && ldapAttribute instanceof Array) {
-    return ldapAttribute.slice();
-  } else if (ldapAttribute != null && ldapAttribute != "") {
-    return [ldapAttribute];
-  } else {
-    return [];
-  }
 }
 
 var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
@@ -53,9 +42,9 @@ var updateGroups = function(currentUser, dn, oldDn, oldUser, member, owner) {
               var actions = [];
               groups.forEach((group) => {
                 if (group && group.cn) {
-                  var updatedMember = ldapAttributeToArray(group.member),
+                  var updatedMember = ldaphelper.ldapAttributeToArray(group.member),
                       updated = false,
-                      updatedAdmin = ldapAttributeToArray(group.owner);
+                      updatedAdmin = ldaphelper.ldapAttributeToArray(group.owner);
                   if (member !== false) {
                     // check if member list needs to be updated
                     if (assignedGroups.includes(group.dn)) {
@@ -396,9 +385,9 @@ var modifyGroup = function(group, currentUser) {
               var member = JSON.parse(group.member);
               if (oldGroup.member) {
                  	if (oldGroup.member instanceof Array) {
-						oldGroup.member.forEach(u => {
-				          	diff = diff || !member.includes(u);
-				        })
+        						oldGroup.member.forEach(u => {
+        				          	diff = diff || !member.includes(u);
+        				        })
                  	} else {
                  		diff = diff || !member.includes(oldGroup.member);
                  	}
